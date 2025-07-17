@@ -1,0 +1,52 @@
+# Data files
+# data/Collision_Integrals/*
+# data/Differential_Cross_Sections/*
+# data/Electronic_Configurations/*
+# data/Momentum_Transport_Cross_Section/*
+# data/Partition_Functions/*
+# data/Phase_Shifts/*
+# data/*
+out/*
+
+# gitkeep folders
+# !data/.gitkeep
+# !data/Collision_Integrals/
+# !data/Collision_Integrals/.gitkeep
+# !data/Differential_Cross_Sections/
+# !data/Differential_Cross_Sections/.gitkeep
+# !data/Electronic_Configurations/
+# !data/Electronic_Configurations/.gitkeep
+# !data/Momentum_Transport_Cross_Section/
+# !data/Momentum_Transport_Cross_Section/.gitkeep
+# !data/Partition_Functions/
+!data/Partition_Functions/.gitkeep
+# !data/Phase_Shifts/
+# !data/Phase_Shifts/.gitkeep
+# !out/.gitkeep
+
+# useless folders
+doc/
+build/
+Debug/
+
+#Executables
+rooster
+rooster.exe
+rooster.pdb
+
+#Demo collision integrals
+!data/Phase_Shifts/PS_Bell1984_Ar_e-.csv
+!data/Phase_Shifts/PS_Gibson1996_Ar_e-.csv
+!data/Collision_Integrals/Q4th_Ar_Ar.txt
+!data/Collision_Integrals/Q4th_Ar_Ar+.txt
+!data/Collision_Integrals/Q4th_Ar_Ar+2.txt
+!data/Collision_Integrals/Q4th_Ar_e-.txt
+!data/Collision_Integrals/Q4th_H2_H2.txt
+!data/Collision_Integrals/Q4th_H_H.txt
+!data/Collision_Integrals/Q4th_H_H2.txt
+!data/Differential_Cross_Sections/DCS_Ar_e-.csv
+!data/Differential_Cross_Sections/DCS_H2_e-.csv
+!data/Electronic_Configurations/H_ElConfig.csv
+!data/Momentum_Transport_Cross_Section/TCS_H_e-.csv
+!data/Momentum_Transport_Cross_Section/TCS_In_Ar+_H2.csv
+!data/Momentum_Transport_Cross_Section/TCS_In_H+_H2.csv
