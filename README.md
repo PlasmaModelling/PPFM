@@ -144,7 +144,22 @@ BUT, PPFM offers the most scalable and powerful environment to compute them from
 AND, if you're interested in: computed properties, collaborating, PPFM development, becoming a developer, helping, sharing knowledge or you have any kind of questions related to this work, please contact me, I'll be very keen to help.
 
 alberto.vagnoni3@unibo.it
+
 albertovagnoni97@gmail.com
+
+## 🤝 Contributing
+
+Contributions are welcome!
+
+If you'd like to contribute to PPFM:
+
+1. Fork this repository
+2. Clone your fork locally
+3. Make your changes (on `master` or a separate branch)
+4. Commit and push
+5. Open a Pull Request to `master` on this repository
+
+Please ensure your contributions are well-documented and tested. All changes will be reviewed and must be approved by the owner before being merged.
 
 ## License
 
