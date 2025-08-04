@@ -70,25 +70,35 @@ CsHolder::CsHolder( CsCalculator* Qe , CsCalculator* Qin ) : Qe(Qe), Qin(Qin) {N
 /// @brief Construct a new object
 CsHolder::CsHolder( InteractionInterface* i ) : CsCalculator(i) {}
 
-void CsHolder::Compute()  { Qe->Compute() ; Qin->Compute() ; E = Qe->E; Q = Qe->Q; }
+void CsHolder::Compute()  { Qe->Compute() ; Qin->Compute() ; computed = true; }
 
 // ______________________ Implementation MultiCs _____________________
 
 // Constructor
-MultiCs::MultiCs( InteractionInterface* i, std::vector<CsCalculator*> c ) : CsCalculator(i) { Qs = c; }
+MultiCs::MultiCs( InteractionInterface* i, std::vector<CsCalculator*> c, std::vector<double> gs ) : CsCalculator(i) , Qs(c), statesG(gs) {}  
+
+MultiCs::MultiCs( InteractionInterface* i, std::vector<CsCalculator*> c ) : CsCalculator(i) , Qs(c) {}  
 
 CsCalculator*& MultiCs::operator[](int i) {return Qs[i];}
 
-std::vector<double> MultiCs::operator() ( int s, int l ) { return (*Qs[s])(l); };
+// std::vector<double> MultiCs::operator() ( int s, int l ) { return (*Qs[s])(l); };
 
-int MultiCs::Size(){return Qs.size();}
+int MultiCs::Size() { 
 
-void MultiCs::Compute() { for ( int i = 0; i < Qs.size(); i++ ) { Qs[i]->Compute(); Q = Qs[0]->Q; } }
+    if ( Qs.size() == statesG.size() ) 
+        return Qs.size() ;  
+    else 
+        throw std::invalid_argument("Invalid Multiple Cross Sections,"
+        "\n different sizes between state potentials and degeneracies ") ;
+
+}
+
+void MultiCs::Compute() { for ( int i = 0; i < Qs.size(); i++ ) { Qs[i]->Compute(); } computed = true; }
 
 // ______________________ Implementation ThresholdCs _____________________
 
 // Constructor
-ThresholdCs::ThresholdCs(InteractionInterface* i, std::vector<CsCalculator*> c, std::vector<double> Elim ): 
+ThresholdCs::ThresholdCs ( InteractionInterface* i, std::vector<CsCalculator*> c, std::vector<double> Elim ) : 
     MultiCs(i,c), Elim(Elim) {
         
     if( Qs.size() != (Elim.size()+1) ){
@@ -140,6 +150,7 @@ void ThresholdCs::Compute() {
     for (const auto& q : Qs) 
         Q = concatenate(Q, q->Q);
 
+    computed = true ;
 }
 
 // __________________________ Implementation parser ___________________________
@@ -186,7 +197,7 @@ ElasticLoader::ElasticLoader( InteractionInterface* i ) : CsCalculator(i) { Init
 ElasticLoader::ElasticLoader( const std::string& prefix, InteractionInterface* interaction ) : 
     CsCalculator(interaction) { this->customPrefix = prefix + "_"; Init(); }
 
-void ElasticLoader::Compute()  { Init(); }
+void ElasticLoader::Compute()  { Init(); computed = true ; }
 
 void ElasticLoader::Init()  { if(!loaded) LoadData("Momentum_Transport_Cross_Section",Name); }
 
@@ -207,7 +218,7 @@ InelasticLoader::InelasticLoader( InteractionInterface* i ) : CsCalculator(i) { 
 InelasticLoader::InelasticLoader( const std::string& prefix, InteractionInterface* interaction ) : 
     CsCalculator(interaction) { this->customPrefix = prefix + "_"; Init(); }
 
-void InelasticLoader::Compute()  { Init(); }
+void InelasticLoader::Compute()  { Init(); computed = true; }
 
 void InelasticLoader::Init()  { if( !loaded ) LoadData("Momentum_Transport_Cross_Section",Name); }
 
@@ -347,6 +358,8 @@ void PhaseShiftsLoader::Compute()  {
     Init();
 
     ComputeFromPhaseShifts() ; 
+
+    computed = true ;
 
 }
 
@@ -709,6 +722,9 @@ void AvrgChiIntegrator::Compute() {
         throw;
     
     }
+
+    computed = true ; 
+
 } ; 
 
 // __________________________________ Implementation AdaptChiIntegrator ____________________________
@@ -818,6 +834,8 @@ void AdaptChiIntegrator::Compute(){
     } catch(const std::exception& e) {
         throw;
     }
+
+    computed = true;
 
 }
 
@@ -1123,6 +1141,8 @@ void DcsLoader::Compute() {
     E = Qe->E;
     Q = Qe->Q;
 
+    computed = true ; 
+
 } ;
 
 std::string DcsLoader::BuildFileName ( const std::string& name) { 
@@ -1164,4 +1184,7 @@ void ChargeTransferCs::Compute() {
             Q[i][j] = (1./2.) * pow ( A - B*log(gij) , 2.) ; 
 
     }
+
+    computed = true;
+
 }

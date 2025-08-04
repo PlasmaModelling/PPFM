@@ -13,6 +13,7 @@ class CsHolder ;
 class MultiCs ; 
 class Potential ;
 class TcsInterface ;  
+class Composition ;
 
 /** @brief Interface class for algorithms to compute on Collision Integrals.
  * A pointer to this base class is possessed by a CollisionIntegral object which 
@@ -95,9 +96,6 @@ class LoaderOmega : public OmegaCalculator, public DataLoader {
  * collision integral. */
 class CoulombOmega : public OmegaCalculator {
 
-    ChargedSpecies* sp1;
-    ChargedSpecies* sp2;
-
     /** @brief Matrix that stores computed Coulomb collision integrals on adimensional 
      * temperatures (the first row) for attractive (even rows) and repulsive (odd rows) 
      * shielded coulomb potential, (l,s) combinations necessary for the 4-th order approximation
@@ -109,6 +107,8 @@ class CoulombOmega : public OmegaCalculator {
     /// @brief Constructor to CoulombOmega class, initialize Qctxt hard-coded data.
     CoulombOmega(ChargedSpecies* s1, ChargedSpecies* s2) ;
 
+    CoulombOmega(InteractionInterface* i ) ; 
+
     /// @brief Print info when called.    
     virtual void info() override {std::cout<<"Coulomb collision"; } ;
 
@@ -118,67 +118,41 @@ class CoulombOmega : public OmegaCalculator {
 
 };
 
-/** @brief class for the calculation of Non-coulomb (neutral-neutral, neutral-ion) interactions
- * integrating computed TransportCrossSection. */
 class NonCoulombOmega : public OmegaCalculator {
 
     protected:
 
     /// @brief 32th order Laguerre polynomial nodes to integrate Transport Cross Section. 
-    std::vector<double> x ;
-   
-    /// @brief 32th order Laguerre polynomials related weights.
-    std::vector<double> w ;
+    std::vector<double> x;
 
-    double ComputeModuleOmega ( int l, int s, double T, double Lam, CsHolder* TcS ) ;
+    /// @brief 32th order Laguerre polynomial weights.
+    std::vector<double> w;
 
-    double IntegrateOmega ( int l, int s, double T, double Lam, CsCalculator* TcS ) ; 
+    /// @brief Compute Omega^(l,s) from a CsHolder object.
+    double ModuleCompute(int l, int s, double T, double Lam, CsHolder* TcS);
 
-    public:
+    /// @brief Compute Omega^(l,s) from a standard CsCalculator via interpolation.
+    double IntegrateOmega(int l, int s, double T, double Lam, CsCalculator* TcS);
 
-    /// @brief Initialize members x and w hard-coded data and interactionName.
-    NonCoulombOmega( InteractionInterface* i ) ;
-    
-    /** @brief Initialize members x and w hard-coded data and interactionName.
-     ** substitute calculator with ChiIntegrator and gives it Potential */
-    NonCoulombOmega( InteractionInterface* i , TcsInterface* t, Potential* pot ) ;
-
-    /// @brief Print info when called.    
-    virtual void info() override {std::cout<<"Non-coulomb coll." ; } ;
-
-    /** @brief compute Omega^(l,s)(T) for NonCoulomb collision, 
-     * @see OmegaCalculator for info on the parameters */
-    double Compute ( int l, int s, double T, double Lam, CsCalculator* TcS ) override ;
-
-};
-
-class MultiPotOmega : public NonCoulombOmega {
-
-    /// @brief User-given degeneracies holder
-    std::vector<double> degeneracies ;
-
-    double MultiCompute ( int l, int s, double T, double Lam, MultiCs* p ) ;
+    /// @brief Compute degeneracy-weighted Omega^(l,s) for MultiCs calculators.
+    double MultiCompute(int l, int s, double T, double Lam, MultiCs* p);
 
     public:
 
-    MultiPotOmega( InteractionInterface* i, TcsInterface* TcS, 
-        std::initializer_list<Potential*> phis, std::initializer_list<double> gs ) ;
+    /// @brief Initialize x and w (Laguerre nodes and weights).
+    NonCoulombOmega(InteractionInterface* i);
 
-    MultiPotOmega ( InteractionInterface* i, TcsInterface* TcS, std::initializer_list<double> gs ) ;
+    /// @brief Initialize x and w, and assign ChiIntegrator based on Potential type.
+    NonCoulombOmega(InteractionInterface* i, TcsInterface* t, Potential* pot);
 
-    /// @brief Print info when called 
-    virtual void info() override {std::cout<<"  Multi Potential" ; } ;
+    /// @brief Print info when called.
+    virtual void info() override { std::cout << "Non-coulomb coll."; }
 
-    /** @brief Compute Omega^(l,s)(T) for NonCoulomb collisions involving different states,
-     ** of the involved species in a multi potential approach to excited states.
-     ** @see OmegaCalculator for info on the parameters */
-    double Compute ( int l, int s, double T, double Lam, CsCalculator* TcS ) override ;
-
+    /// @brief Compute Omega^(l,s)(T) based on the type of calculator.
+    double Compute(int l, int s, double T, double Lam, CsCalculator* TcS) override;
 
 };
 
-/** @brief class to account forcharge exchange phenomena in the inelastic 
- * contribution to collision integrals */
 class ChargeExchangeOmega : public OmegaCalculator {
 
     /** @brief Inner elastic collision calculator copied from the Collision Integral

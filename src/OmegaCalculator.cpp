@@ -83,7 +83,7 @@ void LoaderOmega::ParseFile(std::ifstream& file) {
 }
 
 
-CoulombOmega::CoulombOmega(ChargedSpecies* sp1, ChargedSpecies* sp2) : OmegaCalculator(sp1,sp2), sp1(sp1), sp2(sp2) {
+CoulombOmega::CoulombOmega(ChargedSpecies* sp1, ChargedSpecies* sp2) : OmegaCalculator(sp1,sp2) {
         
     interactionName = sp1->getFormula()+"_"+sp2->getFormula() ;
 
@@ -169,8 +169,8 @@ double CoulombOmega::Compute( int l, int s, double T, double Lam, CsCalculator* 
     double tmp = (sp1->getCharge() * sp2->getCharge()*qe*qe) / (4.*std::numbers::pi*eps0*Lam) ;
     double Ts = fabs((KB*T)/tmp) ;
     double r = interp(qcTxt[0],qcTxt[ii], Ts) ;
-    /* Ang^2 */
-    return (std::numbers::pi*Lam*Lam*((r)/(Ts*Ts))) * 1e+20 ;
+    // Ang^2 
+    return (std::numbers::pi*Lam*Lam*((r)/(Ts*Ts))) * 1.e+20 ;
 
 }
 
@@ -221,192 +221,77 @@ NonCoulombOmega::NonCoulombOmega( InteractionInterface* i, TcsInterface* t, Pote
     
 }
 
-/** @brief Compute Omega^(l,s)(T) for NonCoulomb collision, 
- * @see OmegaCalculator for info on the parameters */
-double NonCoulombOmega::Compute ( int l, int s, double T, double Lam, CsCalculator* TcS ) {
-
-    if (auto p = dynamic_cast<CsHolder*>(TcS))
-        return ComputeModuleOmega(l,s,T,Lam,p) ; 
-
-    // Computes and populate Transport Cross Sections 
-    if ((*TcS).Q.empty())
-        TcS->Compute() ; 
+double NonCoulombOmega::IntegrateOmega(int l, int s, double T, double Lam, CsCalculator* TcS) {
     
     try {
+        std::vector<double> ln_e(TcS->E.size());
+        std::vector<double> Qs((*TcS)(l).size());
 
-        // Building up vectors for energies and transport cross sections
-        std::vector<double> ln_e(  TcS->E.size() );
-        std::vector<double> Qs  ((*TcS)(l).size());
-
-        for (int i = 0; i < TcS->E.size(); ++i) 
+        for (int i = 0; i < TcS->E.size(); ++i)
             ln_e[i] = log(TcS->E[i]);
-        
-        for (int i = 0; i < (*TcS)(l).size(); ++i) 
+
+        for (int i = 0; i < Qs.size(); ++i)
             Qs[i] = (*TcS)(l)[i];
 
-        // Integrand
-        std::vector<double> f(x.size(), 0.);
+        std::vector<double> f(x.size(), 0.0);
         for (int i = 0; i < x.size(); ++i) {
-            
-            // logaritmic point of energy 
-            double ee = log( ( KB * T * x[i]) / qe ) ;
-
-            // logaritmic (positive) cubic spline interpolation
+            double ee = log((KB * T * x[i]) / qe);
             double spline = interpolateSpline(ln_e, Qs, ee);
-
-            // integrand value
-            f[i] = pow(x[i], (s + 1)) * spline / 2;
+            f[i] = pow(x[i], s + 1) * spline / 2.0;
         }
 
-        // Scalar product f⋅w (Laguerre integration)
         double fxw = std::inner_product(f.begin(), f.end(), w.begin(), 0.0);
-        double QQ = fxw * (4. * (l + 1.)) / (factorial(s + 1) * (2. * l + 1. - pow((-1.), l)));
+        return fxw * (4. * (l + 1.)) / (factorial(s + 1) * (2. * l + 1. - pow(-1., l)));
 
-        return QQ;
-    
-    } catch(...) {
-
-        /*  If there's a non-valid Transport Cross Section  
-        interpolateSpline will fail and the function will return 0. */
-        return 0.0 ; 
+    } catch ( const std::exception& ) {
+        throw ;
     }
-
 }
 
-double NonCoulombOmega::ComputeModuleOmega( int l , int s,  double T, double Lam, CsHolder* TcS ){
-    
-    if (TcS->Qe->Q.empty() || TcS->Qin->Q.empty() )
-        TcS->Compute() ; 
-    
-    CsCalculator* elastic   = TcS->Qe  ; 
-    CsCalculator* inelastic = TcS->Qin ; 
-        
-    // this cannot fail because extracted members are not Holders
-    double qel = Compute(l,s,T,Lam,  elastic) ; 
-    double qin = Compute(l,s,T,Lam,inelastic) ;
+double NonCoulombOmega::MultiCompute(int l, int s, double T, double Lam, MultiCs* p) {
+    std::vector<double> OmegaK;
 
-    return sqrt(pow(qe,2.)+pow(qin,2.)) ;
-
-}
-
-MultiPotOmega::MultiPotOmega( InteractionInterface* i, TcsInterface* TcS, 
-    std::initializer_list<Potential*> phis, 
-        std::initializer_list<double> gs ) : NonCoulombOmega(i) {
-
-    std::vector<CsCalculator*> chis ;
-    for ( auto phi : phis )
-        chis.push_back( new AdaptChiIntegrator(i,phi) ) ;
-    
-    for ( auto g : gs )
-        degeneracies.push_back( g ) ;
-    
-    TcS->TCScalculator = new MultiCs(i,chis);
-
-}
-
-MultiPotOmega::MultiPotOmega( InteractionInterface* i, TcsInterface* TcS, 
-    std::initializer_list<double> gs ) : NonCoulombOmega(i) {
-
-    for ( auto g : gs )
-        degeneracies.push_back( g ) ;
-
-}
-
-double MultiPotOmega::MultiCompute ( int l, int s, double T, double Lam, MultiCs* p ) {
-        
-    if ((*p)[0]->Q.empty()) {
-        p->Compute();
-    }
-    
-    if ( degeneracies.size() < p->Size() || degeneracies.size() > p->Size() ) {
-        
-        throw std::runtime_error("Conflicting degeneracies and calculators sizes.\n"
-        "Be sure to set as much degeneracies (cibox[i]->MultiState({1.,2.,3.,...N})\n" 
-        "as calculators in the MultiCs  ) ");
-    }
-    
-
-    std::vector<double> OmegaK ; 
-    for(int i = 0; i < p->Size(); i++) {
-
-        auto p1 = dynamic_cast<ChargeTransferCs*> ((*p)[i]) ; 
-        
-        if ( p1 != nullptr && l%2 == 0 )
-            return 0. ; 
-        
-        OmegaK.push_back ( NonCoulombOmega::Compute(l,s,T,Lam,(*p)[i]) ) ; 
-
-    }
-
-    double num = 0.0 ; 
-    double den = 0.0 ;
-    for (int k = 0; k < p->Size() ; k++) {
-
-        num += OmegaK[k]*degeneracies[k] ; 
-        den += degeneracies[k] ; 
-    
-    }
-
-    return num / den ;
-    
-}
-
-
-double MultiPotOmega::Compute ( int l, int s, double T, double Lam, CsCalculator* cscalc ) {
-    
-    double Qe = 0. ;
-    double Qin = 0. ; 
-
-    if ( auto p1 = dynamic_cast<CsHolder*>(cscalc) ) {
-
-        if (p1->Q.empty())
-            p1->Compute() ;
-            
-        if ( auto p2 = dynamic_cast<MultiCs*>(p1->Qe) ){
-            
-            Qe = MultiCompute ( l, s, T, Lam, p2 ) ;
-        
-        } else {
-        
-            Qe = NonCoulombOmega::Compute(l,s,T,Lam,p1->Qe) ; 
-        
+    for (int i = 0; i < p->Size(); ++i) {
+        if (auto ct = dynamic_cast<ChargeTransferCs*>((*p)[i])) {
+            if (l % 2 == 0) return 0.0;
         }
-        
-        if ( auto p3 = dynamic_cast<MultiCs*>(p1->Qin) ){
-        
-            Qin = MultiCompute ( l, s, T, Lam, p3 ) ;
-            
-        } else if ( auto p3 = dynamic_cast<ChargeTransferCs*>(p1->Qin) ) {
-
-            if (l%2 != 0) {
-
-                Qin = NonCoulombOmega::Compute(l,s,T,Lam,p3) ; 
-            
-            } else {
-            
-                Qin = 0.;
-            
-            }
-            
-        } else {
-
-            Qin = NonCoulombOmega::Compute (l,s,T,Lam,p1->Qin) ;
-
-        }
-
-        return sqrt(pow(Qe,2.) + pow(Qin,2.)) ;
-        
-    } else if ( auto p1 = dynamic_cast<MultiCs*>(cscalc) ) {
-              
-        return MultiCompute(l,s,T,Lam,p1) ;
-   
-    } else {
-    
-        throw std::runtime_error("Passed calculator is not MultiCs or CsHolder\n "
-        "Please, specify a TCScalculator and pass it to the CollisionIntegral object.\n");
-    
+        OmegaK.push_back(Compute(l, s, T, Lam, (*p)[i]));
     }
 
+    double num = 0.0, den = 0.0;
+    for (int i = 0; i < p->Size(); ++i) {
+        num += OmegaK[i] * p->statesG[i];
+        den += p->statesG[i];
+    }
+
+    if (den == 0.0) throw std::runtime_error("MultiCompute: degeneracy sum is zero.");
+
+    return num / den;
+}
+
+double NonCoulombOmega::ModuleCompute(int l, int s, double T, double Lam, CsHolder* TcS) {
+  
+    double qel = Compute(l, s, T, Lam, TcS->Qe);
+    double qin = Compute(l, s, T, Lam, TcS->Qin);
+    return sqrt(pow(qel, 2.) + pow(qin, 2.));
+}
+
+double NonCoulombOmega::Compute(int l, int s, double T, double Lam, CsCalculator* TcS) {
+
+    if ( TcS->computed == false ){
+        TcS->Compute();
+    }
+
+    if (auto th = dynamic_cast<ThresholdCs*>(TcS))    
+        return IntegrateOmega(l, s, T, Lam, th);
+
+    if (auto multi = dynamic_cast<MultiCs*>(TcS))
+        return MultiCompute(l, s, T, Lam, multi);
+
+    if (auto holder = dynamic_cast<CsHolder*>(TcS))
+        return ModuleCompute(l, s, T, Lam, holder);
+
+    return IntegrateOmega(l, s, T, Lam, TcS);
 }
 
 ChargeExchangeOmega::ChargeExchangeOmega( InteractionInterface* i, OmegaCalculator* OMel, double A , double B ) : 

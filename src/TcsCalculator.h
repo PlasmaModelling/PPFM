@@ -31,6 +31,8 @@ class CsCalculator {
      * @throws std::invalid_argument if l is out of range.  */
     std::vector<double> operator()(int l);
 
+    bool computed = false ; 
+
     /// @brief Computes the cross sections. Must be implemented in derived classes.
     virtual void Compute() = 0;
 
@@ -80,15 +82,18 @@ class MultiCs : public CsCalculator {
     /// @brief Vector for multiple calculators.
     std::vector<CsCalculator*> Qs;
 
+    /// @brief State degeneracies "g" vector 
+    std::vector<double> statesG ; 
+
     /// @brief Construct MultiCs object, calculators must be passed by the user.
-    MultiCs(InteractionInterface* i, std::vector<CsCalculator*> c);
+    MultiCs ( InteractionInterface* i, std::vector<CsCalculator*> c, std::vector<double> gs );
 
     /// @brief Access calculator by index.
     CsCalculator*& operator[](int i);
 
-    /// @brief Access Q^l of s-th calculator.
+/*     /// @brief Access Q^l of s-th calculator.
     std::vector<double> operator()(int s, int l);
-
+ */
     /// @brief Returns number of calculators.
     int Size();
 
@@ -96,7 +101,13 @@ class MultiCs : public CsCalculator {
     void Compute() override;
 
     protected:
-    
+
+    /**
+     * @brief USE ONLY on logics of multpiple cross sections 
+     * without state degeneracies
+     * @example ThresholdCs */
+    MultiCs ( InteractionInterface* i, std::vector<CsCalculator*> c) ; 
+
     ~MultiCs() = default;
 
 };

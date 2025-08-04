@@ -5,7 +5,7 @@
 # data/Momentum_Transport_Cross_Section/*
 # data/Partition_Functions/*
 # data/Phase_Shifts/*
-# data/*
+data/*
 out/*
 
 # gitkeep folders

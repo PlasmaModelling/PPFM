@@ -1,72 +1,167 @@
-/*
+/* 
 
-    TEST MAIN FOR TRANSPORT PROPERTIES RAW CALCULATION PERFORMANCES
-
-    #Include JUST the modules you intend to use.
-    Check src/header.h files for info on the implemented classes
-
-    Test on pure Argon 4 species: Ar, Ar+, Ar+2, e-
-    LTE, T.range 300-3000K.
-    Required collision integrals are loaded.
+    MAIN FILE USED IN THE VALIDATION PROCESS 
+    DESCRIBED IN THE PURE ARGON VALIDATION FOR THE +
+    ZHANG, MURPHY MODULE DESCRIBED ON 
+    
+    "PPFM (Plasma Properties For Many): An Object Oriented C++ 
+    Library for Computing Thermodynamic and Transport Properties
+    of Plasmas Under Different Operating Conditions" 
+    
+    by
+    
+    A.Vagnoni, E.Ghedini, M.Gherardi
 
 */
 
 #include "GasMixture.h"
+#include "CiBox.h"
+#include "PartitionFunction.h"
 #include "Devoto.h"
+#include "Thermodynamics.h"
 #include "ZhangMurphyTP.h"
+#include "Potential.h"
+#include "CollisionIntegral.h"
 
 int main() {
 
-    std::cout<<"Test on pure Argon 4 species: Ar, Ar+, Ar+2, e- . " << std::endl;
+    // Output folder
+    std::string folder = "PureAr4Species";
 
     // GasMixture definition
-    auto mix = new GasMixture (
-
-        300.            , 101325.       ,
+    GasMixture* mix = new GasMixture ( 
+        
+        300.            , 101325.       , 
         new Argon       , new ArgonI    , new ArgonII           ,
-        new Electron
+        new Electron 
+        
+    );
 
-    ) ;
+    // Non equilibrium parameters to loop on
+    std::vector<double> NEparam = { 1. , 2. , 3., 5., 7., 10. };
 
-    // non-equilibrium parameter Te/Th
-    mix->theta->set(1.) ;
+    // Set LTE T range to compute on 
+    const std::vector<double> T = arange ( 300., 30100., 100. );
 
-    // Transport init with default CiBoxes
-    DevotoTP transp ( mix ) ;
-    ZhangMurphyTP zmtransp ( mix ) ;
+    auto pp = mix->Comp->Qbox ;
 
-    std::cout << "LTE, T.range 300-3000K." << std::endl;
+    (*pp)[0]->setAbInitio();
+    (*pp)[1]->setAbInitio();
+    (*pp)[2]->setAbInitio();
 
-    // set Temperature range to compute on
-    std::vector<double> T = arange (300., 3100., 100.) ;
+    (mix->Comp->Qbox)->info() ; 
 
-    std::cout << "Required collision integrals are loaded." << std::endl;
+    CiBox cibox (mix) ; 
 
-    // loop
-    for (size_t i = 0; i < T.size(); i++) {
+    // Ar - Ar
+    /* 
+    cibox[0]->Pot( new HFDTCS2_ArAr() ) ;   
 
-        auto start = std::chrono::high_resolution_clock::now();
+    // Ar - Ar+ 
+    cibox[1]->Load(false);
+    auto arari = cibox[1]->GetIntInterface();
 
-        std::cout << "T = "<<T[i]<<std::endl ;
+    // Elastic + Inelastic collision
+    cibox[1]->TCScalculator = new CsHolder (
 
-        // Setting temperature, composition is computed.
-        mix->setT(T[i]) ;
+        // Elastic integration of the potential 
+        new MultiCs (
+            arari, {
+                new AvrgChiIntegrator ( arari, new Morse3Param(1.34,1.69,2.43) ),
+                new AvrgChiIntegrator ( arari, new Morse2Param(369.,    2.031) ),
+                new AvrgChiIntegrator ( arari, new Morse3Param(0.21,1.63,3.08) ),
+                new ThresholdCs (
+                    arari, {
+                        new AvrgChiIntegrator ( arari, new Morse2Param(2.68e+6,5.889) ) ,
+                        new AvrgChiIntegrator ( arari,new Morse2Param(29100,4.154) )
+                        },
+                        {
+                            10.
+                        }
+                    ),
+                new AvrgChiIntegrator ( arari, new Morse3Param(0.10,1.79,3.16) ),
+                new AvrgChiIntegrator ( arari, new Morse2Param(1.65e+4,3.88) ),
+                
+            },
+            {
+                1./6.,
+                1./6.,
+                1./6.,
+                1./6.,
+                1./6.,
+                1./6.
+            }
+        ),
+        // Two different Charge Transfer Cross Sections for the two different states
+        new MultiCs ( 
+            arari, { 
 
-        // compute
-        transp.computeTransport(mix) ;
+                new ChargeTransferCs ( arari, 26.39, 1.12 ) , 
+                new ChargeTransferCs ( arari, 18.96, 0.83 ) 
+            
+            },
+            // States degeneracies for Charge Transfers            
+            {
+                1./3.,
+                2./3.
+            }
+        )
+    );
 
-        auto end = std::chrono::high_resolution_clock::now() ;
-        std::chrono::duration<double> duration = end - start ;
-        std::cout <<"Devoto  elapsed in: "<< duration.count() << "s" << std::endl ;
+    // Pure Argon polarizability
+    double alphaAr = 1.641100; // Ang^3
+      
+    // Ar - Ar+2 
+    cibox[2]->Pot( new Polarization ( new Argon, new ArgonII, alphaAr) );
 
-        start = end ;
+    // Ar - e-
+    cibox[3]->Load(false);    
+    cibox[3]->LoadElastic(); 
 
-        zmtransp.computeTransport(mix) ;
+    InteractionInterface* Are = cibox[3]->GetIntInterface();
 
-        end = std::chrono::high_resolution_clock::now() ;
-        std::cout <<"Zhang   elapsed in: "<< duration.count() << "s" << std::endl ;
+    // Different Cross Sections for different energy ranges 
+    cibox[3]->TCScalculator = new ThresholdCs ( Are, 
+        {
+            // Quantum phase shifts from literature
+            new PhaseShiftsLoader ( "Bell1984" , Are ), 
+            new PhaseShiftsLoader ( "Gibson1996" , Are ),
+            
+            // Differential cross sections
+            new DcsLoader(Are) 
+        },
+        {
+            1.,  // Bell until 1.eV
+            10.  // Gibson until 10.eV, 
+                 // Dcs after.
+        }
+    ); */
 
+    cibox.info() ; 
+
+    ZhangTpCsv zhangmurphy ( &cibox , folder ) ; 
+
+    std::vector<double> Th = T ;
+
+    for (size_t i = 0; i < NEparam.size(); i++) {
+
+        Th = T ; 
+        for (size_t j = 0; j < T.size(); j++)
+            Th[j] /= NEparam[i] ;  
+        
+        // int to write filenames
+        int str = NEparam[i]; 
+
+        // Set the NEparam
+        mix->theta->set(NEparam[i]) ; 
+        mix->setT(Th[0]) ; 
+        mix->restartComposition() ;
+
+        // Computing and printing data
+        zhangmurphy.Print ( "ZM2013_Theta" + std::to_string(str), Th, mix );
+        
     }
-
+    
     return 0 ;
+
 }

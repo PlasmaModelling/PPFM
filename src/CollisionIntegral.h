@@ -65,7 +65,7 @@ class CInterface {
     
     /** @brief Interface function to set the degenereacies for multi state interactions 
      * @param gs Initializer_list of { interaction statistical degeneracies } */
-    virtual void MultiState ( std::initializer_list<double> gs ) = 0 ;
+/*     virtual void MultiState ( std::initializer_list<double> gs ) = 0 ;*/
 
     /** @brief Interface function to set parameters for the Charge Exchange collision cross 
      ** section Q(g)=(A-Bln(g))^2 
@@ -126,7 +126,7 @@ class CollisionIntegral : public TransportCrossSection<T1,T2>, public HybridInte
      * @details Initialize a MultiPotOmega and a nullptr MultiCs new objects to members Omega and TCScalculator.
      * CsCalculators of the MultiCs have to be specified or initialized by the user.   
      * @param gs Initializer_list of { interaction statistical degeneracies } */
-    virtual void MultiState ( std::initializer_list<double> gs ) override ;
+    /* virtual void MultiState ( std::initializer_list<double> gs ) override ; */
 
     /** @brief Interface function to set parameters for the Charge Exchange collision cross 
      ** section Q(g)=(A-Bln(g))^2 
@@ -235,7 +235,7 @@ template<typename T1, typename T2>
 void CollisionIntegral<T1, T2>::MultiPot(std::initializer_list<Potential*> potentials,
     std::initializer_list<double> gss) {
 
-    if (potentials.size() < gss.size()) {
+    if (potentials.size() != gss.size()) {
 
         throw std::runtime_error(
         
@@ -245,31 +245,34 @@ void CollisionIntegral<T1, T2>::MultiPot(std::initializer_list<Potential*> poten
         
         );
 
-    } else if (potentials.size() > gss.size()) {
+    } else {
 
-        throw std::runtime_error(
+        std::vector<CsCalculator*> chis ; 
+        std::vector<double> gs ; 
         
-            "Lacking degeneracies in MultiPot setting \n"
-            "  potentials and degeneracies must be the same number."
+        for (auto chi : potentials ) {
+            if (auto morsePot = dynamic_cast<Morse*>(chi)) 
+                chis.push_back( new AvrgChiIntegrator ( this, chi ) ) ;
+            else
+                chis.push_back( new AdaptChiIntegrator ( this, chi ) ) ;        
+        }
+  
+        for (auto g : gss)  
+            gs.push_back(g) ; 
         
-        );
-    }
-
-    else {
-        
-        Omega = new MultiPotOmega( this, this, potentials, gss );  
+        TCScalculator = new MultiCs(this->GetIntInterface(),chis,gs) ; 
         
     }
 }
 
-template<typename T1, typename T2>
+/* template<typename T1, typename T2>
 void CollisionIntegral<T1, T2>::MultiState ( std::initializer_list<double> gss ) {
     
     std::vector<CsCalculator*> nullcalcs (gss.size(),nullptr) ; 
     Omega = new MultiPotOmega(this,this,gss) ;
     TCScalculator = new MultiCs(this,nullcalcs) ;
     
-}
+} */
 
 template<typename T1 ,typename T2 >
 void CollisionIntegral<T1, T2>::ChargeTransfer( double A, double B ) {
