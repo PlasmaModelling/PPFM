@@ -47,6 +47,10 @@ rooster.pdb
 !data/Differential_Cross_Sections/DCS_Ar_e-.csv
 !data/Differential_Cross_Sections/DCS_H2_e-.csv
 !data/Electronic_Configurations/H_ElConfig.csv
+!data/Electronic_Configurations/Ar_ElConfig.csv
+!data/Electronic_Configurations/Ar+_ElConfig.csv
+!data/Electronic_Configurations/Ar+2_ElConfig.csv
+!data/Momentum_Transport_Cross_Section/TCS_Ar_e-.csv
 !data/Momentum_Transport_Cross_Section/TCS_H_e-.csv
 !data/Momentum_Transport_Cross_Section/TCS_In_Ar+_H2.csv
 !data/Momentum_Transport_Cross_Section/TCS_In_H+_H2.csv
