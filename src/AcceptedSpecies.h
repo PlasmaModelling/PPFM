@@ -10,7 +10,10 @@ using AcceptedSpecies = std::variant<
     Electron*,
     Argon*,
     ArgonI*,
-    ArgonII*
+    ArgonII*,
+    Hydrogen*,
+    HydrogenI*,
+    MolecularHydrogen*
 >;
 
 #endif // ACCEPTED_SPECIES_H

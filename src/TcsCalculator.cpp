@@ -118,9 +118,6 @@ void ThresholdCs::Compute() {
     
     for (int i = 0; i < Qs.size(); ++i) {
         
-        if (Qs[i]->E.empty()) 
-            throw std::runtime_error("Threshold calculator: " + std::to_string(i) + " has empty energy range.");
-        
         int it = 0;
         while (it < Qs[i]->E.size() && Qs[i]->E[it] < previousLimit) 
             ++it;
@@ -136,8 +133,10 @@ void ThresholdCs::Compute() {
     }
 
     for (int i = 0; i < Qs.size(); ++i) {
-        if (Qs[i]->Q.empty()) 
+
+        if ( Qs[i]->computed == false ) 
             Qs[i]->Compute();  
+    
     }
 
     E.clear();
@@ -1142,7 +1141,9 @@ void DcsLoader::Compute() {
     Q = Qe->Q;
 
     computed = true ; 
-
+    Qe->computed = true ; 
+    Qin->computed = true ;
+    
 } ;
 
 std::string DcsLoader::BuildFileName ( const std::string& name) { 

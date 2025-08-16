@@ -278,21 +278,25 @@ double NonCoulombOmega::ModuleCompute(int l, int s, double T, double Lam, CsHold
 
 double NonCoulombOmega::Compute(int l, int s, double T, double Lam, CsCalculator* TcS) {
 
-    if ( TcS->computed == false ){
+    if (!TcS->computed) 
         TcS->Compute();
-    }
 
-    if (auto th = dynamic_cast<ThresholdCs*>(TcS))    
-        return IntegrateOmega(l, s, T, Lam, th);
+    if (auto ct = dynamic_cast<ChargeTransferCs*>(TcS)) 
+        if (l % 2 == 0) 
+            return 0.0;    
 
-    if (auto multi = dynamic_cast<MultiCs*>(TcS))
-        return MultiCompute(l, s, T, Lam, multi);
+    if (auto th    = dynamic_cast<ThresholdCs*>(TcS)) 
+        return IntegrateOmega(l,s,T,Lam, th);
+    
+    if (auto multi = dynamic_cast<MultiCs*>(TcS))     
+        return MultiCompute(l,s,T,Lam, multi);
+    
+    if (auto hold  = dynamic_cast<CsHolder*>(TcS))    
+        return ModuleCompute(l,s,T,Lam, hold);
 
-    if (auto holder = dynamic_cast<CsHolder*>(TcS))
-        return ModuleCompute(l, s, T, Lam, holder);
-
-    return IntegrateOmega(l, s, T, Lam, TcS);
+    return IntegrateOmega(l,s,T,Lam,TcS);
 }
+
 
 ChargeExchangeOmega::ChargeExchangeOmega( InteractionInterface* i, OmegaCalculator* OMel, double A , double B ) : 
     OmegaCalculator(i->GetSp1(),i->GetSp2()), omegaEl(OMel),A(A),B(B){}
