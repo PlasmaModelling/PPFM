@@ -6,14 +6,11 @@
 
 #include "Species.h"
 
+/* !! NO_MIXTURE_MODE activated: 
+ AcceptedSpecies generated but not used. */ 
 using AcceptedSpecies = std::variant<
-    Electron*,
     Argon*,
-    ArgonI*,
-    ArgonII*,
-    Hydrogen*,
-    HydrogenI*,
-    MolecularHydrogen*
+    ArgonI*
 >;
 
 #endif // ACCEPTED_SPECIES_H

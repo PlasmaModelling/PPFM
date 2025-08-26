@@ -990,6 +990,16 @@ public:
     Element* Constituent() override ;
 } ;
 
+class KryptonIV : public ChargedSpecies {
+public:
+    double getMass() override ;
+    int getCharge() override ;
+    std::string getFormula() override ;
+    double formationEnergy() override ;
+    double IonLim() override ;
+    Element* Constituent() override ;
+} ;
+
 
 class Lead : public Element {
 public:
@@ -2124,6 +2134,15 @@ public:
     Element* Constituent() override ;
 } ;
 
+class XenonIV : public ChargedSpecies {
+public:
+    double getMass() override ;
+    int getCharge() override ;
+    std::string getFormula() override ;
+    double formationEnergy() override ;
+    double IonLim() override ;
+    Element* Constituent() override ;
+} ;
 
 class Zinc : public Element {
 public:

@@ -348,7 +348,7 @@ std::string ArgonIII::getFormula() { return "Ar+3" ; }
 
 double ArgonIII::formationEnergy() { return 84.12929 * eVtoJ ; }
 
-double ArgonIII::IonLim() { return 9999999999.0 * eVtoJ ; }
+double ArgonIII::IonLim() { return 59.58 * eVtoJ ; }
 
 Element* ArgonIII::Constituent() { return new Argon; }
 
@@ -402,11 +402,23 @@ int KryptonIII::getCharge() { return 3 ; }
 
 std::string KryptonIII::getFormula() { return "Kr+3" ; }
 
-double KryptonIII::formationEnergy() { return 73.35945 * eVtoJ ; }
+double KryptonIII::formationEnergy() { return 74.1974455 * eVtoJ ; }
 
-double KryptonIII::IonLim() { return 9999999999.0 * eVtoJ ; }
+double KryptonIII::IonLim() { return 50.850 * eVtoJ ; }
 
 Element* KryptonIII::Constituent() { return new Krypton; }
+
+double KryptonIV::getMass() { return (83.79584 - 4*eamu) * amuKg ; }
+
+int KryptonIV::getCharge() { return 4 ; }
+
+std::string KryptonIV::getFormula() { return "Kr+4" ; }
+
+double KryptonIV::formationEnergy() { return 125.0474455 * eVtoJ ; }
+
+double KryptonIV::IonLim() { return 64.69 * eVtoJ ; }
+
+Element* KryptonIV::Constituent() { return new Krypton; }
 
 double Xenon::getMass() { return 131.293 * amuKg ; }
 
@@ -434,7 +446,7 @@ int XenonII::getCharge() { return 2 ; }
 
 std::string XenonII::getFormula() { return "Xe+2" ; }
 
-double XenonII::formationEnergy() { return 33.33959 * eVtoJ ; }
+double XenonII::formationEnergy() { return 33.1048 * eVtoJ ; }
 
 double XenonII::IonLim() { return 32.123 * eVtoJ ; }
 
@@ -448,9 +460,21 @@ std::string XenonIII::getFormula() { return "Xe+3" ; }
 
 double XenonIII::formationEnergy() { return 65.46259 * eVtoJ ; }
 
-double XenonIII::IonLim() { return 9999999999.0 * eVtoJ ; }
+double XenonIII::IonLim() { return 42.20 * eVtoJ ; }
 
 Element* XenonIII::Constituent() { return new Xenon; }
+
+double XenonIV::getMass() { return (131.2909 - 4*eamu) * amuKg ; }
+
+int XenonIV::getCharge() { return 4 ; }
+
+std::string XenonIV::getFormula() { return "Xe+4" ; }
+
+double XenonIV::formationEnergy() { return 107.66259 * eVtoJ ; }
+
+double XenonIV::IonLim() { return 54.10 * eVtoJ ; }
+
+Element* XenonIV::Constituent() { return new Xenon; }
 
 double Radon::getMass() { return 222.01758 * amuKg ; }
 
