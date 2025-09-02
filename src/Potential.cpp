@@ -126,37 +126,17 @@ double Polarization::Pot ( double r ) {
 
 }
 
-// Argon-Argon 
-LennardJones::LennardJones(Argon* ar, Argon* arr) { eps = 0.010333 ; sig = 3.405 ; }
-// Helium-Helium
-LennardJones::LennardJones(Helium* t1, Helium* t2) { eps = 9.39289e-04 ; sig = 2.64 ; }
-// Argon-Helium
-LennardJones::LennardJones(Argon* t1, Helium* t2) { eps = std::sqrt(9.39289e-04 * 0.010333); sig = (2.64 + 3.405) / 2; }
+double HFD_B::Pot(double r) {
+    
+    const double x  = r / Rm;
+    const double Fx = (x < D) ? std::exp(-std::pow(D / x - 1.0, 2.0)) : 1.0;
 
-// Argon-Argon
-Capitelli::Capitelli(Argon* t1, Argon* t2) { beta = 8.12; De = 0.011603; Re = 3.794; }
-// Argon-ArgonI
-Capitelli::Capitelli(Argon* t1, ArgonI* t2) { beta = 7.6; De = 0.107609; Re = 3.213; }
-// Argon-ArgonII
-Capitelli::Capitelli(Argon* t1, ArgonII* t2) { beta = 7.48; De = 0.753338; Re = 2.624; }
-// Argon-Nitrogen
-Capitelli::Capitelli(Argon* t1, Nitrogen* t2) { beta = 6.94; De = 0.008505; Re = 3.695; }
-// Argon-NitrogenI
-Capitelli::Capitelli(Argon* t1, NitrogenI* t2) { beta = 7.37; De = 0.12184; Re = 3.054; }
-// Argon-MolecularNitrogen
-Capitelli::Capitelli(Argon* t1, MolecularNitrogen* t2) { beta = 9.1; De = 0.011955; Re = 3.906; }
-// ArgonI-Nitrogen
-Capitelli::Capitelli(ArgonI* t1, Nitrogen* t2) { beta = 6.82; De = 0.082229; Re = 3.121; }
-// ArgonI-MolecularNitrogen
-Capitelli::Capitelli(ArgonI* t1, MolecularNitrogen* t2) { beta = 7.59; De = 0.112256; Re = 3.229; }
-// ArgonII-Nitrogen
-Capitelli::Capitelli(ArgonII* t1, Nitrogen* t2) { beta = 6.79; De = 0.581253; Re = 2.537; }
-// ArgonII-MolecularNitrogen
-Capitelli::Capitelli(ArgonII* t1, MolecularNitrogen* t2) { beta = 7.47; De = 0.784957; Re = 2.639; }
-
-
-
- HFDTCS2_ArAr::HFDTCS2_ArAr() : Potential() {}
+    const double rep  = A * std::exp(-alpha * r + beta * r * r);
+    const double disp = (C6 / std::pow(r, 6))
+                      + (C8 / std::pow(r, 8))
+                      + (C10/ std::pow(r,10));
+    return rep - Fx * disp;
+}
 
 double HFDTCS2_ArAr::Pot(double r) {
 
@@ -210,6 +190,84 @@ double HFDTCS2_ArAr::Pot(double r) {
     return epsilon * VStar ;
 }
 
-Potential* HFDTCS2_ArAr::clone () { return new HFDTCS2_ArAr() ; }
+// _____________________________ Constructors _____________________________
+
+// Argon-Argon 
+LennardJones::LennardJones(Argon* ar, Argon* arr) { eps = 0.010333 ; sig = 3.405 ; }
+// Helium-Helium
+LennardJones::LennardJones(Helium* t1, Helium* t2) { eps = 9.39289e-04 ; sig = 2.64 ; }
+// Argon-Helium
+LennardJones::LennardJones(Argon* t1, Helium* t2) { eps = std::sqrt(9.39289e-04 * 0.010333); sig = (2.64 + 3.405) / 2; }
+
+// Argon-Argon
+Capitelli::Capitelli(Argon* t1, Argon* t2) { beta = 8.12; De = 0.011603; Re = 3.794; }
+// Argon-ArgonI
+Capitelli::Capitelli(Argon* t1, ArgonI* t2) { beta = 7.6; De = 0.107609; Re = 3.213; }
+// Argon-ArgonII
+Capitelli::Capitelli(Argon* t1, ArgonII* t2) { beta = 7.48; De = 0.753338; Re = 2.624; }
+// Argon-Nitrogen
+Capitelli::Capitelli(Argon* t1, Nitrogen* t2) { beta = 6.94; De = 0.008505; Re = 3.695; }
+// Argon-NitrogenI
+Capitelli::Capitelli(Argon* t1, NitrogenI* t2) { beta = 7.37; De = 0.12184; Re = 3.054; }
+// Argon-MolecularNitrogen
+Capitelli::Capitelli(Argon* t1, MolecularNitrogen* t2) { beta = 9.1; De = 0.011955; Re = 3.906; }
+// ArgonI-Nitrogen
+Capitelli::Capitelli(ArgonI* t1, Nitrogen* t2) { beta = 6.82; De = 0.082229; Re = 3.121; }
+// ArgonI-MolecularNitrogen
+Capitelli::Capitelli(ArgonI* t1, MolecularNitrogen* t2) { beta = 7.59; De = 0.112256; Re = 3.229; }
+// ArgonII-Nitrogen
+Capitelli::Capitelli(ArgonII* t1, Nitrogen* t2) { beta = 6.79; De = 0.581253; Re = 2.537; }
+// ArgonII-MolecularNitrogen
+Capitelli::Capitelli(ArgonII* t1, MolecularNitrogen* t2) { beta = 7.47; De = 0.784957; Re = 2.639; }
+
+HFDTCS2_ArAr::HFDTCS2_ArAr() : Potential() {}
+
+// Hartree fock constructor with dimensional parameters must be passed in eV and Ang
+HFD_B::HFD_B(double A_, double alpha_, double beta_,
+    double C6_, double C8_, double C10_,
+        double Rm_, double D_): A(A_), alpha(alpha_), beta(beta_),
+            C6(C6_), C8(C8_), C10(C10_),
+                Rm(Rm_), D(D_) {
+
+    check_dimensional_();
+
+}
+
+// Atomic units parameters constructor
+HFD_B::HFD_B(double A_, double alpha_, double beta_,
+    double C6_, double C8_, double C10_,
+        double Rm_, double D_, bool atomic_units) {
+
+    if (atomic_units) {
+        
+        // CODATA conversion factors defined locally
+        const double Ha_to_eV        = 27.211386245988; // 1 Ha = eV
+        const double a0_to_A         = 0.529177210903;  // 1 a0 = Å
+        const double Ainv_from_a0inv = 1.0 / a0_to_A;   // 1 a0^-1 = Å^-1
+
+        A     = A_     * Ha_to_eV;
+        alpha = alpha_ * Ainv_from_a0inv;
+        beta  = beta_  * (Ainv_from_a0inv * Ainv_from_a0inv);
+        C6    = C6_ * (Ha_to_eV * std::pow(a0_to_A, 6));
+        C8    = C8_ * (Ha_to_eV * std::pow(a0_to_A, 8));
+        C10   = C10_ * (Ha_to_eV * std::pow(a0_to_A,10));
+        Rm    = Rm_    * a0_to_A;
+        D     = D_;
+        
+        check_dimensional_();
+    
+    } else {
+
+        // Initialize dimensional
+        *this = HFD_B(A_, alpha_, beta_, C6_, C8_, C10_, Rm_, D_);
+
+    }
+}
+
+void HFD_B::check_dimensional_() const {
+    
+    if (Rm <= 0.0) throw std::invalid_argument("HFD_B: Rm must be > 0");
+    if (D  <= 0.0) throw std::invalid_argument("HFD_B: D must be > 0");
+}
 
 #endif
