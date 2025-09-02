@@ -1,4 +1,9 @@
-#!/usr/bin/env python3
+# PPFM © 2025 by Emanuele Ghedini, Alberto Vagnoni (University of Bologna, Italy)
+# Licensed under CC BY 4.0. 
+#  To view a copy of this license, visit: 
+#  https://creativecommons.org/licenses/by/4.0/
+
+# !/usr/bin/env python3
 # Python file to dinamically generate the AcceptedSpecies.h variant file 
 # This ensures minimum compile-time while having very large chemical Species 
 # hard-coded datasets. 
@@ -108,7 +113,13 @@ else:
 with open(output_file, "w") as f:
     f.write("#ifndef ACCEPTED_SPECIES_H\n"
     "#define ACCEPTED_SPECIES_H\n\n"
-    "/* FILE DINAMICALLY GENERATED AT COMPILE-TIME,\n CHECK AcceptedSpeciesGuard.py FOR DETAILS */\n\n")
+    "/* FILE DINAMICALLY GENERATED AT COMPILE-TIME,\n CHECK AcceptedSpeciesGuard.py FOR DETAILS */\n\n"
+    "// PPFM © 2025 by Emanuele Ghedini, Alberto Vagnoni // \n"
+    "// (University of Bologna, Italy) // \n"
+    "// Licensed under CC BY 4.0. // \n"
+    "// To view a copy of this license, visit: // \n"
+    "// https://creativecommons.org/licenses/by/4.0/ // \n\n")
+    
     f.write('#include "Species.h"\n\n')
     f.write(comment)
     f.write("using AcceptedSpecies = std::variant<\n")

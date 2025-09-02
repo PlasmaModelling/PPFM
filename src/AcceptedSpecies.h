@@ -4,13 +4,19 @@
 /* FILE DINAMICALLY GENERATED AT COMPILE-TIME,
  CHECK AcceptedSpeciesGuard.py FOR DETAILS */
 
+// PPFM © 2025 by Emanuele Ghedini, Alberto Vagnoni // 
+// (University of Bologna, Italy) // 
+// Licensed under CC BY 4.0. // 
+// To view a copy of this license, visit: // 
+// https://creativecommons.org/licenses/by/4.0/ // 
+
 #include "Species.h"
 
-/* !! NO_MIXTURE_MODE activated: 
- AcceptedSpecies generated but not used. */ 
 using AcceptedSpecies = std::variant<
+    Electron*,
     Argon*,
-    ArgonI*
+    ArgonI*,
+    ArgonII*
 >;
 
 #endif // ACCEPTED_SPECIES_H

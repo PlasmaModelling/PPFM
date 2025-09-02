@@ -163,10 +163,6 @@ Please ensure your contributions are well-documented and tested. All changes wil
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the Creative Common License.
 
-© 2025 Alberto Vagnoni, Emanuele Ghedini, Matteo Gherardi
-Alma Mater Studiorum – Università di Bologna
-
-See the [LICENSE](./LICENSE) file for details.
-
+<a href="https://creativecommons.org">PPFM</a> © 2025 by <a href="https://creativecommons.org">Emanuele Ghedini, Alberto Vagnoni (University of Bologna, Italy)</a> is licensed under <a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International</a><img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">
