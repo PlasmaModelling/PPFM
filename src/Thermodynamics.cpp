@@ -36,7 +36,6 @@ void Thermodynamics::computeThermodynamics ( GasMixture& gasmix ) {
 
     std::vector<double> n, mass, epsf ;
     n = gasmix.Comp->compositions();
-
     std::vector<double> n0 = gasmix.Comp->compositions();
     
     mass = gasmix.masses();
@@ -45,30 +44,58 @@ void Thermodynamics::computeThermodynamics ( GasMixture& gasmix ) {
         rho += mass[i]*n[i];
         epsf.push_back(gasmix(i)->formationEnergy()) ;
     }
+
     R = 0.;
     R += mass[N-1]*n[N-1]*Te;
     for (int i = 0; i < N-1; i++)
         R += n[i]*mass[i]*T ;
     R = P/R ;
     
-    he = 0.; ee = 0.; hh = 0.; eh = 0.;
+    // --- Energia interna ed entalpia (stile codice C con offset fisso) ---
+    he = hh = ee = eh = 0.0;
+
+    static bool ref_set = false;
+    static double e_chem_ref = 0.0; // offset come nel codice C
+
+    double e_chem_tot = 0.0;
+
     for (int i = 0; i < N; i++) {
-        if (dynamic_cast<Electron*>(gasmix(i)) != nullptr ) {
-            // 1o order
-            he = ( 2.5 * KB * Te * n[i] ) / rho ; 
-            ee = ( 1.5 * KB * Te * n[i] ) / rho ;
-            // 2o order
-            hh += ( KB * Te / rho ) * n[i] * ( log(Qf(i)) - log(Qb(i)) ) / (2. * dT) / rho ;
-            eh += ( KB * Te / rho ) * n[i] * ( log(Qf(i)) - log(Qb(i)) ) / (2. * dT) / rho ;
+        bool isElectron = (dynamic_cast<Electron*>(gasmix(i)) != nullptr);
+        double Ti = isElectron ? Te : T;
+
+        // energia traslazionale (1.5 kBT)
+        double e_tr = 1.5 * KB * Ti * n[i] / rho;
+
+        // energia chimica
+        double e_ch = epsf[i] * n[i] / rho;
+        e_chem_tot += e_ch;
+
+        // energia interna da partizioni
+        double dlogQdT = (std::log(Qf(i)) - std::log(Qb(i))) / (2.0 * dT);
+        double e_in = KB * Ti * Ti * dlogQdT * n[i] / rho;
+
+        double e_tot = e_tr + e_ch + e_in;   // energia specifica specie
+        double h_i   = (KB * Ti * n[i]) / rho + e_tot; // entalpia specifica specie
+
+        if (isElectron) {
+            ee += e_tot;
+            he += h_i;
         } else {
-            // 1o order
-            hh += ( ( 2.5 * KB * T + epsf[i] ) * n[i] ) / rho ; 
-            eh += ( ( 1.5 * KB * T + epsf[i] ) * n[i] ) / rho ;
-            // 2o order
-            hh += ( KB * T / rho ) * n[i] * ( log(Qf(i)) - log(Qb(i)) ) / (2. * dT) / rho ;
-            eh += ( KB * T / rho ) * n[i] * ( log(Qf(i)) - log(Qb(i)) ) / (2. * dT) / rho ;
+            eh += e_tot;
+            hh += h_i;
         }
     }
+
+    // imposta il riferimento una sola volta (alla prima chiamata)
+    if (!ref_set) {
+        e_chem_ref = e_chem_tot;
+        ref_set = true;
+    }
+
+    // correggi con offset fisso
+    double delta_e_chem = e_chem_tot - e_chem_ref;
+    hh += (delta_e_chem - e_chem_tot);
+    eh += (delta_e_chem - e_chem_tot);
 
     // derivatives dependent quantities 
 
@@ -183,6 +210,8 @@ void Thermodynamics::computeThermodynamics ( GasMixture& gasmix ) {
     Td[8] = gamma ;
     Td[9] = vs ;
 }
+
+
 
 std::string ThermodynamicsCsv::BuildFileName(const std::string& filename ) const  {
 

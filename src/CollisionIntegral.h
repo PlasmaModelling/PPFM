@@ -294,18 +294,23 @@ void CollisionIntegral<T1, T2>::ComputeCollisionIntegral(double Te, double Th, d
 
         double Ti, Tj;
         
-        Ti = dynamic_cast<Electron*>(this->getSp1()) ? Te : Th;
-        Tj = dynamic_cast<Electron*>(this->getSp2()) ? Te : Th;
+        if constexpr (std::is_base_of_v<Electron, T1>)
+            Ti = Te;
+        else
+            Ti = Th;
+
+        if constexpr (std::is_base_of_v<Electron, T2>)
+            Tj = Te;
+        else
+            Tj = Th;
 
         double mi = this->getSp1()->getMass();
         double mj = this->getSp2()->getMass();
         
-        // Effective temperature of collision
         TijStar = pow((1 / (mi + mj)) * ((mi / Tj) + (mj / Ti)), -1);
 
-        // direct calculation through the OmegaCalculator object. 
         omega4th = {
-
+            
             Omega->Compute(1, 1, TijStar, lambda, this->TCScalculator), 
             Omega->Compute(1, 2, TijStar, lambda, this->TCScalculator),
             Omega->Compute(1, 3, TijStar, lambda, this->TCScalculator), 
@@ -328,11 +333,10 @@ void CollisionIntegral<T1, T2>::ComputeCollisionIntegral(double Te, double Th, d
         };
     
     } catch (const std::exception& e) {
-    
         throw;
-    
     }
 }
+
 
 template<typename T1, typename T2>
 std::string CollisionIntegral<T1,T2>::InteractionName(){

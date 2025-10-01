@@ -27,7 +27,7 @@ class PfBox {
     /**
      * @brief Constructs PfBox and initializes one partition function per species.
      * @param mix Pointer to the species container (Mixture). */
-    PfBox(Mixture* mix);
+    PfBox ( Mixture* mix );
 
     /**
      * @brief Accesses the i-th PFinterface.
@@ -50,7 +50,7 @@ class PfBox {
      * @param folder Output folder for CSV files.
      * @details For each species, constructs a `PartitionFunctionCsv` writer and 
      * prints its Q values over the given temperature range. */
-    void PrintPartitionFunctions(const std::vector<double>& Ti, GasMixture* gasmix, const std::string& folder);
+    void PrintPartitionFunctions ( const std::vector<double>& Ti, GasMixture* gasmix, const std::string& folder );
 
     /**
      * @brief Computes all partition functions in parallel.
@@ -60,10 +60,12 @@ class PfBox {
      * @details Uses OpenMP to parallelize the computation. If any function throws, 
      * an error message is printed and execution is terminated.
      * @throws std::exit(EXIT_FAILURE) if any computation fails. */
-    void computePartitionFunctions(double temperature, double pressure, double lambda);
+    void computePartitionFunctions ( double temperature, double pressure, double lambda );
 
     /// @brief Displays a summary of partition functions and associated methods.
     void info();
+
+    void AllAbInitio() ; 
 
 };
 

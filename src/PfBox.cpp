@@ -91,3 +91,9 @@ void PfBox::info() {
     std::cout << std::endl ;
 }
 
+void PfBox::AllAbInitio() { 
+    
+    for ( int i = 0; i < partitionfunctions.size()-1; i++ )         
+        partitionfunctions[i]->setAbInitio(); 
+
+}
