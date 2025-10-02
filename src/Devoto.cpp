@@ -55,7 +55,7 @@ void DevotoTP::computeTransport ( GasMixture* gasmix ) {
 double DevotoTP::ThermalCondEl ( GasMixture* gasmix, int order ) {
     
     /* [#/micron^3] */
-    std::vector<double> n = gasmix->Comp->compositions(1.e-18) ; 
+    std::vector<double> n = gasmix->getCompositionObj()->compositions(1.e-18) ; 
     /* [g] */
     std::vector<double> mass = gasmix->masses(1.e+3) ; 
     int N_SPC = gasmix->getN () ;
@@ -105,7 +105,7 @@ double DevotoTP::ThermalCondHeavy ( GasMixture* gasmix, int order ) {
     // nuovo codice masse in Species da NIST con elettroni persi.
  
     int N_SPC = gasmix->getN() ;
-    std::vector<double> n = gasmix->Comp->compositions(1e-18) ; 
+    std::vector<double> n = gasmix->getCompositionObj()->compositions(1e-18) ; 
     std::vector<double> mass = gasmix->masses(1e+3) ;
     double T = gasmix->getTemperature() ;
 
@@ -169,7 +169,7 @@ double DevotoTP::ThermalCondHeavy ( GasMixture* gasmix, int order ) {
 double DevotoTP::Viscosity ( GasMixture* gasmix, int order ) {
 
     int N_SPC = gasmix->getN() ;
-    std::vector<double> n = gasmix->Comp->compositions(1e-18) ; 
+    std::vector<double> n = gasmix->getCompositionObj()->compositions(1e-18) ; 
     std::vector<double> mass = gasmix->masses(1e+3) ;
     double T = gasmix->getTemperature() ;
     
@@ -212,7 +212,7 @@ double DevotoTP::Viscosity ( GasMixture* gasmix, int order ) {
 double DevotoTP::ElCond( GasMixture* gasmix, int order ) {
 
     int N_SPC = gasmix->getN() ;
-    std::vector<double> n = gasmix->Comp->compositions(1e-18) ; 
+    std::vector<double> n = gasmix->getCompositionObj()->compositions(1e-18) ; 
     std::vector<double> mass = gasmix->masses(1e+3) ;
     double T = gasmix->getTemperature() ;
 
@@ -254,7 +254,7 @@ double DevotoTP::ElCond( GasMixture* gasmix, int order ) {
 double DevotoTP::Qeh( GasMixture* gasmix ) {
     
     int N_SPC = gasmix->getN() ;    
-    std::vector<double> n = gasmix->Comp->compositions(1e-18) ; 
+    std::vector<double> n = gasmix->getCompositionObj()->compositions(1e-18) ; 
     std::vector<double> mass = gasmix->masses(1e+3) ;
     double T = gasmix->getTemperature() ;
 
@@ -277,7 +277,7 @@ double DevotoTP::Dij ( GasMixture* gasmix , int order , int ii , int jj ) {
 
     int N = gasmix->getN() ; 
 
-    std::vector<double> n = gasmix->Comp->compositions(1.e-18) ;
+    std::vector<double> n = gasmix->getCompositionObj()->compositions(1.e-18) ;
     std::vector<double> mass = gasmix->masses(1.e+3) ;
 
     std::vector<std::vector<double>> QQ ( (N*order)+1 , 
@@ -335,7 +335,7 @@ double DevotoTP::Dij ( GasMixture* gasmix , int order , int ii , int jj ) {
 
 double DevotoTP::DiT(GasMixture* gasmix, int order, int ii) {
     
-    const std::vector<double> n = gasmix->Comp->compositions(1.e-18);
+    const std::vector<double> n = gasmix->getCompositionObj()->compositions(1.e-18);
     const std::vector<double> mass = gasmix->masses(1.e+3);  // in kg
     const int N = gasmix->getN();
     const double theta = gasmix->theta->get();
@@ -454,8 +454,8 @@ double DevotoTP::TotalThermalCondEl(GasMixture* gasmix, int order) {
     const int N = gasmix->getN();
     const int Ne = N - 1; // Elettrone
 
-    std::vector<double> n = gasmix->Comp->compositions();      // n_i
-    double ntot = gasmix->Comp->ntot();
+    std::vector<double> n = gasmix->getCompositionObj()->compositions();      // n_i
+    double ntot = gasmix->getCompositionObj()->ntot();
     std::vector<double> mass = gasmix->masses();               // m_i
     double T = gasmix->getTemperature();
     double Te = T * gasmix->theta->get() ; 
@@ -491,11 +491,11 @@ double DevotoTP::TotalThermalCondEl(GasMixture* gasmix, int order) {
     // Derivata dx_i/dT
     double dT = 1. ; 
     gasmix->setT(T - dT);
-    std::vector<double> nb = gasmix->Comp->compositions();
-    double ntotb = gasmix->Comp->ntot();
+    std::vector<double> nb = gasmix->getCompositionObj()->compositions();
+    double ntotb = gasmix->getCompositionObj()->ntot();
     gasmix->setT(T + dT);
-    std::vector<double> nf = gasmix->Comp->compositions();
-    double ntotf = gasmix->Comp->ntot();
+    std::vector<double> nf = gasmix->getCompositionObj()->compositions();
+    double ntotf = gasmix->getCompositionObj()->ntot();
     gasmix->setT(T);
 
     std::vector<double> dxidT(N);
@@ -535,8 +535,8 @@ double DevotoTP::TotalThermalCondHeavy(GasMixture* gasmix, int order) {
     const int N = gasmix->getN();
     const int Ne = N - 1; // Elettrone
 
-    std::vector<double> n = gasmix->Comp->compositions();      // n_i
-    double ntot = gasmix->Comp->ntot();
+    std::vector<double> n = gasmix->getCompositionObj()->compositions();      // n_i
+    double ntot = gasmix->getCompositionObj()->ntot();
     std::vector<double> mass = gasmix->masses();               // m_i
     double T = gasmix->getTemperature();
     double Te = T * gasmix->theta->get() ; 
@@ -572,11 +572,11 @@ double DevotoTP::TotalThermalCondHeavy(GasMixture* gasmix, int order) {
     // Derivata dx_i/dT
     double dT = 1. ; 
     gasmix->setT(T - dT);
-    std::vector<double> nb = gasmix->Comp->compositions();
-    double ntotb = gasmix->Comp->ntot();
+    std::vector<double> nb = gasmix->getCompositionObj()->compositions();
+    double ntotb = gasmix->getCompositionObj()->ntot();
     gasmix->setT(T + dT);
-    std::vector<double> nf = gasmix->Comp->compositions();
-    double ntotf = gasmix->Comp->ntot();
+    std::vector<double> nf = gasmix->getCompositionObj()->compositions();
+    double ntotf = gasmix->getCompositionObj()->ntot();
     gasmix->setT(T);
 
     std::vector<double> dxidT(N);

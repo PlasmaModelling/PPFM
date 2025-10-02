@@ -39,8 +39,8 @@ double ZMAppendix::qmpi1V ( GasMixture* gasmix , int m , int p , int i ) {
     double sum = 0.;
     double M1,Mi ; 
 
-    double n1 = gasmix->Comp->compositions(1.e-18).back() ;
-    double ni = gasmix->Comp->compositions(1.e-18)[i] ;
+    double n1 = gasmix->getCompositionObj()->compositions(1.e-18).back() ;
+    double ni = gasmix->getCompositionObj()->compositions(1.e-18)[i] ;
 
     double m1 = gasmix->masses(1.e+3).back() ;
     double mi = gasmix->masses(1.e+3)[i] ;
@@ -92,7 +92,7 @@ double ZMAppendix::qmpi1V ( GasMixture* gasmix , int m , int p , int i ) {
 
 double ZMAppendix::qcapmpij( GasMixture* gasmix, int m, int p, int i, int j) {
 
-    std::vector<double> n = gasmix->Comp->compositions(1.e-18) ; 
+    std::vector<double> n = gasmix->getCompositionObj()->compositions(1.e-18) ; 
     std::vector<double> mass = gasmix->masses(1.e+03) ;
     int N = gasmix->getN() ;
 
@@ -230,8 +230,8 @@ double ZMAppendix::qmpi1 ( GasMixture* gasmix , int m , int p , int i ) {
     double sum = 0.;
     double M1,Mi ; 
 
-    double n1 = gasmix->Comp->compositions(1.e-18).back() ;
-    double ni = gasmix->Comp->compositions(1.e-18)[i] ;
+    double n1 = gasmix->getCompositionObj()->compositions(1.e-18).back() ;
+    double ni = gasmix->getCompositionObj()->compositions(1.e-18)[i] ;
 
     double m1 = gasmix->masses(1.e+3).back() ;
     double mi = gasmix->masses(1.e+3)[i] ;
@@ -466,7 +466,7 @@ double ZMAppendix::qmpi1 ( GasMixture* gasmix , int m , int p , int i ) {
 
 double ZMAppendix::qsimpmpij ( GasMixture* gasmix , int m , int p ) {
 
-    std::vector<double> n = gasmix->Comp->compositions(1.e-18) ;
+    std::vector<double> n = gasmix->getCompositionObj()->compositions(1.e-18) ;
     std::vector<double> mass = gasmix->masses(1.e+03) ;
     int N_SPC = gasmix->getN() ;
 
@@ -844,7 +844,7 @@ double ZMAppendix::qsimpmpij ( GasMixture* gasmix , int m , int p ) {
 
 double ZMAppendix::qmpij ( GasMixture* gasmix , int m , int p , int i , int j ) {
     
-    std::vector<double> n = gasmix->Comp->compositions(1.e-18) ; 
+    std::vector<double> n = gasmix->getCompositionObj()->compositions(1.e-18) ; 
     std::vector<double> mass = gasmix->masses(1.e+03) ;
     int N = gasmix->getN() ;
 
@@ -1377,11 +1377,11 @@ double ZMAppendix::qmpij ( GasMixture* gasmix , int m , int p , int i , int j ) 
 double ZMAppendix::qmpijBar ( GasMixture* gasmix, int m , int p , int i , int j ) {
     
     int N = gasmix->getN() ;
-    double ni = gasmix->Comp->compositions(1.e-18)[i] ;
+    double ni = gasmix->getCompositionObj()->compositions(1.e-18)[i] ;
     double mi = gasmix->masses(1.e+3)[i] ;
     double T = gasmix->getTemperature() ; 
     double mj = gasmix->masses(1.e+3)[j] ;
-    double nj = gasmix->Comp->compositions(1.e-18)[j] ;
+    double nj = gasmix->getCompositionObj()->compositions(1.e-18)[j] ;
 
     double qij = qmpij(gasmix,m,p,i,j) ;
     double qii = qmpij(gasmix,m,p,i,i) ;
@@ -1392,9 +1392,9 @@ double ZMAppendix::qmpijBar ( GasMixture* gasmix, int m , int p , int i , int j 
 double ZMAppendix::qmpi1Bar ( GasMixture* gasmix, int m , int p , int i ) {
     
     int N = gasmix->getN() ;
-    double ni = gasmix->Comp->compositions(1.e-18)[i] ;
+    double ni = gasmix->getCompositionObj()->compositions(1.e-18)[i] ;
     double mi = gasmix->masses(1.e+3)[i] ;
-    double n1 = gasmix->Comp->compositions(1.e-18).back() ;
+    double n1 = gasmix->getCompositionObj()->compositions(1.e-18).back() ;
     double m1 = gasmix->masses(1.e+3).back() ;
     double T = gasmix->getTemperature() ; 
     double Te = T*gasmix->theta->get() ;

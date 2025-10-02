@@ -1,23 +1,23 @@
- // PPFM © 2025 by Emanuele Ghedini, Alberto Vagnoni // 
- // (University of Bologna, Italy)                   // 
- // Licensed under CC BY 4.0.                        // 
- // To view a copy of this license, visit:           // 
- // https://creativecommons.org/licenses/by/4.0/     // 
+// PPFM © 2025 by Emanuele Ghedini, Alberto Vagnoni // 
+// (University of Bologna, Italy)                   // 
+// Licensed under CC BY 4.0.                        // 
+// To view a copy of this license, visit:           // 
+// https://creativecommons.org/licenses/by/4.0/     // 
 
 #ifndef THERMODYNAMICS_H
 #define THERMODYNAMICS_H
 
-#include<vector>
-#include<stdexcept>
-#include<string>
-#include"DataPrinter.h"
+#include <vector>
+#include <stdexcept>
+#include <string>
+#include "DataPrinter.h"
 
-class GasMixture ;
+class GasMixture;
 
 /// @brief Computes thermodynamic properties for a given gas mixture.
 class Thermodynamics {
 
-    protected:
+protected:
 
     /** @brief Vector of computed thermodynamic quantities.
     * @details Indexing:  
@@ -33,59 +33,57 @@ class Thermodynamics {
     * [9] a [m/s] */
     std::vector<double> Td;
 
-    public:
+public:
     
     /// @brief Constructs the object and initializes the thermodynamic vector.
     Thermodynamics() { Td.resize(10, 0.0); }
 
     /**
      * @brief Computes thermodynamic properties from a given gas mixture state.
-     * @param gasmix Reference to the GasMixture object (provides composition, T, P).
-     * @details 
-     * - Uses finite differences to estimate derivatives via shifted thermodynamic states.
-     * - Partition functions are recomputed at T ± ΔT and P ± ΔP.
-     * - Uses the Godin formulation (eqs. 41–43) to compute Cₚ, Cᵥ, γ, and a.
-     * - Restores the mixture to its original state after computation.
-     * @see class PfBox for partition function evaluation.
-     * @see class GasMixture for thermodynamic context.  */
+     * @param gasmix Reference to the GasMixture object (provides composition, T, P). */
     void computeThermodynamics(GasMixture& gasmix);
+
+    // ---------------- Getters ---------------- //
+
+    double rho()   const { return Td[0]; }
+    double R()     const { return Td[1]; }
+    double he()    const { return Td[2]; }
+    double hh()    const { return Td[3]; }
+    double ee()    const { return Td[4]; }
+    double eh()    const { return Td[5]; }
+    double cp()    const { return Td[6]; }
+    double cv()    const { return Td[7]; }
+    double gamma() const { return Td[8]; }
+    double a()     const { return Td[9]; }
 };
 
+/** @brief Outputs thermodynamic properties to CSV.
+ ** @see class Thermodynamics for property computation.
+ ** @see class DataPrinter for CSV interface. */
+class ThermodynamicsCsv : public DataPrinter {
 
-//______________________________ Implementation ______________________________
+    /// @brief Solver reference (non-owning, external lifetime managed).
+    Thermodynamics* solver;
 
-/// @brief Outputs thermodynamic properties to CSV.
-/// @see class Thermodynamics for property computation.
-/// @see class DataPrinter for CSV interface.
-class ThermodynamicsCsv : public Thermodynamics, public DataPrinter {
+    /// @brief Build the output filename.
+    std::string BuildFileName(const std::string& filename) const override;
 
-    /// @brief Builds the output filename with "TH_" prefix.
-    std::string BuildFileName(const std::string& filename) const;
+    /// @brief Prepare the CSV header row.
+    void PrepareHeader() override;
 
-    /// @brief Prepares the CSV header row.
-    void PrepareHeader();
-
-    /**
-     * @brief Computes thermodynamic properties over a temperature range.
-     * @param x Vector of electron temperatures (Te/θ).
-     * @param gasmix Pointer to the gas mixture.
-     * @details For each temperature, the following properties are computed and stored:
-     * ρ [kg/m³], Cp [J/kg·K], hₑ + hₕ [J/kg], γ, a [m/s]. Initial gas state is restored at the end.
-     * @see Thermodynamics::computeThermodynamics */
+    /// @brief Prepare the data matrix for printing.
     void PrepareData(const std::vector<double>& x, GasMixture* gasmix) override;
 
-    /**
-     * @brief Prints a message confirming successful output.
-     * @param filename Name of the generated file. */
+    /// @brief Print completion message.
     void PrintMessage(const std::string& filename) override;
 
-    public:
+public:
     
-    /// @brief Default constructor.
-    ThermodynamicsCsv();
+    /// @brief Constructor with explicit solver
+    ThermodynamicsCsv(Thermodynamics* solver);
 
-    /// @brief Constructor with output folder specification.
-    ThermodynamicsCsv(const std::string& folder);
+    /// @brief Constructor with explicit solver and custom folder
+    ThermodynamicsCsv(Thermodynamics* solver, const std::string& folder);
 
 };
 

@@ -11,18 +11,16 @@
 
 #include "Composition.h"
 #include "Mixture.h"
-
-/// @brief Models a gas mixture combining thermodynamic state and species composition.
-/// @see class Gas for pressure and temperature state.
-/// @see class Mixture for chemical species management.
 class GasMixture : public Gas, public Mixture {
 
-    public:
+private:
 
-    /// @brief Pointer to the composition solver.
+    /// @brief Pointer to the composition solver (protected from direct user access).
     Composition* Comp;
 
-    /// @brief Constructs a GasMixture from a set of species.
+public:
+
+    /// @brief Constructs a GasMixture from a set of species (default solver = GodinTrepSahaSolver).
     template<typename... SpeciesTypes>
     GasMixture(SpeciesTypes... newSpecies);
 
@@ -30,44 +28,51 @@ class GasMixture : public Gas, public Mixture {
     template<typename... SpeciesTypes>
     GasMixture(double Temp, double Press, SpeciesTypes... newSpecies);
 
+    /// @brief Destructor
+    ~GasMixture();
+
+    /// @brief Access the composition solver object (non-owning reference).
+    Composition* getCompositionObj() { return Comp; }
+
+    /// @brief Replace the composition solver with a user-specified one.
+    void setCompositionSolver(Composition* solver);
+
     /// @brief Sets the temperature and recomputes the composition.
     void setT(double temperature) override;
 
     /// @brief Sets the pressure and recomputes the composition.
     void setP(double pressure) override;
 
-    /**
-     * @brief Sets the mole fractions for the given set of species.
-     * @param doublevalues List of mole fractions.
-     * @param species Pointers to species to which mole fractions refer.
-     * @details If only M–2 species are provided, the last one is auto-completed. Species are
-     * ordered lexicographically and checked for consistency with the mixture. The function 
-     * ensures normalization and raises exceptions if mismatches occur.
-     * @throws std::invalid_argument if input sizes mismatch or species are missing or 
-     * mole fractions do not sum to 1. */
+    /// @brief Sets the mole fractions for the given set of species.
     template<typename... speciestype>
     void setMoleFractions(std::initializer_list<double> doublevalues, speciestype... species);
 
     /// @brief Resets the composition object and recomputes the internal state.
     void restartComposition() override;
-};
 
+};
 
 //_________________________ Implementazione _________________________
 
-
+// Template constructors
 template<typename... SpeciesTypes>
-GasMixture::GasMixture(SpeciesTypes... newSpecies): Mixture(newSpecies...){
-    Comp = new Composition ( this , this ) ;                                    
-    /* Comp->compositionSolve ( this , this ) ; */
+GasMixture::GasMixture(SpeciesTypes... newSpecies)
+    : Mixture(newSpecies...) {
+    
+    Comp = new GodinTrepSahaSolver(this, this);
+
 }
 
+// Template constructor with T, P
 template<typename... SpeciesTypes>
-GasMixture::GasMixture(double Temp, double Press ,SpeciesTypes... newSpecies): Mixture(newSpecies...), Gas(Press,Temp ){
-    Comp = new Composition ( this , this ) ;                                    
-    /* Comp->compositionSolve ( this , this ) ; */
+GasMixture::GasMixture(double Temp, double Press, SpeciesTypes... newSpecies)
+    : Mixture(newSpecies...), Gas(Press, Temp) {
+
+    Comp = new GodinTrepSahaSolver(this, this);
+
 }
 
+// setter mole fractions
 template < typename... speciestypes >
 void GasMixture::setMoleFractions ( std::initializer_list<double> values , speciestypes... speciespointers ) {
     
@@ -178,7 +183,7 @@ void GasMixture::setMoleFractions ( std::initializer_list<double> values , speci
 
     // compute composition with newer mole fractions
     restartComposition() ;
-    Comp->compositionSolve(this,this) ;
+    Comp->CompositionSolve(this,this) ;
 }
 
 

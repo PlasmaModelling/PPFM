@@ -784,7 +784,7 @@ double ZMCoefficients::DiThetaStar ( GasMixture* gasmix, int epsilon, int ii ) {
 void ZMCoefficients::init ( GasMixture* gasmix ) {
 
     N = gasmix->getN() ;
-    n = gasmix->Comp->compositions(1.e-18) ; 
+    n = gasmix->getCompositionObj()->compositions(1.e-18) ; 
     mass = gasmix->masses(1.e+3) ;
     T = gasmix->getTemperature() ;
     theta = gasmix->theta->get() ;

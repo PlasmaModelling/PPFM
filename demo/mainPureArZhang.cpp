@@ -43,18 +43,18 @@ int main() {
     // Set LTE T range to compute on 
     const std::vector<double> T = arange ( 300., 30100., 100. );
 
-    auto pp = mix->Comp->Qbox ;
+    // Editable partition function box via Composition accessor
+    auto pp = mix->getCompositionObj()->getPfBox();
 
     (*pp)[0]->setAbInitio();
     (*pp)[1]->setAbInitio();
     (*pp)[2]->setAbInitio();
 
-    (mix->Comp->Qbox)->info() ; 
+    mix->getCompositionObj()->getPfBox()->info();
 
     CiBox cibox (mix) ; 
 
     // Ar - Ar
-    
     cibox[0]->Pot( new HFDTCS2_ArAr() ) ;   
 
     // Ar - Ar+ 

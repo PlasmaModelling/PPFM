@@ -1,61 +1,56 @@
- // PPFM © 2025 by Emanuele Ghedini, Alberto Vagnoni // 
- // (University of Bologna, Italy)                   // 
- // Licensed under CC BY 4.0.                        // 
- // To view a copy of this license, visit:           // 
- // https://creativecommons.org/licenses/by/4.0/     // 
+#include "Thermodynamics.h"
+#include "PfBox.h"
+#include "GasMixture.h"
+#include "PartitionFunction.h"
+#include "Composition.h"
 
-#include"Thermodynamics.h"
-#include"PfBox.h"
-#include"GasMixture.h"
-#include"PartitionFunction.h"
-
-void Thermodynamics::computeThermodynamics ( GasMixture& gasmix ) {
+void Thermodynamics::computeThermodynamics(GasMixture& gasmix) {
     
-    PfBox Qf (* gasmix.Comp->Qbox) ;
-    PfBox Qb (* gasmix.Comp->Qbox) ;
-    PfBox Q  (* gasmix.Comp->Qbox) ;
+    PfBox Qf(*gasmix.getCompositionObj()->getPfBox());
+    PfBox Qb(*gasmix.getCompositionObj()->getPfBox());
+    PfBox Q (*gasmix.getCompositionObj()->getPfBox());
 
-    double theta = gasmix.theta->get() ;
-    double T = gasmix.getTemperature() ;
+    double theta = gasmix.theta->get();
+    double T  = gasmix.getTemperature();
     double Te = T * theta;
-    double P = gasmix.getPressure() ;
-    int N =    gasmix.getN() ;
+    double P  = gasmix.getPressure();
+    int N     = gasmix.getN();
 
-    const double dT = 0.01 ; 
-    const double dP = 10. ;
+    const double dT = 0.01; 
+    const double dP = 10.0;
 
-    Qf.computePartitionFunctions(T+dT,P,gasmix.Comp->getDebyeLength(T+dT));
-    Q.computePartitionFunctions(T,P,gasmix.Comp->getDebyeLength(T));
-    Qb.computePartitionFunctions(T-dT,P,gasmix.Comp->getDebyeLength(T-dT)); 
+    // Partition functions at shifted states
+    Qf.computePartitionFunctions(T + dT, P, gasmix.getCompositionObj()->getDebyeLength(T + dT));
+    Q .computePartitionFunctions(T,      P, gasmix.getCompositionObj()->getDebyeLength(T));
+    Qb.computePartitionFunctions(T - dT, P, gasmix.getCompositionObj()->getDebyeLength(T - dT));
 
-    Qf[N-1]->computePartitionFunction(Te+dT*theta,P,gasmix.Comp->getDebyeLength(Te+dT)) ; 
-    Q[N-1]->computePartitionFunction(Te,P,gasmix.Comp->getDebyeLength(Te)) ; 
-    Qb[N-1]->computePartitionFunction(Te-dT*theta,P,gasmix.Comp->getDebyeLength(Te-dT)) ; 
+    Qf[N-1]->computePartitionFunction(Te + dT*theta, P, gasmix.getCompositionObj()->getDebyeLength(Te + dT));
+    Q [N-1]->computePartitionFunction(Te,            P, gasmix.getCompositionObj()->getDebyeLength(Te));
+    Qb[N-1]->computePartitionFunction(Te - dT*theta, P, gasmix.getCompositionObj()->getDebyeLength(Te - dT));
 
     double rho , R , he , hh , ee , eh , cp , cv , gamma , vs ;
 
-    std::vector<double> n, mass, epsf ;
-    n = gasmix.Comp->compositions();
-    std::vector<double> n0 = gasmix.Comp->compositions();
+    std::vector<double> n, mass, epsf;
+    n  = gasmix.getCompositionObj()->compositions();
+    std::vector<double> n0 = n;
     
     mass = gasmix.masses();
     rho = 0.;
-    for (int i = 0; i < N; i++){
-        rho += mass[i]*n[i];
-        epsf.push_back(gasmix(i)->formationEnergy()) ;
+    for (int i = 0; i < N; i++) {
+        rho += mass[i] * n[i];
+        epsf.push_back(gasmix(i)->formationEnergy());
     }
 
-    R = 0.;
-    R += mass[N-1]*n[N-1]*Te;
+    R = mass[N-1] * n[N-1] * Te;
     for (int i = 0; i < N-1; i++)
-        R += n[i]*mass[i]*T ;
-    R = P/R ;
+        R += n[i] * mass[i] * T;
+    R = P / R;
     
-    // --- Energia interna ed entalpia (stile codice C con offset fisso) ---
+    // --- Energetics ---
     he = hh = ee = eh = 0.0;
 
     static bool ref_set = false;
-    static double e_chem_ref = 0.0; // offset come nel codice C
+    static double e_chem_ref = 0.0;
 
     double e_chem_tot = 0.0;
 
@@ -63,19 +58,15 @@ void Thermodynamics::computeThermodynamics ( GasMixture& gasmix ) {
         bool isElectron = (dynamic_cast<Electron*>(gasmix(i)) != nullptr);
         double Ti = isElectron ? Te : T;
 
-        // energia traslazionale (1.5 kBT)
         double e_tr = 1.5 * KB * Ti * n[i] / rho;
-
-        // energia chimica
         double e_ch = epsf[i] * n[i] / rho;
         e_chem_tot += e_ch;
 
-        // energia interna da partizioni
         double dlogQdT = (std::log(Qf(i)) - std::log(Qb(i))) / (2.0 * dT);
         double e_in = KB * Ti * Ti * dlogQdT * n[i] / rho;
 
-        double e_tot = e_tr + e_ch + e_in;   // energia specifica specie
-        double h_i   = (KB * Ti * n[i]) / rho + e_tot; // entalpia specifica specie
+        double e_tot = e_tr + e_ch + e_in;
+        double h_i   = (KB * Ti * n[i]) / rho + e_tot;
 
         if (isElectron) {
             ee += e_tot;
@@ -86,178 +77,166 @@ void Thermodynamics::computeThermodynamics ( GasMixture& gasmix ) {
         }
     }
 
-    // imposta il riferimento una sola volta (alla prima chiamata)
     if (!ref_set) {
         e_chem_ref = e_chem_tot;
         ref_set = true;
     }
 
-    // correggi con offset fisso
     double delta_e_chem = e_chem_tot - e_chem_ref;
     hh += (delta_e_chem - e_chem_tot);
     eh += (delta_e_chem - e_chem_tot);
 
-    // derivatives dependent quantities 
+    // ----- Derivative-dependent quantities -----
+    double Tf = T + dT;
+    double Tb = T - dT;
+    double Tef = Te + dT*theta;
+    double Teb = Te - dT*theta;    
 
-    // Specific heat at constant pressure
-    double Tf, rhof{0.}, Rf{0.}, hf{0.}, ef{0.};
-    double Tb, rhob{0.}, Rb{0.}, hb{0.}, eb{0.};
-    
-    Tf = T + dT ;
-    Tb = T - dT ;
-    double Tef = Te + dT*theta ;
-    double Teb = Te - dT*theta ;    
+    Gas gasf = gasmix;
+    Gas gasb = gasmix;
+    gasf.setT(Tf);
+    gasb.setT(Tb);
 
-    Gas gasf = ( gasmix ) , gasb = ( gasmix ) ;
-    gasf.setT ( Tf ) ;
-    gasb.setT ( Tb ) ;
-     
-    Composition nf( &gasmix, &gasmix, new PfBox(Q) ), nb( &gasmix, &gasmix, new PfBox(Q) ) ;
+    auto* solver = gasmix.getCompositionObj();
 
-    nf.setn0(n0) ; 
-    nb.setn0(n0) ;
+    // Forward composition
+    solver->setn0(n0);
+    solver->CompositionSolve(&gasmix, &gasf);
+    std::vector<double> nf = solver->compositions();
 
-    nf.compositionSolve ( &gasmix , &gasf ) ;
-    nb.compositionSolve ( &gasmix , &gasb ) ;
-    
-    Qf.computePartitionFunctions(Tf + dT,P,gasmix.Comp->getDebyeLength(Tf + dT));
-    Qb.computePartitionFunctions(Tb - dT,P,gasmix.Comp->getDebyeLength(Tb - dT));
-    Qf[N-1]->computePartitionFunction(Tef,P,gasmix.Comp->getDebyeLength(Tef));
-    Qb[N-1]->computePartitionFunction(Teb,P,gasmix.Comp->getDebyeLength(Teb));
+    // Backward composition
+    solver->setn0(n0);
+    solver->CompositionSolve(&gasmix, &gasb);
+    std::vector<double> nb = solver->compositions();
 
-    // rho
+    // rho forward/backward
+    double rhof = 0.0, rhob = 0.0;
     for (int i = 0; i < N; i++) {
-        rhof += mass[i] * nf(i) ;
-        rhob += mass[i] * nb(i) ;
+        rhof += mass[i] * nf[i];
+        rhob += mass[i] * nb[i];
     }
-    
-    // e 
-    Q.computePartitionFunctions(Tf,P,gasmix.Comp->getDebyeLength(Tf)) ; 
-    Q[N-1]->computePartitionFunction(Tef,P,gasmix.Comp->getDebyeLength(Tef)) ;
+
+    // Energy forward/backward for Cp
+    double ef = 0.0, eb = 0.0;
+    Q.computePartitionFunctions(Tf,P,gasmix.getCompositionObj()->getDebyeLength(Tf));
+    Q[N-1]->computePartitionFunction(Tef,P,gasmix.getCompositionObj()->getDebyeLength(Tef));
     for (int i = 0; i < N; i++) {
-        if (dynamic_cast<Electron*>(gasmix(i)) != nullptr ) {       
-            ef += 1.5 * KB * Tef * nf(i) ;
+        if (dynamic_cast<Electron*>(gasmix(i)) != nullptr) {
+            ef += 1.5 * KB * Tef * nf[i];
         } else {
-            ef += ( ( 1.5 * KB * Tf + epsf[i] ) * nf(i) ) ;
-            ef += ( KB * Tf ) * nf(i) * (log(Qf(i)) - log(Q(i))) / (2. * dT) ;
+            ef += ((1.5 * KB * Tf + epsf[i]) * nf[i]);
+            ef += (KB * Tf) * nf[i] * (log(Qf(i)) - log(Q(i))) / (2. * dT);
         }
     }
-    // e 
-    Q.computePartitionFunctions(Tb,P,gasmix.Comp->getDebyeLength(Tb)) ; 
+    Q.computePartitionFunctions(Tb,P,gasmix.getCompositionObj()->getDebyeLength(Tb));
     for (int i = 0; i < N; i++) {
-        if (dynamic_cast<Electron*>(gasmix(i)) != nullptr ) {       
-            eb += 1.5 * KB * Teb * nb(i) ;
+        if (dynamic_cast<Electron*>(gasmix(i)) != nullptr) {
+            eb += 1.5 * KB * Teb * nb[i];
         } else {
-            eb += ( ( 1.5 * KB * Tb + epsf[i] ) * nb(i) ) ;
-            eb += ( KB * Tb ) * nb(i) * (log(Q(i)) - log(Qb(i))) / (2. * dT) ;
+            eb += ((1.5 * KB * Tb + epsf[i]) * nb[i]);
+            eb += (KB * Tb) * nb[i] * (log(Q(i)) - log(Qb(i))) / (2. * dT);
         }
     }
 
-    // R e dRdT
-    Rf = mass[N-1] * nf(N-1) * Tef ;
-    Rb = mass[N-1] * nb(N-1) * Teb ;    
+    // R forward/backward
+    double Rf = mass[N-1] * nf[N-1] * Tef;
+    double Rb = mass[N-1] * nb[N-1] * Teb;    
     for (int i = 0; i < N-1; i++){
-            Rf += mass[i]*nf(i)*Tf;
-            Rb += mass[i]*nb(i)*Tb;
+        Rf += mass[i]*nf[i]*Tf;
+        Rb += mass[i]*nb[i]*Tb;
     }
-    Rf = P/Rf ;
-    Rb = P/Rb ;
-    double dRdT = (Rf-Rb)/(2. * dT) ;
+    Rf = P/Rf;
+    Rb = P/Rb;
+    double dRdT = (Rf - Rb)/(2. * dT);
 
     // GODIN eq.41
-    cp = (( ef / rhof ) - ( eb / rhob )) / ( 2. * dT * theta ) + R * ( 1. + ( T/R ) * dRdT ) ;
-    
-    // calcolo calore specifico a volume costante
-    gasf.setT(T) ;
-    gasb.setT(T) ;
+    cp = (( ef / rhof ) - ( eb / rhob )) / ( 2. * dT * theta ) + R * ( 1. + ( T/R ) * dRdT );
 
-    Rf = 0.; Rb = 0.;
-    double Pf = P + dP ;
-    double Pb = P - dP ;
-    gasf.setP ( Pf ) ; 
-    nf.setn0(n0) ;
-    nf.compositionSolve ( &gasmix , &gasf ) ; 
-    gasb.setP ( Pb ) ; 
-    nb.setn0(n0) ;
-    nb.compositionSolve ( &gasmix , &gasb ) ;
-    
-    Rf = mass[N-1] * nf(N-1) * Te ;
-    Rb = mass[N-1] * nb(N-1) * Te ;    
+    // --- Cv from pressure perturbation ---
+    gasf.setT(T);
+    gasb.setT(T);
+
+    double Pf = P + dP;
+    double Pb = P - dP;
+
+    gasf.setP(Pf);
+    solver->setn0(n0);
+    solver->CompositionSolve(&gasmix, &gasf);
+    std::vector<double> nfP = solver->compositions();
+
+    gasb.setP(Pb);
+    solver->setn0(n0);
+    solver->CompositionSolve(&gasmix, &gasb);
+    std::vector<double> nbP = solver->compositions();
+
+    Rf = mass[N-1] * nfP[N-1] * Te;
+    Rb = mass[N-1] * nbP[N-1] * Te;    
     for (int i = 0; i < N-1; i++){
-            Rf += mass[i]*nf(i)*T;
-            Rb += mass[i]*nb(i)*T;
+        Rf += mass[i]*nfP[i]*T;
+        Rb += mass[i]*nbP[i]*T;
     }
-    Rf = Pf / Rf ;
-    Rb = Pb / Rb ;
-    double dRdP = ( Rf - Rb ) / ( 2. * dP ) ;
+    Rf = Pf / Rf;
+    Rb = Pb / Rb;
+    double dRdP = (Rf - Rb)/(2. * dP);
 
-    // GODIN eq.42
-    cv = cp - ( R * ( pow(( 1. + T/R * dRdT ),2.) / (1. - P/R *dRdP ) ));
-    
-    // eq.43 Cp/Cv Velocità del suono
-    gamma = cp/cv ; 
-    vs = sqrt( gamma * R * T / ( 1. - P/R * dRdP )) ;
+    // GODIN eq.42 & 43
+    cv = cp - ( R * ( pow(( 1. + T/R * dRdT ),2.) / (1. - P/R * dRdP ) ));
+    gamma = cp/cv;
+    vs = sqrt( gamma * R * T / ( 1. - P/R * dRdP ));
 
-
-    Td[0] = rho ;
-    Td[1] = R ;
-    Td[2] = he ;
-    Td[3] = hh ;
-    Td[4] = ee ;
-    Td[5] = eh ;
-    Td[6] = cp ;
-    Td[7] = cv ;
-    Td[8] = gamma ;
-    Td[9] = vs ;
+    // Store results
+    Td[0] = rho;
+    Td[1] = R;
+    Td[2] = he;
+    Td[3] = hh;
+    Td[4] = ee;
+    Td[5] = eh;
+    Td[6] = cp;
+    Td[7] = cv;
+    Td[8] = gamma;
+    Td[9] = vs;
 }
 
+// ---------------- ThermodynamicsCsv ---------------- //
 
-
-std::string ThermodynamicsCsv::BuildFileName(const std::string& filename ) const  {
-
+std::string ThermodynamicsCsv::BuildFileName(const std::string& filename) const {
     return "TH_" + filename + ".csv";  
-    
 }
 
 void ThermodynamicsCsv::PrepareHeader() {
-    
-    header = "Te [K], ρ [kg/m³], Cₚ [J/(kg·K)], hₑ + hₕ [J/kg], γ [#], a [m/s]";
-
+    header = "Te [K], ρ [kg/m³], Cₚ [J/(kg·K)], hₑ + hₕ [J/kg], γ [–], a [m/s]";
 }
     
-void ThermodynamicsCsv::PrintMessage(const std::string& filename)  { 
-    std::cout << "Thermodynamic properties " << filename << " printed." << std::endl ;
+void ThermodynamicsCsv::PrintMessage(const std::string& filename) {
+    std::cout << "Thermodynamic properties " << filename << " printed." << std::endl;
 }
 
-ThermodynamicsCsv::ThermodynamicsCsv () : Thermodynamics() {}
+ThermodynamicsCsv::ThermodynamicsCsv(Thermodynamics* solver) : solver(solver) {}
 
-ThermodynamicsCsv::ThermodynamicsCsv ( const std::string& folder ) : Thermodynamics() { customFolder = folder; }
+ThermodynamicsCsv::ThermodynamicsCsv(Thermodynamics* solver, const std::string& folder) : solver(solver) {
+    customFolder = folder;
+}
 
-void ThermodynamicsCsv::PrepareData ( const std::vector<double>& temperatureRange, GasMixture* gasmix ) {
+void ThermodynamicsCsv::PrepareData(const std::vector<double>& temperatureRange, GasMixture* gasmix) {
         
-    double T0 = gasmix->getTemperature() ;  
-
+    double T0 = gasmix->getTemperature();  
     double theta = gasmix->theta->get();
 
-    data.resize (temperatureRange.size(), std::vector<double>(6) );
+    data.resize(temperatureRange.size(), std::vector<double>(6));
 
-    for (int i = 0; i < temperatureRange.size() ; i++) {
-        
-        gasmix->setT(temperatureRange[i]) ;        
-        computeThermodynamics(*gasmix) ;
+    for (int i = 0; i < temperatureRange.size(); i++) {
+        gasmix->setT(temperatureRange[i]);        
+        solver->computeThermodynamics(*gasmix);
     
-        data[i][0] = temperatureRange[i]*theta ;
-        data[i][1] = Td[0] ;
-        data[i][2] = Td[6] ; 
-        data[i][3] = Td[2] + Td[3] ; 
-        data[i][4] = Td[8] ; 
-        data[i][5] = Td[9] ; 
-        
+        data[i][0] = temperatureRange[i] * theta;
+        data[i][1] = solver->rho();
+        data[i][2] = solver->cp();
+        data[i][3] = solver->he() + solver->hh();
+        data[i][4] = solver->gamma();
+        data[i][5] = solver->a();
     }
 
-    // SETBACK 
     gasmix->setT(T0); 
-    gasmix->restartComposition() ; 
-    computeThermodynamics(*gasmix) ;
-
+    gasmix->restartComposition(); 
+    solver->computeThermodynamics(*gasmix);
 } 

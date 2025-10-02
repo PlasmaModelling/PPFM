@@ -1,7 +1,7 @@
 /* 
 
     MAIN FILE USED IN THE VALIDATION PROCESS 
-    OF KRIPTON, XENON AT DIFFERENT PRESSURES.
+    OF ARGON, KRIPTON, XENON AT DIFFERENT PRESSURES.
 
     REFERENCE ARTICLE:
     " Thermodynamic properties and transport
@@ -53,31 +53,25 @@ int main() {
     );
 
     // setting the partition function calculations from electronic configurations
-
-    krypton->Comp->Qbox->AllAbInitio() ; 
-
-    xenon->Comp->Qbox->AllAbInitio() ; 
+    krypton->getCompositionObj()->getPfBox()->AllAbInitio(); 
+    xenon->getCompositionObj()->getPfBox()->AllAbInitio(); 
 
     // Thermodynamic modules
+    auto thermKrSolver = new Thermodynamics();
+    auto thermXeSolver = new Thermodynamics();
 
-    auto thermKr = new ThermodynamicsCsv ( folder ) ; 
-
-    auto thermXe = new ThermodynamicsCsv ( folder ) ; 
+    auto thermKr = new ThermodynamicsCsv(thermKrSolver, folder); 
+    auto thermXe = new ThermodynamicsCsv(thermXeSolver, folder); 
 
     // polarizabilities 
-
     double alphaKr = 2.498 ; // Ang^3
-
     double alphaXe = 4.005 ; // Ang^3
 
     // editable collision integrals boxes
-
     auto kryptonCI = CiBox ( krypton ) ;  
-
-    auto xenonCI = CiBox ( xenon ) ; 
+    auto xenonCI   = CiBox ( xenon  ) ; 
 
     // editing Krypton collision integrals
-
     kryptonCI.info() ; 
 
     kryptonCI[0]->Pot ( new HFD_B ( 44.44924, 1.1066257, -0.048669, 128.3040, 3947.999, 170000., 7.579694, 1.208 , true ) ) ; 
@@ -105,7 +99,6 @@ int main() {
     kryptonCI[5]->LoadElastic() ; 
 
     // editing Xenon collision integrals  
-
     xenonCI.info() ; 
 
     xenonCI[0]->Pot ( new HFD_B ( 48.72733, 0.9127, -0.049061, 283.900, 11214., 619600., 8.249788, 1.114, true ) );
@@ -124,9 +117,7 @@ int main() {
         }
     );
     xenonCI[1]->TCScalculator = new CsHolder ( 
-        
         xenonCI[1]->TCScalculator,
-        
         new ThresholdCs(xenonCI[1]->GetIntInterface(),
             {
                 new ChargeTransferCs ( xenonCI[1]->GetIntInterface(), 78.3, 13.6 ) ,
@@ -144,10 +135,8 @@ int main() {
     xenonCI[5]->LoadElastic() ; 
     
     // Transport modules initialization
-
     auto DevKr = new DevotoTpCsv ( &kryptonCI, folder ) ;
-
-    auto DevXe = new DevotoTpCsv ( &xenonCI, folder ) ;
+    auto DevXe = new DevotoTpCsv ( &xenonCI,   folder ) ;
 
     // print cycling on pressures
     for (size_t i = 0; i < pressures.size(); i++) {
@@ -158,10 +147,8 @@ int main() {
         xenon->setP(p) ; 
 
         // Composition 
-        auto compKr = new CompositionCsv ( krypton, krypton, folder ) ;
-        compKr->Qbox->AllAbInitio() ;
-        auto compXe = new CompositionCsv ( xenon, xenon, folder ) ;
-        compXe->Qbox->AllAbInitio() ;
+        auto compKr = new CompositionCsv ( krypton->getCompositionObj(), folder ) ;
+        auto compXe = new CompositionCsv ( xenon->getCompositionObj(),   folder ) ;
 
         compKr->Print ( "Kr Composition " + p_strings[i], T, krypton ) ; 
         compXe->Print ( "Xe Composition " + p_strings[i], T, xenon   ) ; 
@@ -172,10 +159,9 @@ int main() {
 
         // Transport properties
         DevKr->Print ( "Kr Transport " + p_strings[i], T, krypton ) ; 
-        DevXe->Print ( "Kr Transport " + p_strings[i], T, xenon   ) ; 
+        DevXe->Print ( "Xe Transport " + p_strings[i], T, xenon   ) ; 
 
     }
     
     return 0;
-
 }

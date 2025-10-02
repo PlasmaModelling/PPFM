@@ -29,7 +29,7 @@ void PartitionFunctionCsv::PrepareData(const std::vector<double>& Ti, GasMixture
 
         gasmix->setT(Ti[i]);
 
-        double lambda = gasmix->Comp->getDebyeLength(Ti[i]);
+        double lambda = gasmix->getCompositionObj()->getDebyeLength(Ti[i]);
 
         data[i][0] = Ti[i];
         data[i][1] = P;

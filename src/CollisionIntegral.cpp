@@ -30,7 +30,7 @@ void CollisionIntegralCsv::PrepareData(const std::vector<double>& x, GasMixture*
 
         gasmix->setT(x[i]);
         
-        double lambda = gasmix->Comp->getDebyeLength(x[i]);
+        double lambda = gasmix->getCompositionObj()->getDebyeLength(x[i]);
         
         double Te = x[i] * gasmix->theta->get();
         

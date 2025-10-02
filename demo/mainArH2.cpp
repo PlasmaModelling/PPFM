@@ -59,7 +59,7 @@ std::vector<double> NEparam = { 1. , 2. , 3. };
 std::vector<double> T = arange ( 500., 30100., 100. );
 
 // Setting editable partition function box
-auto editableQbox = mix->Comp->Qbox;
+auto editableQbox = mix->getCompositionObj()->getPfBox();
 
 // Get info on partition functions for editing
 editableQbox->info(); 
@@ -254,9 +254,10 @@ cibox[26]->Load(false);
 cibox[26]->LoadDCS(); 
 
 // Output modules initialization
-ThermodynamicsCsv th ( folder );
+Thermodynamics thSolver;
+ThermodynamicsCsv th(&thSolver, folder);
 DevotoTpCsv Dev ( &cibox, folder ); 
-ZhangTpCsv zm ( &cibox, folder ); 
+ZhangTpCsv  zm  ( &cibox, folder ); 
 
 // Loop on NEparam
 for (size_t i = 0; i < NEparam.size(); i++) {

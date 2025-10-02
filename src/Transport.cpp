@@ -16,7 +16,7 @@ void Transport::QtCalc ( GasMixture* gasmix) {
 
     double Th = gasmix->getTemperature() ; 
     double Te = gasmix->theta->get() * Th ;
-    double lambda = gasmix->Comp->getDebyeLength(Te) ;
+    double lambda = gasmix->getCompositionObj()->getDebyeLength(Te) ;
     
     int Ninteractions = Ci->InteractionsNumber() ;
 
@@ -79,7 +79,7 @@ double Appendix::Qmpil ( GasMixture* gasmix , int m , int p , int i , int l ) {
 
 double Appendix::qmpij ( GasMixture* gasmix , int m , int p , int i , int j ) {
 
-    std::vector<double> n = gasmix->Comp->compositions(1.e-18) ;
+    std::vector<double> n = gasmix->getCompositionObj()->compositions(1.e-18) ;
     std::vector<double> mass = gasmix->masses(1.e+03) ;
     int N_SPC = gasmix->getN() ; 
 
@@ -325,7 +325,7 @@ double Appendix::qmpij ( GasMixture* gasmix , int m , int p , int i , int j ) {
 
 double Appendix::qsimpmpij( GasMixture* gasmix , int m , int p ) {
 
-    std::vector<double> n = gasmix->Comp->compositions(1.e-18) ;
+    std::vector<double> n = gasmix->getCompositionObj()->compositions(1.e-18) ;
     std::vector<double> mass = gasmix->masses(1.e+03) ;
     int N_SPC = gasmix->getN() ;
 
@@ -491,7 +491,7 @@ double Appendix::qsimpmpij( GasMixture* gasmix , int m , int p ) {
 
 double Appendix::qcapmpij( GasMixture* gasmix, int m, int p, int i, int j) {
 
-std::vector<double> n = gasmix->Comp->compositions(1.e-18) ; 
+std::vector<double> n = gasmix->getCompositionObj()->compositions(1.e-18) ; 
 std::vector<double> mass = gasmix->masses(1.e+03) ;
 int N_SPC = gasmix->getN() ;
 

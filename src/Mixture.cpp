@@ -102,3 +102,7 @@ bool Mixture::isBase(Species* specie) {
     }
     return false;
 }
+
+std::tuple<std::vector<Species*>, std::vector<double>> Mixture::getMoleFractions() {
+    return molefractions ;
+}
