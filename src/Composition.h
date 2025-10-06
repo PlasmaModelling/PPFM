@@ -8,7 +8,6 @@
 #define COMPOSITION_H
 
 #include "PfBox.h"
-#include "DataPrinter.h"
 
 #include <map>
 #include <string>
@@ -157,37 +156,6 @@ private:
     void baseCalc(std::vector<int>& b, std::vector<int>& bs,
         const std::vector<std::vector<double>>& C);
 
-};
-
-/**
- * @brief CSV printer for composition results.
- *
- * Provides formatted CSV output for any Composition solver,
- * iterating over a given temperature range. */
-class CompositionCsv : public DataPrinter {
-
-    /// @brief Solver reference (non-owning, external lifetime managed).
-    Composition* solver;
-
-    /// @brief Build the output filename.
-    std::string BuildFileName(const std::string& filename) const override;
-
-    /// @brief Prepare the CSV header.
-    void PrepareHeader() override; 
-
-    /// @brief Prepare the data matrix for printing.
-    void PrepareData(const std::vector<double>& x, GasMixture* gasmix) override;
-
-    /// @brief Print completion message.
-    void PrintMessage(const std::string& filename) override;
-
-public:
-
-    /// @brief Constructor with explicit solver
-    CompositionCsv(Composition* solver);
-
-    /// @brief Constructor with explicit solver and custom folder
-    CompositionCsv(Composition* solver, const std::string& folder);
 };
 
 #endif

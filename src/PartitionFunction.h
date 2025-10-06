@@ -8,7 +8,6 @@
 #define PARTITION_FUNCTION_H
 
 #include "ParfCalculator.h"
-#include "DataPrinter.h"
 #include "GasMixture.h"
 #include <stdexcept>
 #include <iostream>
@@ -113,55 +112,6 @@ class PartitionFunction : public PFinterface {
     void info() override ;
 
 } ;
-
-//________________________________ Printing class ________________________________
-
-/// @brief Prints partition functions to CSV files.
-/// @see class DataPrinter for CSV interface.
-/// @see class PFinterface for partition function computation.
-class PartitionFunctionCsv : public DataPrinter {
-
-    friend class PfBox;
-
-    /// @brief Pointer to the partition function interface.
-    PFinterface* pf;
-
-    /// @brief Builds the output filename with "PF_" prefix.
-    std::string BuildFileName(const std::string& filename) const override;
-
-    /// @brief Prepares the CSV header row.
-    void PrepareHeader() override;
-
-    /**
-     * @brief Computes the partition function over a range of temperatures.
-     * @param Ti Vector of temperatures [K].
-     * @param gasmix Pointer to the gas mixture.
-     * @details For each temperature, computes the Debye length, calls the partition 
-     * function model, and stores: T, P, λ_D, Q. The original gas state is restored at the end.
-     * @see PFinterface::computePartitionFunction */
-    void PrepareData(const std::vector<double>& Ti, GasMixture* gasmix) override;
-
-    /**
-     * @brief Prints a message confirming output.
-     * @param filename Name of the written CSV file. */
-    void PrintMessage(const std::string& filename) override;
-
-    /**
-     * @brief Redirects print to a dedicated subfolder and invokes base print logic.
-     * @param filename File base name.
-     * @param x Temperature values.
-     * @param gasmix Pointer to the gas mixture.
-     * @details Temporarily modifies the output folder path to include
-     * "PartitionFunctions_<original-folder>" before calling the base print.
-     * @see DataPrinter::Print */
-    void Print(const std::string& filename, const std::vector<double>& x, GasMixture* gasmix) override;
-
-    public:
-    
-    /// @brief Constructor from a PFinterface pointer.
-    PartitionFunctionCsv(PFinterface* _pf);
-
-};
 
 //________________________ Implementazione _____________________________
 

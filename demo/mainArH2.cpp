@@ -36,6 +36,7 @@
 #include "ZhangMurphyTP.h"
 #include "Potential.h"
 #include "CollisionIntegral.h"
+#include "DataPrinter.h"
 
 int main() {
 
@@ -256,8 +257,10 @@ cibox[26]->LoadDCS();
 // Output modules initialization
 Thermodynamics thSolver;
 ThermodynamicsCsv th(&thSolver, folder);
-DevotoTpCsv Dev ( &cibox, folder ); 
-ZhangTpCsv  zm  ( &cibox, folder ); 
+
+// NOTE: pass explicit solvers to CSV printers
+DevotoTpCsv Dev ( new DevotoTP(&cibox), folder ); 
+ZhangTpCsv  zm  ( new ZhangMurphyTP(&cibox), folder ); 
 
 // Loop on NEparam
 for (size_t i = 0; i < NEparam.size(); i++) {
@@ -277,4 +280,4 @@ for (size_t i = 0; i < NEparam.size(); i++) {
 
 return 0;
 
-} 
+}

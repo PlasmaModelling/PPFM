@@ -7,6 +7,7 @@
 #include "PfBox.h"
 #include "PartitionFunction.h"
 #include "Mixture.h"
+#include "DataPrinter.h"
 
 PfBox::PfBox(Mixture* mix) {
     

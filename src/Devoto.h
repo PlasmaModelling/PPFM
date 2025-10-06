@@ -8,7 +8,6 @@
 #define DEVOTO_H
 
 #include "Transport.h"
-#include "DataPrinter.h"
 
 /** @class DevotoTP
  ** @brief Implementation of the theory formalized by R.S Devoto in \n
@@ -81,40 +80,5 @@ class DevotoTP : public Appendix {
 } ;
 
 //______________________________ Implementation ______________________________
-
-/// @brief Handles CSV output of transport properties using Devoto's method.
-class DevotoTpCsv : public DevotoTP, public DataPrinter {
-
-    private:
-    
-    /// @brief Builds the output filename with "TP_" prefix.
-    std::string BuildFileName(const std::string& filename) const override;
-
-    /// @brief Prepares the CSV header row.
-    void PrepareHeader();
-
-    /**
-     * @brief Computes and stores transport properties over a temperature range.
-     * @param temperatureRange Electron temperatures (in θ units).
-     * @param gasmix Pointer to the gas mixture.
-     * @details For each temperature, computes λₑ, λₕ, μ, σ using Devoto's method.
-     * Restores initial gas state after the loop.
-     * @see class DevotoTP for computeTransport. */
-    void PrepareData(const std::vector<double>& temperatureRange, GasMixture* gasmix) override;
-
-    /**
-     * @brief Prints confirmation message after file generation.
-     * @param filename Name of the written CSV file. */
-    void PrintMessage(const std::string& filename) override;
-
-    public:
-
-    /// @brief Constructor with CiBox pointer.
-    DevotoTpCsv(CiBox* cbx);
-
-    /// @brief Constructor with CiBox and custom folder.
-    DevotoTpCsv(CiBox* cbx, const std::string& folder);
-
-};
 
 #endif

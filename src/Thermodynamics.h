@@ -10,7 +10,6 @@
 #include <vector>
 #include <stdexcept>
 #include <string>
-#include "DataPrinter.h"
 
 class GasMixture;
 
@@ -55,36 +54,6 @@ public:
     double cv()    const { return Td[7]; }
     double gamma() const { return Td[8]; }
     double a()     const { return Td[9]; }
-};
-
-/** @brief Outputs thermodynamic properties to CSV.
- ** @see class Thermodynamics for property computation.
- ** @see class DataPrinter for CSV interface. */
-class ThermodynamicsCsv : public DataPrinter {
-
-    /// @brief Solver reference (non-owning, external lifetime managed).
-    Thermodynamics* solver;
-
-    /// @brief Build the output filename.
-    std::string BuildFileName(const std::string& filename) const override;
-
-    /// @brief Prepare the CSV header row.
-    void PrepareHeader() override;
-
-    /// @brief Prepare the data matrix for printing.
-    void PrepareData(const std::vector<double>& x, GasMixture* gasmix) override;
-
-    /// @brief Print completion message.
-    void PrintMessage(const std::string& filename) override;
-
-public:
-    
-    /// @brief Constructor with explicit solver
-    ThermodynamicsCsv(Thermodynamics* solver);
-
-    /// @brief Constructor with explicit solver and custom folder
-    ThermodynamicsCsv(Thermodynamics* solver, const std::string& folder);
-
 };
 
 #endif

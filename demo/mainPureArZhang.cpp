@@ -22,6 +22,7 @@
 #include "ZhangMurphyTP.h"
 #include "Potential.h"
 #include "CollisionIntegral.h"
+#include "DataPrinter.h"
 
 int main() {
 
@@ -120,7 +121,8 @@ int main() {
 
     cibox.info() ; 
 
-    ZhangTpCsv zhangmurphy ( &cibox , folder ) ; 
+    // Zhang–Murphy transport printer with explicit solver
+    ZhangTpCsv zhangmurphy( new ZhangMurphyTP(&cibox), folder );
 
     std::vector<double> Th = T ;
 

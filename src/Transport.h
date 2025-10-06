@@ -29,6 +29,9 @@ class CiBox ;
 */
 class Transport {
 
+    friend class ZhangTpCsv ;
+    friend class DevotoTpCsv ;
+
     protected :
 
     /// @brief Vector to store computed Transport Properties values

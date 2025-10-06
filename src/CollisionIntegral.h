@@ -18,7 +18,7 @@ reference:
 
 #include"TransportCrossSection.h"
 #include"OmegaCalculator.h"
-#include"DataPrinter.h"
+
 
 #include <regex>
 
@@ -147,55 +147,6 @@ class CollisionIntegral : public TransportCrossSection<T1,T2>, public HybridInte
     void Load( bool b ) override { b ? InitCalculator() : InitCalculator(b) ;}
 
 };
-
-//________________________________ Printing class ________________________________
-
-/// @brief Prints collision integrals to CSV files.
-/// @see class DataPrinter for CSV output interface.
-class CollisionIntegralCsv : public DataPrinter {
-
-    friend class CiBox;
-
-    /// @brief Pointer to collision integral interface.
-    CInterface* ci;
-
-    /// @brief Builds the output filename with "CI_" prefix.
-    std::string BuildFileName(const std::string& filename) const override;
-
-    /// @brief Prepares the CSV header for collision integrals.
-    void PrepareHeader() override;
-
-    /**
-     * @brief Computes and stores collision integrals at different temperatures.
-     * @param x Vector of reduced temperatures Tij*.
-     * @param gasmix Pointer to the gas mixture.
-     * @details For each temperature, computes the 4th order set of Ω(l,s) integrals,
-     * using Debye length and θ to evaluate each term. Results are stored for CSV output.
-     * @see class CInterface for ComputeCollisionIntegral. */
-    void PrepareData(const std::vector<double>& x, GasMixture* gasmix) override;
-
-    /**
-     * @brief Prints a message confirming successful output.
-     * @param filename Name of the written file. */
-    void PrintMessage ( const std::string& filename ) override;
-
-    /**
-     * @brief Overrides default print to prepend CollisionIntegrals_ subfolder.
-     * @param filename Base filename.
-     * @param x Vector of reduced temperatures.
-     * @param gasmix Pointer to the gas mixture.
-     * @details Temporarily modifies the output folder to include a dedicated
-     * subfolder for collision integrals, then calls the base print method.
-     * @see class DataPrinter for Print method. */
-    void Print ( const std::string& filename, const std::vector<double>& x, GasMixture* gasmix ) override;
-
-    public:
-    
-    /// @brief Constructor from a HybridInterface pointer.
-    CollisionIntegralCsv ( CInterface* _ci );
-
-};
-
 
 //________________________________ Implementation ________________________________
 

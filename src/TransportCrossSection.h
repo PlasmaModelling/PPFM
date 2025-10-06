@@ -19,6 +19,7 @@ reference:
 #include"TcsCalculator.h"
 #include"GasMixture.h"
 
+
 /// @brief Interface class for Transport Cross Section (TCS) objects.
 /// @see CsCalculator for cross section evaluation.
 class TcsInterface {
@@ -106,72 +107,6 @@ class TransportCrossSection : public Interaction<T1, T2>, public virtual TcsInte
      * @brief Returns a polymorphic clone of the current object.
      * @return Deep copy of this TransportCrossSection. */
     TcsInterface* clone() override;
-
-};
-
-
-/// @brief Prints collision integrals to CSV files.
-/// @see class DataPrinter for CSV output interface.
-class TransportCrossSectionCsv : public DataPrinter {
-
-    friend class CiBox;
-
-    /// @brief Pointer to transport cross section interface.
-    TcsInterface* tcs ;
-
-    /// @brief Builds the output filename with "TCS_" prefix.
-    std::string BuildFileName(const std::string& filename) const override;
-
-    /// @brief Prepares the CSV header for elastic transport cross sections.
-    void PrepareHeader() override;
-
-    /// @brief Prepares the CSV header for inelastic transport cross sections.
-    void PrepareInelasticHeader() ; 
-
-    void PrepareMultiHeader( MultiCs* cscalc , int i ) ; 
-
-    /**
-     * @brief Computes and stores elastic transport cross sections.
-     * @param x Not-used.
-     * @param gasmix Not used.
-     * @details Transport Cross Section computation is static within 
-     * energy ranges in eV, no data should be passed as they're incapsulated
-     * in the tcs->TCScalculator object.
-     * @see classes in file TcsCalculator.h. */
-    void PrepareData(const std::vector<double>& x, GasMixture* gasmix) override ;
-
-    /// @brief Overload function to use in case of a MultiCs.
-    /// @param cscalc 
-    void PrepareData( MultiCs* cscalc , int i ) ;
-
-    /**
-     * @brief Computes and stores inelastic transport cross sections.
-     * @param tcsElIn Holder to extract Qin.
-     * @details Transport Cross Section computation is static within 
-     * energy ranges in eV, no external data should be passed as they're incapsulated
-     * in the tcs->TCScalculator object.
-     * @see classes in file TcsCalculator.h. */
-    void PrepareInelasticData ( CsHolder* tcsElIn ) ;
-
-    /**
-     * @brief Prints a message confirming successful output.
-     * @param filename Name of the written file. */
-    void PrintMessage ( const std::string& filename ) override;
-
-    /**
-     * @brief Overrides default print to prepend CollisionIntegrals_ subfolder.
-     * @param filename Base filename.
-     * @param x Vector of reduced temperatures.
-     * @param gasmix Pointer to the gas mixture.
-     * @details Temporarily modifies the output folder to include a dedicated
-     * subfolder for collision integrals, then calls the base print method.
-     * @see class DataPrinter for Print method. */
-    void Print ( const std::string& filename, const std::vector<double>& x, GasMixture* gasmix ) override;
-
-    public:
-    
-    /// @brief Constructor from a HybridInterface pointer.
-    TransportCrossSectionCsv ( TcsInterface* _ci );
 
 };
 

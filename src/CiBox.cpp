@@ -7,6 +7,7 @@
 #include "CiBox.h"
 #include "CollisionIntegral.h"
 #include "GasMixture.h"
+#include "DataPrinter.h"
 
 CiBox::CiBox(Mixture* mix ) {
     

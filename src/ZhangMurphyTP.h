@@ -8,7 +8,6 @@
 #define ZMTRANSPORT_H
 
 #include"ZMCoefficients.h"
-#include"DataPrinter.h"
 
 /** @class ZhangMurphyTP
  * @brief Implementation of the theory formalized by Zhang et. al. in \n
@@ -106,40 +105,5 @@ class ZhangMurphyTP : public ZMCoefficients {
 };
 
 //______________________________ Implementation ______________________________
-
-/// @brief Outputs transport properties computed via Zhang-Murphy model to CSV.
-/// @see class ZhangMurphyTP for transport computation.
-/// @see class DataPrinter for CSV handling.
-class ZhangTpCsv : public ZhangMurphyTP, public DataPrinter {
-
-    /// @brief Builds the output filename with "TP_" prefix.
-    std::string BuildFileName(const std::string& filename) const override;
-
-    /// @brief Prepares the CSV header row.
-    void PrepareHeader();
-
-    /**
-     * @brief Computes and stores transport properties over a temperature range.
-     * @param temperatureRange Vector of Te/θ values.
-     * @param gasmix Pointer to the gas mixture.
-     * @details For each temperature, computes the Zhang-Murphy transport properties:
-     * λₑ, λₕ, μ, σ, λₑθ, λₕθ. Initial gas state is restored after the loop.
-     * @see ZhangMurphyTP::computeTransport */
-    void PrepareData(const std::vector<double>& temperatureRange, GasMixture* gasmix) override;
-
-    /**
-     * @brief Prints a confirmation message after writing the file.
-     * @param filename Name of the CSV file written. */
-    void PrintMessage(const std::string& filename) override;
-
-    public:
-
-    /// @brief Constructor with pointer to collision integrals.
-    ZhangTpCsv(CiBox* cbx);
-
-    /// @brief Constructor with CiBox and custom output folder.
-    ZhangTpCsv(CiBox* cbx, const std::string& folder);
-
-};
 
 #endif

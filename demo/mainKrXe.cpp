@@ -21,6 +21,7 @@
 #include "ZhangMurphyTP.h"
 #include "Potential.h"
 #include "CollisionIntegral.h"
+#include "DataPrinter.h"
 
 int main() {
 
@@ -134,9 +135,9 @@ int main() {
     xenonCI[4]->Pot ( new Polarization ( new Xenon, new XenonIV, alphaXe ) ) ; 
     xenonCI[5]->LoadElastic() ; 
     
-    // Transport modules initialization
-    auto DevKr = new DevotoTpCsv ( &kryptonCI, folder ) ;
-    auto DevXe = new DevotoTpCsv ( &xenonCI,   folder ) ;
+    // Transport modules initialization (pass explicit solvers)
+    auto DevKr = new DevotoTpCsv( new DevotoTP(&kryptonCI), folder );
+    auto DevXe = new DevotoTpCsv( new DevotoTP(&xenonCI)  , folder );
 
     // print cycling on pressures
     for (size_t i = 0; i < pressures.size(); i++) {

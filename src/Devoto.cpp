@@ -405,50 +405,6 @@ double DevotoTP::DiT(GasMixture* gasmix, int order, int ii) {
     }
 }
 
-void DevotoTpCsv::PrepareData ( const std::vector<double>& temperatureRange, GasMixture* gasmix) {
-    
-    double T0 = temperatureRange[0] ;
-    double theta = gasmix->theta->get() ;
-
-    data.resize(temperatureRange.size(),std::vector<double>(5));
-
-    for (int i = 0; i < temperatureRange.size(); i++)
-    {
-        gasmix->setT(temperatureRange[i]) ; 
-        computeTransport(gasmix) ; 
-
-        // Te
-        data[i][0] = temperatureRange[i] ; 
-        data[i][1] = Tp[0] ;
-        data[i][2] = Tp[1] ;
-        data[i][3] = Tp[2] ;
-        data[i][4] = Tp[3] ;
-
-    }
-    
-    // SETBACK
-    gasmix->setT(T0);
-    gasmix->restartComposition();
-    computeTransport(gasmix);
-
-}
-
-std::string DevotoTpCsv::BuildFileName(const std::string& filename ) const {
-    return "TP_" + filename + ".csv";  
-}
-
-void DevotoTpCsv::PrepareHeader() {
-    header = "Th [K], λₑ [W/(m·K)], λₕ [W/(m·K)], μ [Pa·s], σ [S/m] ";
-}
-
-void DevotoTpCsv::PrintMessage(const std::string& filename) { 
-    std::cout << "Devoto Transport Properties " << filename << " printed." << std::endl ;
-}
-
-DevotoTpCsv::DevotoTpCsv(CiBox* cbx) : DevotoTP(cbx) {};
-
-DevotoTpCsv::DevotoTpCsv(CiBox* cbx, const std::string& folder ) : DevotoTP(cbx) { customFolder = folder; };
-
 double DevotoTP::TotalThermalCondEl(GasMixture* gasmix, int order) {
 
     const int N = gasmix->getN();
