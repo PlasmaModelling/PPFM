@@ -98,7 +98,6 @@ void DataPrinter::AppendData(const std::string& filename) {
     file.close();
 }
 
-
 // Metodo finale che esegue la stampa su file
 void DataPrinter::Print ( const std::string& filename, const std::vector<double>& x, GasMixture* gasmix ) {
     
@@ -118,7 +117,6 @@ void DataPrinter::Print ( const std::string& filename, const std::vector<double>
     PrintMessage(filename) ; 
 
 }
-
 
 // __________________________ CompositionCsv __________________________ //
 
@@ -303,8 +301,6 @@ void ZhangTpCsv::PrepareData(const std::vector<double>& temperatureRange, GasMix
 
 // ___________________________ TransportCrossSectionCsv __________________________ //
 
-#include "TcsCalculator.h"
-
 std::string TransportCrossSectionCsv::BuildFileName(const std::string& filename) const {
     return "TCS_" + filename + ".csv";
 }
@@ -317,13 +313,27 @@ void TransportCrossSectionCsv::PrepareInelasticHeader() {
     header = "E [eV], Qin(1) [Å²], Qin(2) [Å²], Qin(3) [Å²], Qin(4) [Å²]";
 }
 
-void TransportCrossSectionCsv::PrepareMultiHeader(MultiCs* cscalc, int i) {
-    header = "state " + std::to_string(i + 1) + ", E [eV], Q(1) [Å²], Q(2) [Å²], Q(3) [Å²], Q(4) [Å²]";
-}
-
 void TransportCrossSectionCsv::PrepareData(const std::vector<double>&, GasMixture*) {
+    
     auto& e = solver->TCScalculator->E;
     auto& q = solver->TCScalculator->Q;
+
+    data.resize(e.size(), std::vector<double>(5));
+    for (size_t i = 0; i < e.size(); ++i) {
+        data[i][0] = e[i];
+        for (size_t j = 0; j < 4; ++j)
+            data[i][j + 1] = q[i][j];
+    
+    }
+}
+
+void TransportCrossSectionCsv::PrepareElasticData(CsHolder* tcsElIn) {
+    
+    if (tcsElIn->computed == false)
+        tcsElIn->Qe->Compute();
+
+    auto& e = tcsElIn->Qe->E;
+    auto& q = tcsElIn->Qe->Q;
 
     data.resize(e.size(), std::vector<double>(5));
     for (size_t i = 0; i < e.size(); ++i) {
@@ -333,23 +343,11 @@ void TransportCrossSectionCsv::PrepareData(const std::vector<double>&, GasMixtur
     }
 }
 
-void TransportCrossSectionCsv::PrepareData(MultiCs* cscalc, int i) {
-    auto cs = (*cscalc)[i];
-    if (!cs) return;
-
-    const auto& E = cs->E;
-    const auto& Q = cs->Q;
-
-    data.resize(E.size(), std::vector<double>(6, 0.0));
-    for (size_t row = 0; row < E.size(); ++row) {
-        data[row][0] = 0.0; // state placeholder
-        data[row][1] = E[row];
-        for (int j = 0; j < 4; ++j)
-            data[row][2 + j] = Q[row][j];
-    }
-}
-
 void TransportCrossSectionCsv::PrepareInelasticData(CsHolder* tcsElIn) {
+    
+    if (tcsElIn->computed == false)
+        tcsElIn->Qin->Compute();
+
     auto& e = tcsElIn->Qin->E;
     auto& q = tcsElIn->Qin->Q;
 
@@ -361,39 +359,150 @@ void TransportCrossSectionCsv::PrepareInelasticData(CsHolder* tcsElIn) {
     }
 }
 
-void TransportCrossSectionCsv::Print(const std::string& filename, const std::vector<double>& x, GasMixture* gasmix) {
-    if (!solver || !solver->TCScalculator)
+void TransportCrossSectionCsv::PrepareMultiCsData(MultiCs* multiCs, size_t i) {
+    
+    if (!multiCs->computed)
+        multiCs->Compute();
+
+    const size_t nStates = multiCs->Size();
+    if (i >= nStates) {
+        std::cerr << "Error: state index " << i << " out of range (size=" << nStates << ")." << std::endl;
+        data.clear();
         return;
-
-    if (solver->TCScalculator->Q.empty())
-        solver->TCScalculator->Compute();
-
-    std::string tempFolder = customFolder;
-    customFolder += "/TransportCrossSections_" + tempFolder;
-
-    if (auto multi = dynamic_cast<MultiCs*>(solver->TCScalculator)) {
-        for (int i = 0; i < multi->Size(); ++i) {
-            PrepareMultiHeader(multi, i);
-            PrepareData(multi, i);
-            (i == 0) ? WriteData(filename) : AppendData(filename);
-        }
-    } 
-    else if (auto holder = dynamic_cast<CsHolder*>(solver->TCScalculator)) {
-        PrepareHeader();
-        PrepareData(x, gasmix);
-        WriteData(filename);
-
-        PrepareInelasticHeader();
-        PrepareInelasticData(holder);
-        AppendData(filename);
-    } 
-    else {
-        DataPrinter::Print(filename, x, gasmix);
     }
 
-    PrintMessage(filename);
-    customFolder = tempFolder;
+    auto& E = multiCs->Qs[i]->E;
+    auto& Q = multiCs->Qs[i]->Q;
+
+    data.assign(E.size(), std::vector<double>(5));
+    for (size_t j = 0; j < E.size(); ++j) {
+        data[j][0] = E[j];
+        for (size_t k = 0; k < 4; ++k)
+            data[j][k + 1] = Q[j][k];
+    }
 }
+
+void TransportCrossSectionCsv::Print(const std::string& filename,
+    const std::vector<double>& x,
+        GasMixture* gasmix) {
+
+    // --- 1) Case CsHolder: elastic + inelastic
+    if (CsHolder* tcsElIn = dynamic_cast<CsHolder*>(solver->TCScalculator)) {
+        
+        if (auto* elMulti = dynamic_cast<MultiCs*>(tcsElIn->Qe)) {
+        
+            const size_t n = elMulti->Size();
+            for (size_t i = 0; i < n; ++i) {
+        
+                // MultiCs per state
+                data.clear();
+                PrepareMultiCsData(elMulti, i);
+
+                PrepareHeader();    
+                //state label inline                         
+                header += ", (state: " + std::to_string(i+1) + ")";    
+
+                if (data.empty() || header.empty()) {
+                    std::cerr << "Error: elastic state " << i
+                              << " data or header not prepared." << std::endl;
+                    return;
+                }
+                
+                // First state -> write, others -> append
+                if (i == 0) WriteData(filename);
+                else        AppendData(filename);
+            }
+        } else {
+        
+            // simple elastic
+            data.clear();
+            PrepareHeader();
+            PrepareElasticData(tcsElIn);
+
+            if (data.empty() || header.empty()) {
+                std::cerr << "Error: elastic data or header not prepared." << std::endl;
+                return;
+            }
+
+            WriteData(filename);
+        
+        }
+
+        // Inelastic part if multi-state
+        if (auto* inMulti = dynamic_cast<MultiCs*>(tcsElIn->Qin)) {
+            
+            const size_t n = inMulti->Size();
+            for (size_t i = 0; i < n; ++i) {
+                
+                data.clear();
+                PrepareMultiCsData(inMulti, i);
+
+                PrepareInelasticHeader();                     
+                header += ", (state: " + std::to_string(i+1) + ")";     
+
+                if (data.empty() || header.empty()) {
+                    std::cerr << "Error: inelastic state " << i
+                              << " data or header not prepared." << std::endl;
+                    return;
+                }
+
+                AppendData(filename);
+            
+            }
+        
+        } else {
+        
+            // simple inelastic
+            data.clear();
+            PrepareInelasticHeader();
+            PrepareInelasticData(tcsElIn);
+
+            if (data.empty() || header.empty()) {
+                std::cerr << "Error: inelastic data or header not prepared." << std::endl;
+                return;
+            }
+            
+            AppendData(filename);
+        
+        }
+
+        PrintMessage(filename);
+        return;
+    }
+
+    // --- 2) case MultiCs ---
+    if (MultiCs* multiCs = dynamic_cast<MultiCs*>(solver->TCScalculator)) {
+        
+        const size_t n = multiCs->Size();
+        
+        for (size_t i = 0; i < n; ++i) {
+        
+            data.clear();
+            PrepareMultiCsData(multiCs, i);
+
+            PrepareHeader();                             
+            header += ", (state: " + std::to_string(i+1) + ")";    
+
+            if (data.empty() || header.empty()) {
+                std::cerr << "Error: MultiCs state " << i
+                          << " data or header not prepared." << std::endl;
+                return;
+            }
+
+            if (i == 0) WriteData(filename);
+            else        AppendData(filename);
+        }
+
+        PrintMessage(filename);
+        return;
+    }
+
+    // --- 3) Fallback: other CsCalculator ---
+    DataPrinter::Print(filename, x, gasmix);
+    return;
+    
+}
+
 
 void TransportCrossSectionCsv::PrintMessage(const std::string& filename) {
     std::cout << "Transport Cross Sections "
@@ -427,13 +536,24 @@ void CollisionIntegralCsv::PrepareHeader() {
 void CollisionIntegralCsv::PrepareData(const std::vector<double>& x, GasMixture* gasmix) {
     data.resize(x.size(), std::vector<double>(17));
 
+    // if gasmix is provided, store its initial temperature
+    double T0 = 0.0;
+    bool hadGas = (gasmix != nullptr);
+    if (hadGas) T0 = x.front();
+
     for (size_t i = 0; i < x.size(); ++i) {
-        gasmix->setT(x[i]);
+        const double T = x[i];
 
-        double lambda = gasmix->getCompositionObj()->getDebyeLength(x[i]);
-        double Te = x[i] * gasmix->theta->get();
+        double lambda = std::numeric_limits<double>::infinity(); // default: no Debye, nullsafe
+        double Te     = T;                                       // default: Te = T
 
-        solver->ComputeCollisionIntegral(Te, x[i], lambda);
+        if (hadGas) {
+            gasmix->setT(T);
+            lambda = gasmix->getCompositionObj()->getDebyeLength(T);
+            Te     = T * gasmix->theta->get();
+        }
+
+        solver->ComputeCollisionIntegral(Te, T, lambda);
 
         data[i][0] = solver->TijStar;
 
@@ -442,24 +562,16 @@ void CollisionIntegralCsv::PrepareData(const std::vector<double>& x, GasMixture*
             data[i][j + 1] = omega[j];
     }
 
-    // Reset state
-    gasmix->setT(x.front());
-    gasmix->restartComposition();
+    if (hadGas) {
+        gasmix->setT(T0);
+        gasmix->restartComposition();
+    }
 }
 
 void CollisionIntegralCsv::PrintMessage(const std::string& filename) {
     std::cout << "Collision Integral "
               << solver->InteractionName()
               << " printed (" << filename << ")." << std::endl;
-}
-
-void CollisionIntegralCsv::Print(const std::string& filename, const std::vector<double>& x, GasMixture* gasmix) {
-    std::string tempFolder = customFolder;
-    customFolder += "/CollisionIntegrals_" + tempFolder;
-
-    DataPrinter::Print(filename, x, gasmix);
-
-    customFolder = tempFolder;
 }
 
 CollisionIntegralCsv::CollisionIntegralCsv(CInterface* solver)

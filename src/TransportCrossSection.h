@@ -57,9 +57,10 @@ class TcsInterface {
     virtual InteractionInterface* GetIntInterface() = 0;
 
     /**
-     * @brief Clones the current object polymorphically.
+     * @brief Get the interface by cloning the current object polymorphically.
+     * @details Realization in concrete class.
      * @return Pointer to a deep copy of the derived `TcsInterface` instance. */
-    virtual TcsInterface* clone() = 0;
+    virtual TcsInterface* GetTcsInterface() = 0;
 
 };
 
@@ -100,13 +101,16 @@ class TransportCrossSection : public Interaction<T1, T2>, public virtual TcsInte
     /// @brief Downloads DCS from an external reference.
     void DownloadDCS(const std::string& hyperref) override;
 
+    
+    public:
+
     /// @brief Returns the current object as a base interaction interface.
     InteractionInterface* GetIntInterface() override { return this; }
-
-    /**
-     * @brief Returns a polymorphic clone of the current object.
-     * @return Deep copy of this TransportCrossSection. */
-    TcsInterface* clone() override;
+    
+    /** @brief Returns a polymorphic clone of the current object.
+     ** @return Deep copy of this TransportCrossSection. */
+    TcsInterface* GetTcsInterface() override;
+    
 
 };
 
@@ -168,6 +172,6 @@ TransportCrossSection<T1, T2>::TransportCrossSection(T1* t1, T2* t2) : Interacti
 }
 
 template <typename T1, typename T2>
-TcsInterface* TransportCrossSection<T1, T2>::clone() { return new TransportCrossSection<T1, T2>(*this); }
+TcsInterface* TransportCrossSection<T1, T2>::GetTcsInterface() { return new TransportCrossSection<T1, T2>(*this); }
 
 #endif
