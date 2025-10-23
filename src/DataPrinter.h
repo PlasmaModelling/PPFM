@@ -195,6 +195,8 @@ public:
 };
 
 /// @brief CSV printer for Transport Cross Sections.
+/// @details Transport Cross Sections are independent from GasMixture, place yours 
+/// as the third argument of Print or use nullptr.
 /// @see class DataPrinter for CSV handling.
 class TransportCrossSectionCsv : public DataPrinter {
 
@@ -210,17 +212,17 @@ class TransportCrossSectionCsv : public DataPrinter {
     /// @brief Prepares the CSV header for inelastic transport cross sections.
     void PrepareInelasticHeader();
 
-    /// @brief Prepares a header for MultiCs datasets.
-    void PrepareMultiHeader(MultiCs* cscalc, int i);
-
     /// @brief Prepares data for elastic cross sections.
     void PrepareData(const std::vector<double>& x, GasMixture* gasmix) override;
 
-    /// @brief Prepares data for a MultiCs instance.
-    void PrepareData(MultiCs* cscalc, int i);
+    /// @brief Prepares elastic data from a CsHolder.
+    void PrepareElasticData(CsHolder* tcsElIn);
 
     /// @brief Prepares inelastic data from a CsHolder.
     void PrepareInelasticData(CsHolder* tcsElIn);
+
+    /// @brief Prepares data for MultiCs objects.
+    void PrepareMultiCsData(MultiCs* multiCs, size_t i);
 
     /// @brief Prints a confirmation message after writing the file.
     void PrintMessage(const std::string& filename) override;
@@ -238,6 +240,8 @@ public:
 };
 
 /// @brief CSV printer for Collision Integrals.
+/// @details For printing single collision integrals not referring to a GasMixture
+/// call for Print with nullptr as GasMixture pointer (third argument).
 /// @see class DataPrinter for CSV handling.
 class CollisionIntegralCsv : public DataPrinter {
 
@@ -264,8 +268,6 @@ public:
     /// @brief Constructor with solver and custom output folder.
     CollisionIntegralCsv(CInterface* solver, const std::string& folder);
 
-    /// @brief Overrides default print to prepend CollisionIntegrals_ subfolder.
-    void Print(const std::string& filename, const std::vector<double>& x, GasMixture* gasmix) override;
 };
 
 /// @brief Outputs partition functions computed from PFinterface to CSV.
