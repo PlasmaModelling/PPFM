@@ -363,7 +363,7 @@ double ElectronicAtomicPF::compute(double T, double P, double debye) {
     // From Capitelli Fundamental Aspects of Chemical Plasma Physics (FACPP)
 
     // FACPP formula 8.3: Lowering Ionization Potential
-    double DeltaIs = (std::pow(qe,2)*(sp->getCharge()+1)) / (4*std::numbers::pi*eps0*debye);
+    double DeltaIs = (std::pow(qe,2.)*pow((sp->getCharge()+1),2.)) / (8.*std::numbers::pi*eps0*debye);
 
     // Debye-Hückel cutoff for partition function
     double epsMax = sp->IonLim() - DeltaIs;
