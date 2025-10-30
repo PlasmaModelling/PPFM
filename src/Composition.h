@@ -31,7 +31,7 @@ class Composition {
     friend class Thermodynamics;
     friend class CompositionCsv;
 
-protected:
+    protected:
 
     /// @brief Mixture reference (defines species and elements count)
     Mixture* mixptr;
@@ -58,7 +58,24 @@ protected:
     /// @brief Selected Debye length formulation, defaults to Rat2002Th
     DebyeModel debyeChoice = DebyeModel::Rat2002Th;
 
-public:
+    /** @brief Formation energies
+     * @details Null for electrons and neutral atoms
+     * equal to the ionization energy for positive ions,
+     * bond dissociation energy and electron affinity with negative sign for molecules,
+     * and anions, respectively. */
+    std::vector <double> epsf;
+
+    /// @brief Debye length via Rat (2002)
+    double Debye_Rat2002(double T);
+
+    /// @brief Debye length via Ghourui formulation
+    double Debye_Ghourui(double T);
+
+    virtual void initializeComposition();
+
+    std::vector<double> totalPartitionFunctions ( double T, double P, double lambdaD );
+
+    public:
 
     /// @brief Base constructor
     Composition(Mixture* mix, Gas* gas) ;
@@ -103,14 +120,6 @@ public:
     /// @brief Set which Debye model to use
     void setDebyeModel(const std::string& modelName);
 
-private:
-
-    /// @brief Debye length via Rat (2002)
-    double Debye_Rat2002(double T);
-
-    /// @brief Debye length via Ghourui formulation
-    double Debye_Ghourui(double T);
-
 };
 
 /**
@@ -125,23 +134,26 @@ private:
  * Composition in Gaseous Mixtures.pdf">Reference article</a> */
 class GodinTrepSahaSolver : public Composition {
 
-    /// @brief Composition Matrix, fixed on given Mixture
-    std::vector<std::vector<double>> C;
-
-public:
+    
+    public:
     
     /// @brief Base constructor
     GodinTrepSahaSolver(Mixture* mix, Gas* gas);
-
+    
     /// @brief Constructor with qbox assignment.
     GodinTrepSahaSolver(Mixture* mix, Gas* gas, PfBox* qbox);
-
+    
     /** @brief Solve the composition with the specified algorithm in this class reference
-    and store results in member ni. */
+    *** and store results in member ni. */
     void CompositionSolve(Mixture* mix, Gas* gas) override;
+    
+    void CompositionSolveLambdaFrozen( Mixture* mix, Gas* gas, double lambda );
 
-private:
+    protected:
 
+    /// @brief Composition Matrix, fixed on given Mixture
+    std::vector<std::vector<double>> C;
+     
     /// @brief Construct the composition matrix rows for a given specie.
     std::vector<double> Crow(Species* specie, const std::map<std::type_index, int>& colmap);
 
@@ -155,6 +167,48 @@ private:
     /// @brief Identify base and non-base species indices as described in the algorithm.
     void baseCalc(std::vector<int>& b, std::vector<int>& bs,
         const std::vector<std::vector<double>>& C);
+
+    /** @brief Effective pressure used in the Saha equations. 
+     * Peff = P in the ideal case; future modifications may include non-ideal effects.
+     * like Debye-Huckle corrections. */
+    double Peff; 
+
+};
+
+/**
+ * @brief Extension of GodinTrepSahaSolver with Debye–Hückel corrections.
+ * @details Implements the iterative Debye–Hückel correction to the equilibrium composition
+ * by updating the effective pressure and the formation energies of charged species
+ * until self-consistency between Debye length and total density is reached.
+ * References:
+ * - Capitelli Fundamental Aspects of Chemical Plasma Physics, 2016,
+ * - Godin, A., & Trépanier, J.-Y., (2002), *J. Thermophys. Heat Transfer*, 16(1), 145–152. */
+class GTSahaDHcorrection : public GodinTrepSahaSolver {
+
+    public:
+
+    /// @brief Base constructor.
+    GTSahaDHcorrection(Mixture* mix, Gas* gas);
+
+    /// @brief Constructor with PfBox assignment.
+    GTSahaDHcorrection(Mixture* mix, Gas* gas, PfBox* qbox);
+
+    /// @brief Solve the composition including Debye–Hückel corrections.
+    void CompositionSolve(Mixture* mix, Gas* gas) override;
+
+    protected:
+
+    /// @brief Compute Debye–Hückel correction to pressure [Pa].
+    double pressureCorrection(double T, double lambdaD) ;
+
+    /// @brief Apply DH correction to formation energies (species with z ≠ 0).
+    std::vector<double> formationEnergyDHcorrected (double lambdaD);
+
+    /// @brief Convergence tolerance for Debye iteration.
+    double tol = 1e-6;
+
+    /// @brief Maximum number of iterations for self-consistent DH correction.
+    int maxIter = 500;
 
 };
 

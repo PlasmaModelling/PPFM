@@ -148,7 +148,10 @@ void CompositionCsv::PrepareData(const std::vector<double>& temperatureRange, Ga
     std::vector<std::vector<double>> ns(temperatureRange.size(),
         std::vector<double>(mix->getN()));
 
+    data.clear() ; 
     data.resize(temperatureRange.size(), std::vector<double>(mix->getN() + 2));
+
+    solver = mix->getCompositionObj();
 
     for (int i = 0; i < temperatureRange.size(); i++) {
         

@@ -12,8 +12,22 @@
 #include "Species.h"
 
 using AcceptedSpecies = std::variant<
+    Electron*,
     Argon*,
-    ArgonI*
+    ArgonI*,
+    ArgonII*,
+    ArgonIII*,
+    ArgonIV*,
+    Krypton*,
+    KryptonI*,
+    KryptonII*,
+    KryptonIII*,
+    KryptonIV*,
+    Xenon*,
+    XenonI*,
+    XenonII*,
+    XenonIII*,
+    XenonIV*
 >;
 
 #endif // ACCEPTED_SPECIES_H

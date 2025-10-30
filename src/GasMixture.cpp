@@ -34,8 +34,7 @@ void GasMixture::restartComposition() {
 
     PfBox* tempPFBOX = Comp->Qbox;
     delete Comp; 
-    Comp = new GodinTrepSahaSolver(this, this);
-    Comp->setPfBox(tempPFBOX);
+    Comp = new GTSahaDHcorrection(this, this, tempPFBOX);
     Comp->CompositionSolve(this, this);
 
 }
