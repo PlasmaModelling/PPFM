@@ -16,18 +16,44 @@
 // __________________________ Composition (abstract) __________________________ //
 
 Composition::Composition(Mixture* mix, Gas* gas)
-    : Composition(mix, gas, new PfBox(mix)) { initializeComposition(); }
+    : mixptr(mix), gasptr(gas) { 
+
+        initializeComposition(); 
+        initializeFormationEnergies();
+
+        // Just a default PfBox, assign it in the overload and wherever 
+        Qbox = new PfBox(mix) ; 
+
+}
 
 Composition::Composition(Mixture* mix, Gas* gas, PfBox* qbox)
-    : mixptr(mix), gasptr(gas), Qbox(qbox) {
+    : Composition(mix,gas) {
 
-        initializeComposition();
+        Qbox = qbox ; 
+
+}
+
+void Composition::initializeFormationEnergies() {
+
+    epsf.resize(mixptr->getN(), 0.0);
+        for (int i = 0; i < mixptr->getN(); i++) 
+            epsf[i] = (*mixptr)(i)->formationEnergy();
+
+}
+
+void Composition::initializeComposition() {
+
+    ni.resize(mixptr->getN(), 0.0);
+    for (int i = 0; i < mixptr->getN(); i++) {
         
-        epsf.resize(mix->getN(), 0.0);
-        for (int i = 0; i < mix->getN(); i++) 
-            epsf[i] = (*mix)(i)->formationEnergy();
-
-
+        if ((*mixptr)(i)->getFormula() == "e-")
+            ni[i] = 1.e+15;
+        else if (mixptr->isBase((*mixptr)(i)))
+            ni[i] = gasptr->getPressure() / (KB * gasptr->getTemperature());
+        else
+            ni[i] = 1.e+10;
+    
+    }
 }
 
 std::vector<double> Composition::compositions(double conversion) {
@@ -88,29 +114,17 @@ double Composition::getDebyeLength(double T) {
             throw std::runtime_error("Unknown Debye model selected");
     }
 
-    // --- ion-sphere cutoff ----------------------------------------------
-    /* double nch = 0.0;
-    
-    int N = mixptr->getN();
+    /* no cut-off adobted, if the Debye Length goes too low  you're maybe 
+    trying to compute outside the scope of the model itself. */
 
-    for (int i = 0; i < N; ++i) {
-        Species* sp = (*mixptr)(i);
-        const int z = sp->getCharge();
-        if (z != 0)
-            nch += ni[i];
-    }
-
-    if (nch > 0.0) {
-        double a = std::pow(1.0 / (8.0 * std::numbers::pi * nch), 1.0 / 3.0);
-        lambdaD = std::max(lambdaD, a);
-    }
-    */
     return lambdaD;
+
 }
 
 
 double Composition::Debye_Rat2002(double T) {
 
+    // ni.back() == ne , in Mixture e- is always the last specie
     return std::sqrt((eps0 * KB * T) / (qe * qe * ni.back()));
 
 }
@@ -118,37 +132,14 @@ double Composition::Debye_Rat2002(double T) {
 double Composition::Debye_Ghourui(double T) {
 
     double sum = 0.0;
-    int M = mixptr->getM();
     
-    for (size_t i = 0; i < ni.size(); i++)
+    for (size_t i = 0; i < mixptr->getN(); i++)
         sum += ( std::pow((*mixptr)(i)->getCharge(), 2.0) * ni[i] ) ; 
     
     sum *= (qe * qe) / (eps0 * KB * T );
 
     return std::sqrt(1.0 / sum);
-}
-
-void Composition::initializeComposition() {
-
-    int N = mixptr->getN();
-    int M = mixptr->getM();
-    double P = gasptr->getPressure();
-    double T = gasptr->getTemperature();
-
-    std::vector<Species*> species;
-    for (int i = 0; i < N; i++)
-        species.push_back((*mixptr)(i));
-
-    ni.resize(N, 0.0);
-    for (int i = 0; i < N; i++) {
-        if (species[i]->getFormula() == "e-")
-            ni[i] = 1.e15;
-        else if (mixptr->isBase(species[i]))
-            ni[i] = P / (KB * T);
-        else
-            ni[i] = 1.e10;
-    }
-
+    
 }
 
 std::vector<double> Composition::totalPartitionFunctions(double T, double P, double lambdaD) {
@@ -191,18 +182,29 @@ std::vector<double> Composition::totalPartitionFunctions(double T, double P, dou
 GodinTrepSahaSolver::GodinTrepSahaSolver(Mixture* mix, Gas* gas)
     : Composition(mix, gas) {
 
+    N = mix->getN();
+    M = mix->getM();
+    L = N-M ;
     C = CompositionMatrix(*mix);
+    B = std::vector<std::vector<double>> (M,std::vector<double>(M));
+    Bs = std::vector<std::vector<double>> (L,std::vector<double>(M));
+    Binv = std::vector<std::vector<double>> (M,std::vector<double>(M));
+    v = std::vector<std::vector<double>> (L,std::vector<double>(M));
+    b = std::vector<int> (N) ;
+    bs = std::vector<int> (L) ;
+    A0 = std::vector<double> (M) ;
 
-    Peff = gas->getPressure() ;
+    /* Being this the ideal solver Peff is always equal to gas->getPressure() 
+    and can be initialized in the constructor, this is not the case for example for 
+    DH corrections */
+    Peff = gasptr->getPressure() ; 
 
 }
 
 GodinTrepSahaSolver::GodinTrepSahaSolver(Mixture* mix, Gas* gas, PfBox* qbox)
-    : Composition(mix, gas, qbox) {
+    : GodinTrepSahaSolver(mix,gas) {
 
-    C = CompositionMatrix(*mix);
-
-    Peff = gas->getPressure() ;
+    Qbox = qbox ; 
 
 }
 
@@ -247,9 +249,6 @@ std::vector<double> GodinTrepSahaSolver::Crow(Species* specie,
 
 std::vector<std::vector<double>> GodinTrepSahaSolver::CompositionMatrix(Mixture& mixx) {
 
-    int N = mixx.getN();
-    int M = mixx.getM();
-
     std::map<std::type_index, int> columns;
 
     int k = 0;
@@ -269,8 +268,6 @@ std::vector<std::vector<double>> GodinTrepSahaSolver::ConservationMatrix(
     Mixture& mixx, Gas& gass, const std::vector<std::vector<double>>& C) {
 
     double theta = gass.theta->get();
-    int N = mixx.getN();
-    int M = mixx.getM();
 
     std::map<std::type_index, double> nuclei;
     for (int i = 0; i < N; i++)
@@ -340,20 +337,20 @@ std::vector<std::vector<double>> GodinTrepSahaSolver::ConservationMatrix(
 void GodinTrepSahaSolver::baseCalc(std::vector<int>& b, std::vector<int>& bs,
     const std::vector<std::vector<double>>& C) {
 
-    int N = b.size();
-    int M = b.size() - bs.size();
-    int* perm = new int[N];
-    double* n_ord = new double[N];
+    int Nn = b.size();
+    int Mm = b.size() - bs.size();
+    int* perm = new int[Nn];
+    double* n_ord = new double[Nn];
 
-    for (int i = 0; i < N; i++) n_ord[i] = ni[i];
-    sort(n_ord, perm, N);
+    for (int i = 0; i < Nn; i++) n_ord[i] = ni[i];
+    sort(n_ord, perm, Nn);
 
     int tmp = 1;
-    for (int i = 0; i < M; i++) {
+    for (int i = 0; i < Mm; i++) {
 
         int j = 0;
-        b[i] = perm[N - 1];
-        if (C[perm[N - 1]][i] == 0) tmp = 0;
+        b[i] = perm[Nn - 1];
+        if (C[perm[Nn - 1]][i] == 0) tmp = 0;
 
         for (int l = 0; l < i; l++)
             if (b[l] == b[i]) tmp = 0;
@@ -361,8 +358,8 @@ void GodinTrepSahaSolver::baseCalc(std::vector<int>& b, std::vector<int>& bs,
         while (tmp == 0) {
 
             j += 1;
-            b[i] = perm[N - 1 - j];
-            if (C[perm[N - 1 - j]][i] != 0) tmp = 1;
+            b[i] = perm[Nn - 1 - j];
+            if (C[perm[Nn - 1 - j]][i] != 0) tmp = 1;
 
             for (int l = 0; l < i; l++)
                 if (b[l] == b[i]) tmp = 0;
@@ -371,10 +368,10 @@ void GodinTrepSahaSolver::baseCalc(std::vector<int>& b, std::vector<int>& bs,
     }
 
     int l = 0;
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < Nn; i++) {
 
         tmp = 0;
-        for (int j = 0; j < M; j++)
+        for (int j = 0; j < Mm; j++)
             if (i == b[j]) tmp = 1;
 
         if (tmp == 0) {
@@ -389,39 +386,25 @@ void GodinTrepSahaSolver::baseCalc(std::vector<int>& b, std::vector<int>& bs,
     delete[] n_ord;
 }
 
-void GodinTrepSahaSolver::CompositionSolve(Mixture* mix, Gas* gas) {
+void GodinTrepSahaSolver::CompositionSolve(Mixture* mix, Gas* gas, std::optional<double> lambda) {
     
     double theta = gas->theta->get() ; 
-
-    int N = mix->getN();
-    int M = mix->getM();
-    int L = N-M ;
     double T = gas->getTemperature() ; 
-    
+
     std::vector<Species*> species ; 
     for (int i = 0; i < N; i++)
         species.push_back((*mix)(i)) ; 
-        
-    std::vector<std::vector<double>> B (M,std::vector<double>(M));
-    std::vector<std::vector<double>> Bs (L,std::vector<double>(M));
-    std::vector<std::vector<double>> Binv (M,std::vector<double>(M));
-    std::vector<std::vector<double>> v (L,std::vector<double>(M));
-    std::vector<int> b(N);
-    std::vector<int> bs(L);
-    std::vector<double> A0(M);
-
 
     baseCalc ( b, bs, C );
-    for(int i = 0;i < M; i++) {
-        for(int j = 0; j < M; j++) {
+    for(int i = 0;i < M; i++) 
+        for(int j = 0; j < M; j++) 
             B[i][j] = C[b[i]][j];
-        }
-    }
-    for(int i=0;i<L;i++) {
-        for(int j=0;j<M;j++) {
+        
+    
+    for(int i=0;i<L;i++) 
+        for(int j=0;j<M;j++) 
             Bs[i][j] = C[bs[i]][j];
-        }
-    }
+        
     lu_inv(Binv,B,M);
     matrix_prod(v,Bs,Binv,L,M);
 
@@ -431,7 +414,7 @@ void GodinTrepSahaSolver::CompositionSolve(Mixture* mix, Gas* gas) {
         A0[j] = 0.;
     A0[M-1] = Peff ;
 
-    // algoritmo di calcolo
+    // Finally, the core of the algorithm described in the reference
     
     double dnmax, ntot, prod;
     int iter;
@@ -447,19 +430,19 @@ void GodinTrepSahaSolver::CompositionSolve(Mixture* mix, Gas* gas) {
     
     while(dnmax>ERR && iter<itermax){
         
+        /* Newton base densities */
+
         /* residuals as in - GODIN: eq 34 */
         residual(R,J,ni,A,A0,v,b,bs,N,M);
-        for(int i=0; i<M; i++){
+        for(int i=0; i<M; i++)
             R[i] = - R[i];
-        }
         
         /* dn as in GODIN - eq 33 */
         lu_sistema(dn,J,R,M);
 
         /*Bdet = lu_det(J,M); */
-        for(int i=0; i<N; i++) {
+        for(int i=0; i<N; i++) 
             nold[i] = ni[i];
-        } 				
         
         /*update base densities GODIN eq.30*/
         for(int i = 0; i < M; i++ ) 
@@ -472,10 +455,14 @@ void GodinTrepSahaSolver::CompositionSolve(Mixture* mix, Gas* gas) {
             
         }
         
-        // calcolo funzioni di partizione totali
-        std::vector<double> Qtot = totalPartitionFunctions(T,Peff, getDebyeLength(T));
+        // In case of frozen lambda GodinTrepSahaSolver::CompositionSolve 
+        // has to be called with lambda value assigned.
+        double lambdaEff = lambda.has_value() ? *lambda : getDebyeLength(T);
+        // Total partition functions calculation 
+        std::vector<double> Qtot = totalPartitionFunctions(T, Peff, lambdaEff);
         
-        /*update not-base densities: GODIN - eq 30*/
+        /* Mass Action Law */
+        /* update not-base densities: GODIN - eq 30 */
         for(int j = 0; j < (N-M); j++){
             
             prod = 1.;
@@ -492,122 +479,7 @@ void GodinTrepSahaSolver::CompositionSolve(Mixture* mix, Gas* gas) {
         
         }
 
-        /* convergence of the method */
-        ntot = 0.;	
-        
-        for(int i=0; i<N; i++){nold[i] = ni[i]-nold[i];}
-        for(int i=0; i<N; i++){ntot += ni[i]; }
-        
-        dnmax = max_double(nold,N)/ntot ;
-        iter += 1; 
-    
-    }
-}
-
-void GodinTrepSahaSolver::CompositionSolveLambdaFrozen(Mixture* mix, Gas* gas, double lambda) {
-    
-    double theta = gas->theta->get() ; 
-
-    int N = mix->getN();
-    int M = mix->getM();
-    int L = N-M ;
-    double T = gas->getTemperature() ; 
-    
-    std::vector<Species*> species ; 
-    for (int i = 0; i < N; i++)
-        species.push_back((*mix)(i)) ; 
-        
-    std::vector<std::vector<double>> B (M,std::vector<double>(M));
-    std::vector<std::vector<double>> Bs (L,std::vector<double>(M));
-    std::vector<std::vector<double>> Binv (M,std::vector<double>(M));
-    std::vector<std::vector<double>> v (L,std::vector<double>(M));
-    std::vector<int> b(N);
-    std::vector<int> bs(L);
-    std::vector<double> A0(M);
-
-
-    baseCalc ( b, bs, C );
-    for(int i = 0;i < M; i++) {
-        for(int j = 0; j < M; j++) {
-            B[i][j] = C[b[i]][j];
-        }
-    }
-    for(int i=0;i<L;i++) {
-        for(int j=0;j<M;j++) {
-            Bs[i][j] = C[bs[i]][j];
-        }
-    }
-    lu_inv(Binv,B,M);
-    matrix_prod(v,Bs,Binv,L,M);
-
-    std::vector<std::vector<double>> A = ConservationMatrix(*mix,*gas,C) ;
-    
-    for( int j = 0 ; j < M-1 ; j++) 
-        A0[j] = 0.;
-    A0[M-1] = Peff ;
-
-    // algoritmo di calcolo
-    
-    double dnmax, ntot, prod;
-    int iter;
-    const int itermax = 10000;
-    const double ERR = 1.e-15;
-    std::vector<double> dn(M,0.0) ;
-    std::vector<double> R(M,0.0) ;
-    std::vector<double> nold(N,0.0) ;
-    std::vector<std::vector<double>> J(M,std::vector<double>(M)) ;
-    const double nmin = 1. ;
-    dnmax = ERR + 1.;
-    iter = 0;
-    
-    while(dnmax>ERR && iter<itermax){
-        
-        /* residuals as in - GODIN: eq 34 */
-        residual(R,J,ni,A,A0,v,b,bs,N,M);
-        for(int i=0; i<M; i++){
-            R[i] = - R[i];
-        }
-        
-        /* dn as in GODIN - eq 33 */
-        lu_sistema(dn,J,R,M);
-
-        /*Bdet = lu_det(J,M); */
-        for(int i=0; i<N; i++) {
-            nold[i] = ni[i];
-        } 				
-        
-        /*update base densities GODIN eq.30*/
-        for(int i = 0; i < M; i++ ) 
-            ni[b[i]] += dn[i];
-            
-        for(int i = 0; i < M; i++ ) {
- 
-            if (ni[b[i]] < nmin) 
-                ni[b[i]] = nmin;
-            
-        }
-        
-        // calcolo funzioni di partizione totali
-        std::vector<double> Qtot = totalPartitionFunctions(T,Peff, lambda);
-        
-        /*update not-base densities: GODIN - eq 30*/
-        for(int j = 0; j < (N-M); j++){
-            
-            prod = 1.;
-            
-            for(int i = 0; i < M; i++){
-
-                prod *= pow((ni[b[i]]),v[j][i]) *
-                    pow(1./Qtot[b[i]],v[j][i]);
-            
-            }
-            
-            ni[bs[j]] = prod * Qtot[bs[j]];
-            if(ni[bs[j]] < nmin){ ni[bs[j]] = nmin;}
-        
-        }
-
-        /* convergence of the method */
+        /* convergence */
         ntot = 0.;	
         
         for(int i=0; i<N; i++){nold[i] = ni[i]-nold[i];}
@@ -625,95 +497,91 @@ GTSahaDHcorrection::GTSahaDHcorrection(Mixture* mix, Gas* gas)
     : GodinTrepSahaSolver(mix, gas) {
 
     setDebyeModel("Ghourui");
+    /* Peff changes during computatio, has to be assigned in Solve */
 
 }  
 
 GTSahaDHcorrection::GTSahaDHcorrection(Mixture* mix, Gas* gas, PfBox* qbox)
-    : GodinTrepSahaSolver(mix, gas, qbox) {
+    : GodinTrepSahaSolver(mix, gas) {
+    
+    Qbox = qbox ; 
 
-    setDebyeModel("Ghourui");
+}
 
-}   
-
-double GTSahaDHcorrection::pressureCorrection(double T, double lambdaD) {
+double GTSahaDHcorrection::pressureDHcorrected(double T, double lambdaD) {
     
     // Capitelli Fundamental Aspects of Chemical Plasma Physics, 2016,
     // Eq. 6.23-6.24, pp. 105
     // P_DH = -k_B T / (24π λ_D^3)
-    return - (KB * T) / (48.0 * std::numbers::pi * std::pow(lambdaD, 3));
+    return gasptr->getPressure() + ((KB * T) / (24.0 * std::numbers::pi * std::pow(lambdaD, 3.)));
 
 }
 
 std::vector<double> GTSahaDHcorrection::formationEnergyDHcorrected (double lambdaD) {
 
+    /* Be sure corrections are applied only to original 
+    formation energies from chemical species */
+    initializeFormationEnergies() ; 
+
     // Capitelli Fundamental Aspects of Chemical Plasma Physics, 2016,
     // Eq. 6.45 pp. 109
     double KDH = (qe * qe) / (8. * std::numbers::pi * eps0 * lambdaD);
     
-    // Eq. 6.44 pp. 109
+    // Eq. 6.44 pp. 109 
     std::vector<double> delta_epsf;
-    for (size_t i = 0; i < mixptr->getN()-1; i++)
-        delta_epsf.push_back(KDH * std::pow((*mixptr)(i)->getCharge()+1, 2.));
+    for (size_t i = 0; i < mixptr->getN(); i++)
+        delta_epsf.push_back(KDH * std::pow((*mixptr)(i)->getCharge(), 2.));
         
     std::vector<double> corrected_epsf;
-    for (size_t i = 0; i < mixptr->getN()-1; i++)
+    for (size_t i = 0; i < mixptr->getN(); i++)
         corrected_epsf.push_back(epsf[i] - delta_epsf[i]);
 
     return corrected_epsf;
 
 }
-void GTSahaDHcorrection::CompositionSolve(Mixture* mix, Gas* gas) {
+
+void GTSahaDHcorrection::CompositionSolve(Mixture* mix, Gas* gas, std::optional<double> lambda) {
 
     double T = gas->getTemperature();
-    double Pid = gas->getPressure();
-
-    // Backup delle energie di formazione originali
-    std::vector<double> epsf0(mix->getN(), 0.0);
-    for (int i = 0; i < mix->getN(); i++) 
-        epsf0[i] = (*mix)(i)->formationEnergy();
-
-    // Inizializzazione variabili Debye-Hückel
+    
+    // Convergence on Debye Length
     double lambdaOld = getDebyeLength(T);
     double lambdaNew = 0.0;
     double deltaLambda = 1.0;
 
-    // Variabili per la convergenza sulla pressione efficace
+    // Convergence on Peff
     double PeffOld = gas->getPressure();
     double PeffNew = PeffOld;
     double deltaPeff = 1.0;
 
     int iter = 1;
-    const double relax = 0.3; // coefficiente di rilassamento (0 < relax <= 1)
+    // relaxing coefficient (0 < relax <= 1)
+    const double relax = 0.3; 
 
     while ((deltaLambda > tol && deltaPeff > tol) && iter <= maxIter) {
 
-        // Ripristina le energie di formazione originali e la pressione ideale
-        epsf = epsf0;
-        Peff = Pid;
-
-        // Correzione DH delle energie di formazione
+        // Formation Energy Corrections
         epsf = formationEnergyDHcorrected(lambdaOld);
 
-        // Calcola correzione DH sulla pressione (negativa)
-        double PDH = pressureCorrection(T, lambdaOld);
-        PeffNew = Pid + PDH;  // Peff = P + PDH
+        // Peff = P + PDH
+        PeffNew = pressureDHcorrected(T, lambdaOld);  
 
-        // Rilassamento sulla pressione per stabilità numerica
+        // Relaxing on pressure
         double PeffMixed = (1.0 - relax) * PeffOld + relax * PeffNew;
         Peff = PeffMixed;
 
         // Risolve la composizione con le energie corrette
-        GodinTrepSahaSolver::CompositionSolveLambdaFrozen(mix, gas, lambdaOld);
+        GodinTrepSahaSolver::CompositionSolve(mix, gas, lambdaOld);
 
-        // Aggiorna lunghezza di Debye
+        // Relaxing on Debye Length
         lambdaNew = getDebyeLength(T);
         double lambdaMixed = (1.0 - relax) * lambdaOld + relax * lambdaNew;
 
-        // Calcola variazioni relative
+        // Errors
         deltaLambda = std::abs((lambdaMixed - lambdaOld) / lambdaOld);
-        deltaPeff   = std::abs((PeffMixed - PeffOld) / Pid);
+        deltaPeff   = std::abs((PeffMixed - PeffOld) / PeffOld);
 
-        // Aggiorna per iterazione successiva
+        // Update
         lambdaOld = lambdaMixed;
         PeffOld   = PeffMixed;
         iter += 1;
@@ -721,7 +589,7 @@ void GTSahaDHcorrection::CompositionSolve(Mixture* mix, Gas* gas) {
         // Debug log
         if (iter>=maxIter) {
 
-            std::cout << "[Iter " << iter << "] T=" << T << " K "
+            std::cout << "[IterMax reached] T=" << T << " K "
             << "λ_D=" << lambdaMixed << " m, "
             << "Δλ/λ=" << deltaLambda << ", "
             << "Peff=" << Peff << " Pa, "
