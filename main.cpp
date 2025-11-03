@@ -60,9 +60,9 @@ int main() {
     xenon->getCompositionObj()->getPfBox()->AllAbInitio(); 
 
     // Thermodynamic solvers + printers
-    auto thermArSolver = new Thermodynamics();
-    auto thermKrSolver = new Thermodynamics();
-    auto thermXeSolver = new Thermodynamics();
+    auto thermArSolver = new ThermodynamicsDHcorrected();
+    auto thermKrSolver = new ThermodynamicsDHcorrected();
+    auto thermXeSolver = new ThermodynamicsDHcorrected();
 
     auto thermAr = new ThermodynamicsCsv(thermArSolver, folder);
     auto thermKr = new ThermodynamicsCsv(thermKrSolver, folder); 
@@ -165,9 +165,9 @@ int main() {
         compXe->Print("Xe Composition " + p_strings[i], T, xenon); 
 
         // Thermodynamic properties
-        // thermAr->Print("Ar Thermodynamics " + p_strings[i], T, argon);
-        // thermKr->Print("Kr Thermodynamics " + p_strings[i], T, krypton);
-        // thermXe->Print("Xe Thermodynamics " + p_strings[i], T, xenon);
+        thermAr->Print("Ar Thermodynamics " + p_strings[i], T, argon);
+        thermKr->Print("Kr Thermodynamics " + p_strings[i], T, krypton);
+        thermXe->Print("Xe Thermodynamics " + p_strings[i], T, xenon);
 
         // Transport properties
         // devAr->Print("Ar Transport " + p_strings[i], T, argon);

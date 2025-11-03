@@ -16,7 +16,7 @@ class GasMixture;
 /// @brief Computes thermodynamic properties for a given gas mixture.
 class Thermodynamics {
 
-protected:
+    protected:
 
     /** @brief Vector of computed thermodynamic quantities.
     * @details Indexing:  
@@ -32,7 +32,10 @@ protected:
     * [9] a [m/s] */
     std::vector<double> Td;
 
-public:
+    /// @brief saving final dRdP to correct speed of sound in DH corrections 
+    double dRdP_final ; 
+
+    public:
     
     /// @brief Constructs the object and initializes the thermodynamic vector.
     Thermodynamics() { Td.resize(10, 0.0); }
@@ -54,6 +57,15 @@ public:
     double cv()    const { return Td[7]; }
     double gamma() const { return Td[8]; }
     double a()     const { return Td[9]; }
+};
+
+class ThermodynamicsDHcorrected : public Thermodynamics {
+
+    /**
+     * @brief Computes thermodynamic properties as parent class 
+     * and just applies for DH corrections */
+    void computeThermodynamics(GasMixture& gasmix);
+    
 };
 
 #endif
