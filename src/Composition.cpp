@@ -519,9 +519,6 @@ GTSahaDHcorrection::GTSahaDHcorrection(Mixture* mix, Gas* gas, PfBox* qbox)
 
 }
 
-GTSahaDHcorrection::GTSahaDHcorrection(Composition* CompToCopy)
-    : GTSahaDHcorrection(CompToCopy->mixptr, CompToCopy->gasptr, CompToCopy->Qbox) {}
-
 void GTSahaDHcorrection::restart() {
     
     *this = GTSahaDHcorrection(
