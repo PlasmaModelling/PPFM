@@ -90,6 +90,8 @@ class Composition {
     /// @brief Compute Total Partition Functions
     std::vector<double> totalPartitionFunctions(double T, double P, double lambdaD);
 
+    virtual void restart() = 0;
+
     virtual ~Composition() = default;
 
     public:
@@ -199,6 +201,8 @@ class GodinTrepSahaSolver : public Composition {
     void baseCalc(std::vector<int>& b, std::vector<int>& bs,
         const std::vector<std::vector<double>>& C);
 
+    virtual void restart() override;
+
 };
 
 /** @brief Extension of GodinTrepSahaSolver with Debye–Hückel corrections.
@@ -234,6 +238,8 @@ class GTSahaDHcorrection : public GodinTrepSahaSolver {
 
     /// @brief Maximum number of iterations for self-consistent DH correction.
     int maxIter = 500;
+
+    virtual void restart() override;
 
 };
 
