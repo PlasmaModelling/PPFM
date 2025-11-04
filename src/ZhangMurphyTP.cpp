@@ -22,43 +22,43 @@ void ZhangMurphyTP::computeTransport( GasMixture* gasmix ) {
     
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
-            D[i][j] = Dij(gasmix, 3, i, j);
+            D[i][j] = Dij(gasmix, orders[0], i, j);
         }
     }
 
     DT.resize(N, 0.);
 
     for (int i = 0; i < N; i++) {
-        DT[i] = DiT(gasmix, 3, i);
+        DT[i] = DiT(gasmix, orders[1], i);
     }
 
     Tp.resize(6, 0.);
 
     // Calculate properties in parallel or sequentially
-    Tp[0] = ThermalCondEl(gasmix, 3);
+    Tp[0] = ThermalCondEl(gasmix, orders[2]);
 
-    Tp[1] = ThermalCondHeavy(gasmix, 2);
+    Tp[1] = ThermalCondHeavy(gasmix, orders[3]);
 
-    Tp[2] = Viscosity(gasmix, 1);
+    Tp[2] = Viscosity(gasmix, orders[4]);
 
-    Tp[3] = ElCond(gasmix, 4);
+    Tp[3] = ElCond(gasmix, orders[5]);
 
-    Tp[4] = NeThermalCondEl(gasmix, 3);
+    Tp[4] = NeThermalCondEl(gasmix, orders[6]);
 
-    Tp[5] = NeThermalCondHeavy(gasmix, 2);
+    Tp[5] = NeThermalCondHeavy(gasmix, orders[7]);
 
     DiffTheta.resize(N, std::vector<double>(N));
 
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
-            DiffTheta[i][j] = DijTheta(gasmix, 3, i, j);
+            DiffTheta[i][j] = DijTheta(gasmix, orders[8], i, j);
         }
     }
 
     Dtheta.resize(N, 0.);
 
     for (int i = 0; i < N; i++) {
-        Dtheta[i] = DiTheta(gasmix, 3, i);
+        Dtheta[i] = DiTheta(gasmix, orders[9], i);
     }
 
     auto end = std::chrono::high_resolution_clock::now();

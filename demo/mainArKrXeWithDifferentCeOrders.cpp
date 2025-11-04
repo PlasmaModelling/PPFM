@@ -146,34 +146,71 @@ int main() {
     auto devKr = new DevotoTpCsv( new DevotoTP(&kryptonCI), folder);
     auto devXe = new DevotoTpCsv( new DevotoTP(&xenonCI)  , folder);
 
-    // Loop on pressures
-    for (size_t i = 0; i < pressures.size(); i++) {
+    // orders attempts
+    std::vector<int> orders1 = {2,2,2,2,2,2};
+    std::vector<int> orders2 = {2,2,4,3,2,3};
+    std::vector<int> orders3 = {2,2,4,4,2,3};
 
-        double p = pressures[i]; 
 
-        argon->setP(p);
-        krypton->setP(p);
-        xenon->setP(p);
+    // loop on orders
+    for (size_t ii = 1; ii < 4; ii++) {
 
-        // Composition printers
-        auto compAr = new CompositionCsv(argon->getCompositionObj(), folder);
-        auto compKr = new CompositionCsv(krypton->getCompositionObj(), folder);
-        auto compXe = new CompositionCsv(xenon->getCompositionObj(),   folder);
+        switch (ii) {
+                
+            case 1:
+                devAr->solver->setOrders(orders1);
+                devKr->solver->setOrders(orders1);
+                devXe->solver->setOrders(orders1);
+                break;
+            case 2:
+                devAr->solver->setOrders(orders2);
+                devKr->solver->setOrders(orders2);
+                devXe->solver->setOrders(orders2);
+                break;
+            case 3:
+                devAr->solver->setOrders(orders3);
+                devKr->solver->setOrders(orders3);
+                devXe->solver->setOrders(orders3);
+                break;
+            
+            default:
+                break;
+        }
+        
+        // Loop on pressures
+        for (size_t i = 0; i < pressures.size(); i++) {
 
-        // compAr->Print("Ar Composition " + p_strings[i], T, argon);
-        // compKr->Print("Kr Composition " + p_strings[i], T, krypton); 
-        // compXe->Print("Xe Composition " + p_strings[i], T, xenon); 
+            double p = pressures[i]; 
+            
+            argon->setP(p);
+            krypton->setP(p);
+            xenon->setP(p);
+            
+            // Composition printers
+            auto compAr = new CompositionCsv(argon->getCompositionObj(), folder);
+            auto compKr = new CompositionCsv(krypton->getCompositionObj(), folder);
+            auto compXe = new CompositionCsv(xenon->getCompositionObj(),   folder);
+            
+            // compAr->Print("Ar Composition " + p_strings[i], T, argon);
+            // compKr->Print("Kr Composition " + p_strings[i], T, krypton); 
+            // compXe->Print("Xe Composition " + p_strings[i], T, xenon); 
 
-        // Thermodynamic properties
-        // thermAr->Print("Ar Thermodynamics " + p_strings[i], T, argon);
-        // thermKr->Print("Kr Thermodynamics " + p_strings[i], T, krypton);
-        // thermXe->Print("Xe Thermodynamics " + p_strings[i], T, xenon);
+            // Thermodynamic properties
+            // thermAr->Print("Ar Thermodynamics " + p_strings[i], T, argon);
+            // thermKr->Print("Kr Thermodynamics " + p_strings[i], T, krypton);
+            // thermXe->Print("Xe Thermodynamics " + p_strings[i], T, xenon);
 
-        // Transport properties
-        devAr->Print("Ar Transport " + p_strings[i], T, argon);
-        devKr->Print("Kr Transport " + p_strings[i], T, krypton); 
-        devXe->Print("Xe Transport " + p_strings[i], T, xenon); 
+            devAr->customFolder = folder + "/Orders_" + std::to_string(ii) ;
+            devKr->customFolder = folder + "/Orders_" + std::to_string(ii) ;
+            devXe->customFolder = folder + "/Orders_" + std::to_string(ii) ;
+
+            // Transport properties
+            devAr->Print("Ar Transport " + p_strings[i] , T, argon);
+            devKr->Print("Kr Transport " + p_strings[i] , T, krypton); 
+            devXe->Print("Xe Transport " + p_strings[i] , T, xenon); 
+        }
     }
 
     return 0;
+
 }

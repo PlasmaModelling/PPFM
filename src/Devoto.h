@@ -69,8 +69,25 @@ class DevotoTP : public Appendix {
 
     public : 
 
-    DevotoTP (  CiBox* cbx  ) : Appendix ( cbx ) {} 
-    DevotoTP ( GasMixture* mix ) : Appendix ( mix ) {} 
+    /** @brief Constructor with edited CiBox. 
+     ** @details Default orders assigned for transport properties are  
+     ** [D: 3 , DT:4 , Tp[0]:3 , Tp[1]:2 , Tp[2]:1 , Tp[3]:4 , Tp[4]: - ] \n
+     ** Ordinary Diffusion coefficients,
+     ** Thermal Diffusion coefficients,
+     ** Electron Thermal Conductivity,
+     ** Heavy species Thermal Conductivity,
+     ** Viscosity,
+     ** Electrical Conductivity, respectively. */
+    DevotoTP (  CiBox* cbx  ) : Appendix ( cbx ) {
+        orders = {3,4,3,2,1,4} ;
+    } 
+
+    /** @brief Constructor with default CiBox created from GasMixture. 
+     ** @details Default orders assigned for transport properties.
+     ** @see DevotoTP (  CiBox* cbx  ) constructor for details. */
+    DevotoTP ( GasMixture* mix ) : Appendix ( mix ) {
+        orders = {3,4,3,2,1,4} ;
+    } 
     
     /** @brief Function that computes and store the Transport Coefficients in 
      ** the base class Transport members
@@ -78,7 +95,5 @@ class DevotoTP : public Appendix {
     void computeTransport ( GasMixture* gasmix ) override ;
 
 } ;
-
-//______________________________ Implementation ______________________________
 
 #endif

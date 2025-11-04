@@ -27,7 +27,7 @@ class CsHolder;
 
 class DataPrinter {
 
-protected:
+    protected:
 
     /// @brief Data matrix to print in Csv file    
     std::vector<std::vector<double>> data ;
@@ -61,7 +61,7 @@ protected:
     /// @brief FileAppendingCentralizedMethod
     void AppendData(const std::string& filename) ;
 
-public:
+    public:
 
     /// @brief customizable folder, just assign it implementing constructor in derived classes
     std::string customFolder ;
@@ -81,22 +81,22 @@ public:
  * iterating over a given temperature range. */
 class CompositionCsv : public DataPrinter {
 
-    /// @brief Solver reference (non-owning, external lifetime managed).
-    Composition* solver;
-
     /// @brief Build the output filename.
     std::string BuildFileName(const std::string& filename) const override;
 
     /// @brief Prepare the CSV header.
     void PrepareHeader() override; 
-
+    
     /// @brief Prepare the data matrix for printing.
     void PrepareData(const std::vector<double>& x, GasMixture* gasmix) override;
-
+    
     /// @brief Print completion message.
     void PrintMessage(const std::string& filename) override;
+    
+    public:
 
-public:
+    /// @brief Solver reference (non-owning, external lifetime managed).
+    Composition* solver;
 
     /// @brief Constructor with explicit solver
     CompositionCsv(Composition* solver);
@@ -109,10 +109,7 @@ public:
  ** @see class Thermodynamics for property computation.
  ** @see class DataPrinter for CSV interface. */
 class ThermodynamicsCsv : public DataPrinter {
-
-    /// @brief Solver reference (non-owning, external lifetime managed).
-    Thermodynamics* solver;
-
+    
     /// @brief Build the output filename.
     std::string BuildFileName(const std::string& filename) const override;
 
@@ -121,11 +118,14 @@ class ThermodynamicsCsv : public DataPrinter {
 
     /// @brief Prepare the data matrix for printing.
     void PrepareData(const std::vector<double>& x, GasMixture* gasmix) override;
-
+    
     /// @brief Print completion message.
     void PrintMessage(const std::string& filename) override;
-
-public:
+    
+    public:
+    
+    /// @brief Solver reference (non-owning, external lifetime managed).
+    Thermodynamics* solver;
     
     /// @brief Constructor with explicit solver
     ThermodynamicsCsv(Thermodynamics* solver);
@@ -139,10 +139,7 @@ public:
 /// @see class DevotoTP for transport computation.
 /// @see class DataPrinter for CSV handling.
 class DevotoTpCsv : public DataPrinter {
-
-    /// @brief Solver reference (non-owning).
-    DevotoTP* solver;
-
+    
     /// @brief Builds the output filename with "TP_" prefix.
     std::string BuildFileName(const std::string& filename) const override;
 
@@ -151,11 +148,14 @@ class DevotoTpCsv : public DataPrinter {
 
     /// @brief Computes and stores transport properties over a temperature range.
     void PrepareData(const std::vector<double>& temperatureRange, GasMixture* gasmix) override;
-
+    
     /// @brief Prints confirmation message after file generation.
     void PrintMessage(const std::string& filename) override;
-
-public:
+    
+    public:
+    
+    /// @brief Solver reference (non-owning).
+    DevotoTP* solver;
 
     /// @brief Constructor with explicit solver.
     DevotoTpCsv(DevotoTP* solver);
@@ -170,9 +170,6 @@ public:
 /// @see class DataPrinter for CSV handling.
 class ZhangTpCsv : public DataPrinter {
 
-    /// @brief Solver reference (non-owning).
-    ZhangMurphyTP* solver;
-
     /// @brief Builds the output filename with "TP_" prefix.
     std::string BuildFileName(const std::string& filename) const override;
 
@@ -184,8 +181,11 @@ class ZhangTpCsv : public DataPrinter {
 
     /// @brief Prints confirmation message after file generation.
     void PrintMessage(const std::string& filename) override;
+    
+    public:
 
-public:
+    /// @brief Solver reference (non-owning).
+    ZhangMurphyTP* solver;
 
     /// @brief Constructor with explicit solver.
     ZhangTpCsv(ZhangMurphyTP* solver);
@@ -199,10 +199,7 @@ public:
 /// as the third argument of Print or use nullptr.
 /// @see class DataPrinter for CSV handling.
 class TransportCrossSectionCsv : public DataPrinter {
-
-    /// @brief Pointer to transport cross section solver.
-    TcsInterface* solver;
-
+    
     /// @brief Builds the output filename with "TCS_" prefix.
     std::string BuildFileName(const std::string& filename) const override;
 
@@ -214,20 +211,23 @@ class TransportCrossSectionCsv : public DataPrinter {
 
     /// @brief Prepares data for elastic cross sections.
     void PrepareData(const std::vector<double>& x, GasMixture* gasmix) override;
-
+    
     /// @brief Prepares elastic data from a CsHolder.
     void PrepareElasticData(CsHolder* tcsElIn);
-
+    
     /// @brief Prepares inelastic data from a CsHolder.
     void PrepareInelasticData(CsHolder* tcsElIn);
-
+    
     /// @brief Prepares data for MultiCs objects.
     void PrepareMultiCsData(MultiCs* multiCs, size_t i);
 
     /// @brief Prints a confirmation message after writing the file.
     void PrintMessage(const std::string& filename) override;
+    
+    public:
 
-public:
+    /// @brief Pointer to transport cross section solver.
+    TcsInterface* solver;
 
     /// @brief Constructor with solver.
     TransportCrossSectionCsv(TcsInterface* solver);
@@ -245,9 +245,6 @@ public:
 /// @see class DataPrinter for CSV handling.
 class CollisionIntegralCsv : public DataPrinter {
 
-    /// @brief Pointer to collision integral solver.
-    CInterface* solver;
-
     /// @brief Builds the output filename with "CI_" prefix.
     std::string BuildFileName(const std::string& filename) const override;
 
@@ -260,7 +257,10 @@ class CollisionIntegralCsv : public DataPrinter {
     /// @brief Prints a confirmation message after writing the file.
     void PrintMessage(const std::string& filename) override;
 
-public:
+    public:
+    
+    /// @brief Pointer to collision integral solver.
+    CInterface* solver;
 
     /// @brief Constructor with solver.
     CollisionIntegralCsv(CInterface* solver);
@@ -275,9 +275,6 @@ public:
 /// @see class PFinterface for partition function computation.
 class PartitionFunctionCsv : public DataPrinter {
 
-    /// @brief Pointer to the partition function solver.
-    PFinterface* solver;
-
     /// @brief Builds the output filename with "PF_" prefix.
     std::string BuildFileName(const std::string& filename) const override;
 
@@ -290,7 +287,10 @@ class PartitionFunctionCsv : public DataPrinter {
     /// @brief Prints a confirmation message after writing the file.
     void PrintMessage(const std::string& filename) override;
 
-public:
+    public:
+    
+    /// @brief Pointer to the partition function solver.
+    PFinterface* solver;
 
     /// @brief Constructor with solver pointer.
     PartitionFunctionCsv(PFinterface* solver);
@@ -301,6 +301,5 @@ public:
     /// @brief Redirects print to a dedicated subfolder.
     void Print(const std::string& filename, const std::vector<double>& x, GasMixture* gasmix) override;
 };
-
 
 #endif

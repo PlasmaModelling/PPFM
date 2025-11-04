@@ -19,12 +19,12 @@ void DevotoTP::computeTransport ( GasMixture* gasmix ) {
     #pragma omp parallel for collapse(2)
     for ( int i = 0; i < gasmix->getN(); i++ ) 
         for ( int j = 0; j < gasmix->getN(); j++ ) 
-            D[i][j] = Dij ( gasmix, 3, i, j )  ;
+            D[i][j] = Dij ( gasmix, orders[0], i, j )  ;
     
     DT.resize( gasmix->getN() ,0.0 ) ; 
     #pragma omp parallel for
     for ( int i = 0 ; i < gasmix->getN() ; i++ )
-        DT[i] = DiT ( gasmix , 4, i ) ; 
+        DT[i] = DiT ( gasmix , orders[1], i ) ; 
     
     Tp.resize(5,0.0) ; 
     #pragma omp parallel
@@ -32,15 +32,15 @@ void DevotoTP::computeTransport ( GasMixture* gasmix ) {
         #pragma omp sections
         {
             #pragma omp section
-            Tp[0] = ThermalCondEl(gasmix, 3);
+            Tp[0] = ThermalCondEl(gasmix, orders[2]);
             /* Tp[0] = TotalThermalCondEl(gasmix, 3); */
             #pragma omp section
-            Tp[1] = ThermalCondHeavy(gasmix, 2);
+            Tp[1] = ThermalCondHeavy(gasmix, orders[3]);
             /* Tp[1] = TotalThermalCondEl(gasmix, 3) + TotalThermalCondHeavy(gasmix, 2); */
             #pragma omp section
-            Tp[2] = Viscosity(gasmix, 1);
+            Tp[2] = Viscosity(gasmix, orders[4]);
             #pragma omp section
-            Tp[3] = ElCond(gasmix, 4);
+            Tp[3] = ElCond(gasmix, orders[5]);
             #pragma omp section
             Tp[4] = Qeh(gasmix);
         }
