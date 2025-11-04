@@ -160,19 +160,19 @@ int main() {
         auto compKr = new CompositionCsv(krypton->getCompositionObj(), folder);
         auto compXe = new CompositionCsv(xenon->getCompositionObj(),   folder);
 
-        compAr->Print("Ar Composition " + p_strings[i], T, argon);
-        compKr->Print("Kr Composition " + p_strings[i], T, krypton); 
-        compXe->Print("Xe Composition " + p_strings[i], T, xenon); 
+        // compAr->Print("Ar Composition " + p_strings[i], T, argon);
+        // compKr->Print("Kr Composition " + p_strings[i], T, krypton); 
+        // compXe->Print("Xe Composition " + p_strings[i], T, xenon); 
 
         // Thermodynamic properties
-        thermAr->Print("Ar Thermodynamics " + p_strings[i], T, argon);
-        thermKr->Print("Kr Thermodynamics " + p_strings[i], T, krypton);
-        thermXe->Print("Xe Thermodynamics " + p_strings[i], T, xenon);
+        // thermAr->Print("Ar Thermodynamics " + p_strings[i], T, argon);
+        // thermKr->Print("Kr Thermodynamics " + p_strings[i], T, krypton);
+        // thermXe->Print("Xe Thermodynamics " + p_strings[i], T, xenon);
 
         // Transport properties
-        // devAr->Print("Ar Transport " + p_strings[i], T, argon);
-        // devKr->Print("Kr Transport " + p_strings[i], T, krypton); 
-        // devXe->Print("Xe Transport " + p_strings[i], T, xenon); 
+        devAr->Print("Ar Transport " + p_strings[i], T, argon);
+        devKr->Print("Kr Transport " + p_strings[i], T, krypton); 
+        devXe->Print("Xe Transport " + p_strings[i], T, xenon); 
     }
 
     return 0;

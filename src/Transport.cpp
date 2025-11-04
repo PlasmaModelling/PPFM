@@ -36,6 +36,33 @@ void Transport::QtCalc ( GasMixture* gasmix) {
     }   
 }
 
+void Properties::setOrders ( const std::vector<int>& ord ) {
+    
+    if ( ord.size() != orders.size() ) {
+        throw std::invalid_argument("Error in Properties::setOrders - " 
+            "input vector size does not match number of transport properties.\n"
+            "Expected size: " + std::to_string(orders.size()) +
+            ", provided size: " + std::to_string(ord.size()) + ".\n"
+            "please, provide orders for all transport properties between 1 and 4." ) ; 
+    } else {
+
+        for (const auto& i : ord){
+
+            if (i < 2 || i > 4) {
+            
+                throw std::invalid_argument("Error in Properties::setOrders - "
+                    "invalid order value found: " + std::to_string(i) + ".\n"
+                    "please, provide orders for all transport properties between 2 and 4. \n"
+                    "Note: order 1 is not supported YET in methods." 
+                ) ;
+            }
+        }
+    }
+
+    orders = ord ; 
+
+};
+
 double Appendix::Qmpil ( GasMixture* gasmix , int m , int p , int i , int l ) {
 
     int N_specs = gasmix->getN() ; 
