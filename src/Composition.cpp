@@ -208,6 +208,17 @@ GodinTrepSahaSolver::GodinTrepSahaSolver(Mixture* mix, Gas* gas, PfBox* qbox)
 
 }
 
+void GodinTrepSahaSolver::restart(){
+
+    *this = GodinTrepSahaSolver(
+    
+        this->mixptr,
+        this->gasptr,
+        this->Qbox
+    
+    ) ;
+}
+
 std::vector<double> GodinTrepSahaSolver::Crow(Species* specie,
     const std::map<std::type_index, int>& colmap) {
 
@@ -505,6 +516,21 @@ GTSahaDHcorrection::GTSahaDHcorrection(Mixture* mix, Gas* gas, PfBox* qbox)
     : GodinTrepSahaSolver(mix, gas) {
     
     Qbox = qbox ; 
+
+}
+
+GTSahaDHcorrection::GTSahaDHcorrection(Composition* CompToCopy)
+    : GTSahaDHcorrection(CompToCopy->mixptr, CompToCopy->gasptr, CompToCopy->Qbox) {}
+
+void GTSahaDHcorrection::restart() {
+    
+    *this = GTSahaDHcorrection(
+    
+        this->mixptr,
+        this->gasptr,
+        this->Qbox
+    
+    ) ;
 
 }
 

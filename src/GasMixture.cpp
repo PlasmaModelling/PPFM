@@ -32,9 +32,7 @@ void GasMixture::setP(double pressure) {
 // Restart composition and recompute internal state
 void GasMixture::restartComposition() {
 
-    PfBox* tempPFBOX = Comp->Qbox;
-    delete Comp; 
-    Comp = new GTSahaDHcorrection(this, this, tempPFBOX);
+    Comp->restart();
     Comp->CompositionSolve(this, this);
 
 }
