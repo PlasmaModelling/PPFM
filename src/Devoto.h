@@ -25,14 +25,12 @@ class DevotoTP : public Appendix {
      ** @param gasmix GasMixture object 
      ** @param order Desired order of approximation */
     double ThermalCondEl ( GasMixture* gasmix, int order ) override ;
-    double TotalThermalCondEl ( GasMixture* gasmix, int order ) ; 
 
     /**  @brief Function to compute Electrons Thermal Conductivity as in eq.14 of
      ** this class reference 1.
      ** @param gasmix GasMixture object 
      ** @param order Desired order of approximation  */
     double ThermalCondHeavy ( GasMixture* gasmix, int order ) override ;
-    double TotalThermalCondHeavy ( GasMixture* gasmix, int order ) ; 
 
     /** @brief Function to compute Viscosity as in eq.21 of
      ** this class reference 1.
