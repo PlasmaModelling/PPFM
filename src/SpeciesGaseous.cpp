@@ -14,7 +14,7 @@ double Hydrogen::formationEnergy() { return 0.0 * eVtoJ ; }
 
 double Hydrogen::IonLim() { return 13.598434599702 * eVtoJ ; }
 
-double HydrogenI::getMass() { return (1.007259 - 1*eamu) * amuKg ; }
+double HydrogenI::getMass() { return (1.007259 - 1*0.*eamu) * amuKg ; }
 
 int HydrogenI::getCharge() { return 1 ; }
 
@@ -46,7 +46,7 @@ double Helium::formationEnergy() { return 0.0 * eVtoJ ; }
 
 double Helium::IonLim() { return 24.587389011 * eVtoJ ; }
 
-double HeliumI::getMass() { return (4.002096 - 1*eamu) * amuKg ; }
+double HeliumI::getMass() { return (4.002096 - 1*0.*eamu) * amuKg ; }
 
 int HeliumI::getCharge() { return 1 ; }
 
@@ -58,7 +58,7 @@ double HeliumI::IonLim() { return 54.417760582 * eVtoJ ; }
 
 Element* HeliumI::Constituent() { return new Helium; }
 
-double HeliumII::getMass() { return (4.001589 - 2*eamu) * amuKg ; }
+double HeliumII::getMass() { return (4.001589 - 2*0.*eamu) * amuKg ; }
 
 int HeliumII::getCharge() { return 2 ; }
 
@@ -78,7 +78,7 @@ double Nitrogen::formationEnergy() { return 0.0 * eVtoJ ; }
 
 double Nitrogen::IonLim() { return 14.534139 * eVtoJ ; }
 
-double NitrogenI::getMass() { return (14.00615 - 1*eamu) * amuKg ; }
+double NitrogenI::getMass() { return (14.00615 - 1*0.*eamu) * amuKg ; }
 
 int NitrogenI::getCharge() { return 1 ; }
 
@@ -90,7 +90,7 @@ double NitrogenI::IonLim() { return 29.6013 * eVtoJ ; }
 
 Element* NitrogenI::Constituent() { return new Nitrogen; }
 
-double NitrogenII::getMass() { return (14.00561 - 2*eamu) * amuKg ; }
+double NitrogenII::getMass() { return (14.00561 - 2*0.*eamu) * amuKg ; }
 
 int NitrogenII::getCharge() { return 2 ; }
 
@@ -102,7 +102,7 @@ Element* NitrogenII::Constituent() { return new Nitrogen; }
 
 double NitrogenII::IonLim() { return 47.44924 * eVtoJ ; }
 
-double NitrogenIII::getMass() { return (14.00512 - 3*eamu) * amuKg ; }
+double NitrogenIII::getMass() { return (14.00512 - 3*0.*eamu) * amuKg ; }
 
 int NitrogenIII::getCharge() { return 3 ; }
 
@@ -134,7 +134,7 @@ double Oxygen::formationEnergy() { return 0.0 * eVtoJ ; }
 
 double Oxygen::IonLim() { return 13.61806 * eVtoJ ; }
 
-double OxygenI::getMass() { return (15.99845 - 1*eamu) * amuKg ; }
+double OxygenI::getMass() { return (15.99845 - 1*0.*eamu) * amuKg ; }
 
 int OxygenI::getCharge() { return 1 ; }
 
@@ -146,7 +146,7 @@ double OxygenI::IonLim() { return 35.1173 * eVtoJ ; }
 
 Element* OxygenI::Constituent() { return new Oxygen; }
 
-double OxygenII::getMass() { return (15.99791 - 2*eamu) * amuKg ; }
+double OxygenII::getMass() { return (15.99791 - 2*0.*eamu) * amuKg ; }
 
 int OxygenII::getCharge() { return 2 ; }
 
@@ -158,7 +158,7 @@ double OxygenII::IonLim() { return 54.9355 * eVtoJ ; }
 
 Element* OxygenII::Constituent() { return new Oxygen; }
 
-double OxygenIII::getMass() { return (15.99743 - 3*eamu) * amuKg ; }
+double OxygenIII::getMass() { return (15.99743 - 3*0.*eamu) * amuKg ; }
 
 int OxygenIII::getCharge() { return 3 ; }
 
@@ -190,7 +190,7 @@ double Fluorine::formationEnergy() { return 0.0 * eVtoJ ; }
 
 double Fluorine::IonLim() { return 17.42282 * eVtoJ ; }
 
-double FluorineI::getMass() { return (18.997915 - 1*eamu) * amuKg ; }
+double FluorineI::getMass() { return (18.997915 - 1*0.*eamu) * amuKg ; }
 
 int FluorineI::getCharge() { return 1 ; }
 
@@ -200,7 +200,7 @@ double FluorineI::formationEnergy() { return 17.42282 * eVtoJ ; }
 
 double FluorineI::IonLim() { return 34.97082 * eVtoJ ; }
 
-double FluorineII::getMass() { return (18.99743 - 2*eamu) * amuKg ; }
+double FluorineII::getMass() { return (18.99743 - 2*0.*eamu) * amuKg ; }
 
 Element* FluorineI::Constituent() { return new Fluorine; }
 
@@ -214,7 +214,7 @@ double FluorineII::IonLim() { return 62.7084 * eVtoJ ; }
 
 Element* FluorineII::Constituent() { return new Fluorine; }
 
-double FluorineIII::getMass() { return (18.99694 - 3*eamu) * amuKg ; }
+double FluorineIII::getMass() { return (18.99694 - 3*0.*eamu) * amuKg ; }
 
 int FluorineIII::getCharge() { return 3 ; }
 
@@ -234,7 +234,7 @@ double Neon::formationEnergy() { return 0.0 * eVtoJ ; }
 
 double Neon::IonLim() { return 21.5646 * eVtoJ ; }
 
-double NeonI::getMass() { return (20.17916 - 1*eamu) * amuKg ; }
+double NeonI::getMass() { return (20.17916 - 1*0.*eamu) * amuKg ; }
 
 int NeonI::getCharge() { return 1 ; }
 
@@ -246,7 +246,7 @@ double NeonI::IonLim() { return 40.96328 * eVtoJ ; }
 
 Element* NeonI::Constituent() { return new Neon; }
 
-double NeonII::getMass() { return (20.17862 - 2*eamu) * amuKg ; }
+double NeonII::getMass() { return (20.17862 - 2*0.*eamu) * amuKg ; }
 
 int NeonII::getCharge() { return 2 ; }
 
@@ -258,7 +258,7 @@ double NeonII::IonLim() { return 63.45 * eVtoJ ; }
 
 Element* NeonII::Constituent() { return new Neon; }
 
-double NeonIII::getMass() { return (20.17808 - 3*eamu) * amuKg ; }
+double NeonIII::getMass() { return (20.17808 - 3*0.*eamu) * amuKg ; }
 
 int NeonIII::getCharge() { return 3 ; }
 
@@ -278,7 +278,7 @@ double Chlorine::formationEnergy() { return 0.0 * eVtoJ ; }
 
 double Chlorine::IonLim() { return 12.96764 * eVtoJ ; }
 
-double ChlorineI::getMass() { return (35.45215 - 1*eamu) * amuKg ; }
+double ChlorineI::getMass() { return (35.45215 - 1*0.*eamu) * amuKg ; }
 
 int ChlorineI::getCharge() { return 1 ; }
 
@@ -290,7 +290,7 @@ double ChlorineI::IonLim() { return 23.814 * eVtoJ ; }
 
 Element* ChlorineI::Constituent() { return new Chlorine; }
 
-double ChlorineII::getMass() { return (35.4516 - 2*eamu) * amuKg ; }
+double ChlorineII::getMass() { return (35.4516 - 2*0.*eamu) * amuKg ; }
 
 int ChlorineII::getCharge() { return 2 ; }
 
@@ -302,7 +302,7 @@ double ChlorineII::IonLim() { return 39.61 * eVtoJ ; }
 
 Element* ChlorineII::Constituent() { return new Chlorine; }
 
-double ChlorineIII::getMass() { return (35.45105 - 3*eamu) * amuKg ; }
+double ChlorineIII::getMass() { return (35.45105 - 3*0.*eamu) * amuKg ; }
 
 int ChlorineIII::getCharge() { return 3 ; }
 
@@ -322,7 +322,7 @@ double Argon::formationEnergy() { return 0.0 * eVtoJ ; }
 
 double Argon::IonLim() { return 15.75962 * eVtoJ ; }
 
-double ArgonI::getMass() { return (39.948 - 1.*eamu) * amuKg ; }
+double ArgonI::getMass() { return (39.948 - 1.*0.*eamu) * amuKg ; }
 
 int ArgonI::getCharge() { return 1 ; }
 
@@ -334,39 +334,39 @@ double ArgonI::IonLim() { return 27.62967 * eVtoJ ; }
 
 Element* ArgonI::Constituent() { return new Argon; }
 
-double ArgonII::getMass() { return (39.948 - 2.*eamu) * amuKg ; }
+double ArgonII::getMass() { return (39.948 - 2.*0.*eamu) * amuKg ; }
 
 int ArgonII::getCharge() { return 2 ; }
 
 std::string ArgonII::getFormula() { return "Ar+2" ; }
 
-double ArgonII::formationEnergy() { return (15.7596119 + 27.62967) * eVtoJ ; }
+double ArgonII::formationEnergy() { return (15.75962 + 27.62967) * eVtoJ ; }
 
-double ArgonII::IonLim() { return 40.735 * eVtoJ ; }
+double ArgonII::IonLim() { return 40.74 * eVtoJ ; }
 
 Element* ArgonII::Constituent() { return new Argon; }
 
-double ArgonIII::getMass() { return (39.948 - 3.*eamu) * amuKg ; }
+double ArgonIII::getMass() { return (39.948 - 3.*0.*eamu) * amuKg ; }
 
 int ArgonIII::getCharge() { return 3 ; }
 
 std::string ArgonIII::getFormula() { return "Ar+3" ; }
 
-double ArgonIII::formationEnergy() { return (15.7596119 + 27.62967 + 40.735) * eVtoJ ; }
+double ArgonIII::formationEnergy() { return (15.7596119 + 27.62967 + 40.74) * eVtoJ ; }
 
-double ArgonIII::IonLim() { return 59.58 * eVtoJ ; }
+double ArgonIII::IonLim() { return 59.81 * eVtoJ ; }
 
 Element* ArgonIII::Constituent() { return new Argon; }
 
-double ArgonIV::getMass() { return (39.948 - 4.*eamu ) * amuKg ; }
+double ArgonIV::getMass() { return (39.948 - 4.*0.*eamu ) * amuKg ; }
 
 int ArgonIV::getCharge() { return 4 ; }
 
 std::string ArgonIV::getFormula() { return "Ar+4" ; }
 
-double ArgonIV::formationEnergy() { return (15.7596119 + 27.62967 + 40.735 + 59.58) * eVtoJ ; }
+double ArgonIV::formationEnergy() { return (15.7596119 + 27.62967 + 40.735 + 59.81) * eVtoJ ; }
 
-double ArgonIV::IonLim() { return 74.84 * eVtoJ ; }
+double ArgonIV::IonLim() { return 65.0251 * eVtoJ ; }
 
 Element* ArgonIV::Constituent() { return new Argon; }
 
@@ -378,7 +378,7 @@ double Krypton::formationEnergy() { return 0.0 * eVtoJ ; }
 
 double Krypton::IonLim() { return 13.9996055 * eVtoJ ; }
 
-double KryptonI::getMass() { return (83.798 - 1.*eamu) * amuKg ; }
+double KryptonI::getMass() { return (83.798 - 1.*0.*eamu) * amuKg ; }
 
 int KryptonI::getCharge() { return 1 ; }
 
@@ -390,37 +390,37 @@ double KryptonI::IonLim() { return 24.35984 * eVtoJ ; }
 
 Element* KryptonI::Constituent() { return new Krypton; }
 
-double KryptonII::getMass() { return (83.798 - 2.*eamu) * amuKg ; }
+double KryptonII::getMass() { return (83.798 - 2.*0.*eamu) * amuKg ; }
 
 int KryptonII::getCharge() { return 2 ; }
 
 std::string KryptonII::getFormula() { return "Kr+2" ; }
 
-double KryptonII::formationEnergy() { return (13.9996055 + 24.35984) * eVtoJ ; }
+double KryptonII::formationEnergy() { return (13.9996055 + 24.35985) * eVtoJ ; }
 
-double KryptonII::IonLim() { return 35.838 * eVtoJ ; }
+double KryptonII::IonLim() { return 36.950 * eVtoJ ; }
 
 Element* KryptonII::Constituent() { return new Krypton; }
 
-double KryptonIII::getMass() { return (83.798 - 3.*eamu) * amuKg ; }
+double KryptonIII::getMass() { return (83.798 - 3.*0.*eamu) * amuKg ; }
 
 int KryptonIII::getCharge() { return 3 ; }
 
 std::string KryptonIII::getFormula() { return "Kr+3" ; }
 
-double KryptonIII::formationEnergy() { return (13.9996055 + 24.35984 + 35.838) * eVtoJ ; }
+double KryptonIII::formationEnergy() { return (13.9996055 + 24.35985 + 36.950) * eVtoJ ; }
 
-double KryptonIII::IonLim() { return 50.850 * eVtoJ ; }
+double KryptonIII::IonLim() { return 52.50 * eVtoJ ; }
 
 Element* KryptonIII::Constituent() { return new Krypton; }
 
-double KryptonIV::getMass() { return (83.798 - 4.*eamu) * amuKg ; }
+double KryptonIV::getMass() { return (83.798 - 4.*0.*eamu) * amuKg ; }
 
 int KryptonIV::getCharge() { return 4 ; }
 
 std::string KryptonIV::getFormula() { return "Kr+4" ; }
 
-double KryptonIV::formationEnergy() { return (13.9996055 + 24.35984 + 35.838 + 50.850) * eVtoJ ; }
+double KryptonIV::formationEnergy() { return (13.9996055 + 24.35985 + 36.950 + 52.50) * eVtoJ ; }
 
 double KryptonIV::IonLim() { return 64.69 * eVtoJ ; }
 
@@ -434,49 +434,49 @@ double Xenon::formationEnergy() { return 0.0 * eVtoJ ; }
 
 double Xenon::IonLim() { return 12.1298 * eVtoJ ; }
 
-double XenonI::getMass() { return (131.293 - 1.*eamu) * amuKg ; }
+double XenonI::getMass() { return (131.293 - 1.*0.*eamu) * amuKg ; }
 
 int XenonI::getCharge() { return 1 ; }
 
 std::string XenonI::getFormula() { return "Xe+" ; }
 
-double XenonI::formationEnergy() { return 12.1298437 * eVtoJ ; }
+double XenonI::formationEnergy() { return 12.1298 * eVtoJ ; }
 
-double XenonI::IonLim() { return 20.975 * eVtoJ ; }
+double XenonI::IonLim() { return 21.20979 * eVtoJ ; }
 
 Element* XenonI::Constituent() { return new Xenon; }
 
-double XenonII::getMass() { return (131.293 - 2.*eamu) * amuKg ; }
+double XenonII::getMass() { return (131.293 - 2.*0.*eamu) * amuKg ; }
 
 int XenonII::getCharge() { return 2 ; }
 
 std::string XenonII::getFormula() { return "Xe+2" ; }
 
-double XenonII::formationEnergy() { return (12.1298437 + 20.975) * eVtoJ ; }
+double XenonII::formationEnergy() { return (12.1298 + 21.20979) * eVtoJ ; }
 
-double XenonII::IonLim() { return 31.05 * eVtoJ ; }
+double XenonII::IonLim() { return 32.1230 * eVtoJ ; }
 
 Element* XenonII::Constituent() { return new Xenon; }
 
-double XenonIII::getMass() { return (131.293 - 3.*eamu) * amuKg ; }
+double XenonIII::getMass() { return (131.293 - 3.*0.*eamu) * amuKg ; }
 
 int XenonIII::getCharge() { return 3 ; }
 
 std::string XenonIII::getFormula() { return "Xe+3" ; }
 
-double XenonIII::formationEnergy() { return (12.1298437 + 20.975 + 31.05) * eVtoJ ; }
+double XenonIII::formationEnergy() { return (12.1298 + 21.20979 + 32.1230) * eVtoJ ; }
 
 double XenonIII::IonLim() { return 42.20 * eVtoJ ; }
 
 Element* XenonIII::Constituent() { return new Xenon; }
 
-double XenonIV::getMass() { return (131.293 - 4.*eamu) * amuKg ; }
+double XenonIV::getMass() { return (131.293 - 4.*0.*eamu) * amuKg ; }
 
 int XenonIV::getCharge() { return 4 ; }
 
 std::string XenonIV::getFormula() { return "Xe+4" ; }
 
-double XenonIV::formationEnergy() { return (12.1298437 + 20.975 + 31.05 + 42.20) * eVtoJ ; }
+double XenonIV::formationEnergy() { return (12.1298437 + 21.20979 + 32.1230 + 42.20) * eVtoJ ; }
 
 double XenonIV::IonLim() { return 54.10 * eVtoJ ; }
 
@@ -490,7 +490,7 @@ double Radon::formationEnergy() { return 0.0 * eVtoJ ; }
 
 double Radon::IonLim() { return 10.7485 * eVtoJ ; }
 
-double RadonI::getMass() { return (222.0166 - 1*eamu) * amuKg ; }
+double RadonI::getMass() { return (222.0166 - 1*0.*eamu) * amuKg ; }
 
 int RadonI::getCharge() { return 1 ; }
 
@@ -502,7 +502,7 @@ double RadonI::IonLim() { return 18.99 * eVtoJ ; }
 
 Element* RadonI::Constituent() { return new Radon; }
 
-double RadonII::getMass() { return (222.0156 - 2*eamu) * amuKg ; }
+double RadonII::getMass() { return (222.0156 - 2*0.*eamu) * amuKg ; }
 
 int RadonII::getCharge() { return 2 ; }
 
@@ -514,7 +514,7 @@ double RadonII::IonLim() { return 29.4 * eVtoJ ; }
 
 Element* RadonII::Constituent() { return new Radon; }
 
-double RadonIII::getMass() { return (222.0146 - 3*eamu) * amuKg ; }
+double RadonIII::getMass() { return (222.0146 - 3*0.*eamu) * amuKg ; }
 
 int RadonIII::getCharge() { return 3 ; }
 

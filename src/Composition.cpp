@@ -553,7 +553,7 @@ std::vector<double> GTSahaDHcorrection::formationEnergyDHcorrected (double lambd
     // Eq. 6.44 pp. 109 
     std::vector<double> delta_epsf;
     for (size_t i = 0; i < mixptr->getN(); i++)
-        delta_epsf.push_back(KDH * std::pow((*mixptr)(i)->getCharge(), 2.));
+        delta_epsf.push_back( KDH * std::pow( (*mixptr)(i)->getCharge() + 1., 2.) );
         
     std::vector<double> corrected_epsf;
     for (size_t i = 0; i < mixptr->getN(); i++)

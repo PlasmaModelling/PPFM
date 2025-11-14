@@ -91,15 +91,18 @@ class MultiCs : public CsCalculator {
     /// @brief State degeneracies "g" vector 
     std::vector<double> statesG ; 
 
+    /** @brief espilons weights for energyweighting like in formula 1 of 
+     * Thermodynamic and Transport coefficients of arc lamp plasmas: argon, krypton, and xenon */
+    std::vector<double> energyWeights ;
+    bool energyWeighted{false} ;
+    void setEnergyWeights( std::vector<double> ew ) ;
+
     /// @brief Construct MultiCs object, calculators must be passed by the user.
     MultiCs ( InteractionInterface* i, std::vector<CsCalculator*> c, std::vector<double> gs );
 
     /// @brief Access calculator by index.
     CsCalculator*& operator[](int i);
-
-/*     /// @brief Access Q^l of s-th calculator.
-    std::vector<double> operator()(int s, int l);
- */
+    
     /// @brief Returns number of calculators.
     int Size();
 
@@ -301,6 +304,8 @@ class PhaseShiftsLoader : public CsCalculator, public DataLoader {
 /// @see class CsCalculator for interface to energy-dependent cross section computation.
 class ChargeTransferCs : public CsCalculator {
 
+    protected:
+
     /// @brief Fit parameter A in the analytic cross section expression.
     double A;
 
@@ -328,6 +333,31 @@ class ChargeTransferCs : public CsCalculator {
      * \f]
      * where g₍ᵢⱼ₎ is the relative velocity at energy E.
      * Units: σ in Å² if A, B are consistent with log10(cm/s). */
+    void Compute() override;
+    
+};
+
+
+/// @brief Analytic charge-exchange cross section model for when A and B are 
+/// furnished for energy dependant formula. 
+class ChargeTransferCsWithEnergy : public ChargeTransferCs {
+
+    public:
+    /**
+     * @brief Constructs the charge-exchange cross section object.
+     * @param i Pointer to the interaction.
+     * @param A Coefficient A in σ = 2 (A - B log(E))².
+     * @param B Coefficient B in σ = 2 (A - B log(E))².
+     * @details Initializes the energy grid (log-spaced from 1.15 meV to 433 eV) */
+    ChargeTransferCsWithEnergy(InteractionInterface* i, double A, double B);
+
+    /**
+     * @brief Computes the cross section on the energy grid.
+     * @details The cross section is computed as:
+     * \f[
+     * \sigma(E) = 2 * \left( A - B \log E \right)^2
+     * \f]
+     * Units: σ in Å². */
     void Compute() override;
 };
 

@@ -16,8 +16,11 @@ void Transport::QtCalc ( GasMixture* gasmix) {
 
     double Th = gasmix->getTemperature() ; 
     double Te = gasmix->theta->get() * Th ;
-    double lambda = gasmix->getCompositionObj()->getDebyeLength(Te) ;
     
+    gasmix->getCompositionObj()->setDebyeModel("Rat2002Th") ;
+    double lambda = gasmix->getCompositionObj()->getDebyeLength(Te) ;
+    gasmix->getCompositionObj()->setDebyeModel("Ghourui") ;
+
     int Ninteractions = Ci->InteractionsNumber() ;
 
     Qt.resize ( 16, std::vector<double>(Ninteractions) ) ;
