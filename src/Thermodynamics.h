@@ -32,6 +32,9 @@ class Thermodynamics {
     * [9] a [m/s] */
     std::vector<double> Td;
 
+    /// @brief Vector of hentalphy values for species in the mixture [J/kg].
+    std::vector<double> henthalpies;
+
     /// @brief saving final dRdP to correct speed of sound in DH corrections 
     double dRdP_final ; 
 
@@ -57,12 +60,14 @@ class Thermodynamics {
     double cv()    const { return Td[7]; }
     double gamma() const { return Td[8]; }
     double a()     const { return Td[9]; }
+    
+    double h(int i) const{ return henthalpies.at(i); }
+
 };
 
 class ThermodynamicsDHcorrected : public Thermodynamics {
 
-    /**
-     * @brief Computes thermodynamic properties as parent class 
+    /** @brief Computes thermodynamic properties as parent class 
      * and just applies for DH corrections */
     void computeThermodynamics(GasMixture& gasmix);
     

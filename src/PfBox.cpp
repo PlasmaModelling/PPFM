@@ -17,6 +17,9 @@ PfBox::PfBox(Mixture* mix) {
             partitionfunctions.push_back(partitionFunction) ;
         }, mix->cispecies[i] );
     }   
+
+    qvalues.resize(partitionfunctions.size());
+
 }
 
 PFinterface* PfBox::operator[](int i){
@@ -30,7 +33,7 @@ double PfBox::operator()(int i){
     if (i<0 || i>= partitionfunctions.size())
         throw std::out_of_range("Index out of PfBox::partitionfunctions range") ;
     else
-        return partitionfunctions[i]->getPf() ;     
+        return qvalues[i] ;     
 }
 
 void PfBox::PrintPartitionFunctions(const std::vector<double>& Ti, GasMixture* gasmix, const std::string& folder) {
@@ -57,6 +60,7 @@ void PfBox::computePartitionFunctions(double temperature, double pressure, doubl
         try {
 
             partitionfunctions[i]->computePartitionFunction(temperature, pressure, lambda);
+            qvalues[i] = partitionfunctions[i]->getPf(); 
 
         } catch (const std::exception& e) {
 
@@ -80,6 +84,12 @@ void PfBox::computePartitionFunctions(double temperature, double pressure, doubl
     }
 }
 
+void PfBox::updateCachedValues(){ 
+
+    for (size_t i = 0; i < partitionfunctions.size(); i++) 
+        qvalues[i] = partitionfunctions[i]->getPf(); 
+
+}
 
 void PfBox::info() {
     

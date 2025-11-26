@@ -159,10 +159,9 @@ template <typename T>
 void PartitionFunction<T>::computePartitionFunction( double temperature, 
     double pressure, double lambdaD ) {
     
-    QCalculator* newmethod = this->calculator;
     try {
     
-        this->Q = newmethod->compute(temperature, pressure, lambdaD);
+        this->Q = calculator->compute(temperature, pressure, lambdaD);
     
     } catch (const std::exception& e) {
        

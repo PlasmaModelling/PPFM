@@ -445,7 +445,7 @@ class AvrgDeflAngle : public AbInitioTcsIntegration {
     int N {2000} ;
 
     /// @brief Initialize the energy range 
-    virtual void InitE() override { E = logspace ( log10(1.1501404511032503e-3), log10(433), 150 ); }
+    virtual void InitE() override { E = logspace ( log10(1.1501404511032503e-3), log10(433), 50 ); }
 
     /// @brief Construct a new AvrgDefAngle object 
     AvrgDeflAngle( InteractionInterface* i, Potential* pot ) ;

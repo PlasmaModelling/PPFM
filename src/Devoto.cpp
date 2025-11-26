@@ -1,4 +1,4 @@
- // PPFM © 2025 by Emanuele Ghedini, Alberto Vagnoni // 
+// PPFM © 2025 by Emanuele Ghedini, Alberto Vagnoni // 
  // (University of Bologna, Italy)                   // 
  // Licensed under CC BY 4.0.                        // 
  // To view a copy of this license, visit:           // 
@@ -7,6 +7,7 @@
 #include "Devoto.h"
 #include <chrono>
 #include "GasMixture.h"
+#include "Thermodynamics.h" // for reactive and internal contributions to thermal conductivities
 #include <numbers>
 
 void DevotoTP::computeTransport ( GasMixture* gasmix ) {
@@ -401,4 +402,175 @@ double DevotoTP::DiT(GasMixture* gasmix, int order, int ii) {
 
         return (15. / 4.) * n[ii] * std::sqrt(2. * PI * mass[ii] * kB * T) * (detQ / detq) * 1.e+3;
     }
+}
+
+double DevotoLteLambdaR::Dbinij(int i, int j , GasMixture* gasmix){
+
+    std::vector<double> masses = gasmix->masses(1.e+3) ; // g
+    double mi = masses[i] ; 
+    double mj = masses[j] ; 
+    double mu = mi*mj/(mi+mj) ; 
+
+    double T = gasmix->getTemperature() ;
+    double P = gasmix->getPressure()*1.e-3 ; // g / (micron s^2)
+
+    double ntot = gasmix->getCompositionObj()->ntot()*1.e-18 ; 
+
+    // formula binary diffusion coefficients from Transport Properties of Ionized Monatomic Gases - R.S.Devoto 1965
+    return (3./(16.* ntot)) * sqrt(2.*std::numbers::pi*kB*T/mu) * (1./Qmpil(gasmix,1,1,i,j)) ; // micron^2 / s
+}
+
+void DevotoLteLambdaR::computeTransport(GasMixture* gasmix){
+
+    std::vector<double> nbefore = gasmix->getCompositionObj()->compositions(1.e-18) ; // #/micron^3
+
+    double Tdbg = gasmix->getTemperature() ; 
+
+    /* thermodynamics solve with the definition given to the composition
+    object, so, if I give Rat, the composition will have just the electron 
+    contribution in the debye length when computing thermodynamic properties and
+    the Ghoroui definition composition HAS to be called if the composition used for 
+    transport properties has to be with ghoroui. */
+    // gasmix->getCompositionObj()->setDebyeModel("Rat2002Th") ;    
+    /* composition computed (and left) with rat inside thermodynamics */
+    thermo->computeThermodynamics(*gasmix) ; 
+
+    // debug composition
+    std::vector<double> nafter = gasmix->getCompositionObj()->compositions(1.e-18) ; // #/micron^3
+    
+    /* composition reset to ghouroui formulation */
+    // gasmix->getCompositionObj()->setDebyeModel("Ghourui") ; 
+    // gasmix->getCompositionObj()->CompositionSolve(gasmix,gasmix) ;
+    
+    DevotoTP::computeTransport(gasmix) ; 
+    
+    // Debug to see if reactive contribution has been computed with ideal composition
+    // gasmix->setCompositionSolver(new GodinTrepSahaSolver(gasmix,gasmix,gasmix->getCompositionObj()->getPfBox())) ;
+    // gasmix->getCompositionObj()->CompositionSolve(gasmix,gasmix) ; 
+
+    nafter = gasmix->getCompositionObj()->compositions(1.e-18) ; // #/micron^3
+
+    int N = gasmix->getN() ; 
+
+    int M = gasmix->getM() ; 
+
+    int L = N - M ;
+
+    std::vector<double> mass = gasmix->masses(1.e+3) ; // g 
+
+    std::vector<double> n = gasmix->getCompositionObj()->compositions(1.e-18) ; // #/micron^3
+
+    double ntot = gasmix->getCompositionObj()->ntot() * 1.e-18 ; // #/micron^3
+
+    double T = gasmix->getTemperature() ; // K
+
+    double P = gasmix->getPressure()*1.e-3 ; // g / (micron s^2)
+
+    std::vector<std::vector<double>> v = gasmix->getCompositionObj()->getReactionMatrixV() ; 
+    std::vector<int> b = gasmix->getCompositionObj()->getBaseIndicesB();
+    std::vector<int> bs = gasmix->getCompositionObj()->getNonBaseIndicesBs();
+
+    std::vector<std::vector<double>> vv ( L, std::vector<double>(N,0.) );
+
+    for (size_t i = 0; i < L; i++) {
+
+        vv[i][bs[i]] = -1. ; 
+        for (size_t j = 0; j < M; j++)
+            vv[i][b[j]] = v[i][j] ;         
+    
+    }
+
+    std::vector<double> hi (N,0.) ; 
+    for (size_t i = 0; i < N; i++) 
+        hi[i] = thermo->h(i) ; // J 
+    
+    for (size_t i = 0; i < N; i++) 
+        hi[i] *= 1.e+15 ; // g micron^2/s^2
+        
+    std::vector<double> deltaHi (L,0.) ; 
+    for (size_t i = 0; i < L; i++)
+        for (size_t j = 0; j < N; j++)
+            deltaHi[i] += vv[i][j]*hi[j] ; 
+       
+    std::vector<double> x(N,0.) ; 
+    for (size_t i = 0; i < N; i++)
+        x[i] = n[i]/ntot ; 
+    
+    std::vector<std::vector<double>> A (L,std::vector<double>(L,0.)) ; 
+    for (size_t i = 0; i < L; i++)
+        for (size_t j = 0; j < L; j++)
+            for (size_t k = 0; k < N-1; k++)
+                for (size_t l = k+1; l < N; l++)
+                    A[i][j] += ((1.)/( ntot*Dbinij(k,l,gasmix) ) ) * x[k] * x[l] * ((vv[i][k]/x[k])-(vv[i][l]/x[l])) * ((vv[j][k]/x[k])-(vv[j][l]/x[l]));
+
+    std::vector<std::vector<double>> AH(L+1,std::vector<double>(L+1,0.)) ; 
+    for (size_t i = 0; i < L; i++) {
+
+        AH[i][L] = deltaHi[i] ; 
+        AH[L][i] = deltaHi[i] ; 
+
+        for (size_t j = 0; j < L; j++)
+            AH[i][j] = A[i][j] ; 
+            
+    }
+    
+    double num = DetLU(AH,L+1) ; 
+    double den = DetLU(A,L) ; 
+
+    double lambdaR = (-1./(kB*T*T))*(num/den) ;
+
+    lambdaR *= 1e-13 * 1e4 ; // back to W/mK
+
+    // std::cout<< T << "  " << lambdaR << std::endl ; 
+
+    double dT = 20.;
+    
+    std::vector<double> n0 = n;
+    for (size_t i = 0; i < N; i++)
+        n0[i] *= 1.e+18 ; 
+    
+    gasmix->setT(T+dT) ; 
+    thermo->computeThermodynamics(*gasmix) ; 
+    std::vector<double> hf (N,0.) ; 
+    for (size_t i = 0; i < N; i++)
+        hf[i] = thermo->h(i)*1.e+15 ; 
+    
+    gasmix->getCompositionObj()->setn0(n0) ; 
+
+    gasmix->setT(T-dT) ; 
+    thermo->computeThermodynamics(*gasmix) ; 
+    std::vector<double> hb (N,0.) ; 
+    for (size_t i = 0; i < N; i++)
+        hb[i] = thermo->h(i)*1.e+15 ; 
+    
+    gasmix->setT(T) ; 
+    gasmix->getCompositionObj()->setn0(n0) ; 
+
+    std::vector<double> cpintj (N,0.) ; 
+    for (size_t i = 0; i < N; i++)
+        cpintj[i] = ((hf[i]-hb[i])/(2.*dT))-(5./2.)*kB ; 
+        
+    double sum1 = 0.;
+    double sum2 = 0.; 
+    for (size_t j = 0; j < N; j++){
+
+        sum2 = 0.;
+        for (size_t i = 0; i < N; i++)
+            sum2 += x[i]/Dbinij(i,j,gasmix);
+        
+        sum1 += x[j]*cpintj[j]/sum2 ; 
+    }
+    double lambdaInt = sum1*ntot*1.e-9;
+
+    double mu    = Tp[2];
+    double sigma = Tp[3];
+    double Qeh   = Tp[4];
+
+    Tp.resize(7) ;
+    Tp[2] = lambdaR ;
+    Tp[3] = lambdaInt ;
+    Tp[4] = mu ;
+    Tp[5] = sigma ;
+    Tp[6] = Qeh ;
+    
 }
