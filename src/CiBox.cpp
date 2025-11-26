@@ -145,7 +145,7 @@ void CiBox::PrintCollisionIntegrals ( const std::vector<double>& Ti, GasMixture*
     }
 }
 
-void CiBox::PrintTransportCrossSection ( const std::vector<double>& Ti, GasMixture* gasmix, const std::string& folder ) {
+void CiBox::PrintTransportCrossSections ( const std::vector<double>& Ti, GasMixture* gasmix, const std::string& folder ) {
 
     for ( TcsInterface* tcs : integrals ) {
 

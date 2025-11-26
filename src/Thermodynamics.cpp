@@ -15,6 +15,7 @@ void Thermodynamics::computeThermodynamics(GasMixture& gasmix) {
     double Te = T * theta;
     double P  = gasmix.getPressure();
     int N     = gasmix.getN();  
+    henthalpies.resize(N);
 
     // initial values of dT
     double dT = 20; 
@@ -28,7 +29,11 @@ void Thermodynamics::computeThermodynamics(GasMixture& gasmix) {
     Qf[N-1]->computePartitionFunction(Te + dT*theta, P, gasmix.getCompositionObj()->getDebyeLength(Te + dT));
     Q [N-1]->computePartitionFunction(Te,            P, gasmix.getCompositionObj()->getDebyeLength(Te));
     Qb[N-1]->computePartitionFunction(Te - dT*theta, P, gasmix.getCompositionObj()->getDebyeLength(Te - dT));
-
+    
+    Qf.updateCachedValues();
+    Q.updateCachedValues();
+    Qb.updateCachedValues();
+    
     double rho , R , he , hh , ee , eh , cp , cv , gamma , vs ;
 
     std::vector<double> n, mass, epsf;
@@ -56,6 +61,7 @@ void Thermodynamics::computeThermodynamics(GasMixture& gasmix) {
     double e_chem_tot = 0.0;
 
     for (int i = 0; i < N; i++) {
+
         bool isElectron = (dynamic_cast<Electron*>(gasmix(i)) != nullptr);
         double Ti = isElectron ? Te : T;
 
@@ -68,6 +74,7 @@ void Thermodynamics::computeThermodynamics(GasMixture& gasmix) {
 
         double e_tot = e_tr + e_ch + e_in;
         double h_i   = (KB * Ti * n[i]) / rho + e_tot;
+        henthalpies[i] = h_i * (rho / n[i]) ; 
 
         if (isElectron) {
             ee += e_tot;
@@ -117,10 +124,14 @@ void Thermodynamics::computeThermodynamics(GasMixture& gasmix) {
         solver->CompositionSolve(&gasmix, &gasf);
         std::vector<double> nf = solver->compositions();
 
+        solver->setn0(n0);
+
         // Backward composition
         solver->setn0(n0);
         solver->CompositionSolve(&gasmix, &gasb);
         std::vector<double> nb = solver->compositions();
+
+        solver->setn0(n0);
 
         // rho forward/backward
         double rhof = 0.0, rhob = 0.0;
@@ -132,9 +143,6 @@ void Thermodynamics::computeThermodynamics(GasMixture& gasmix) {
         // Energy forward/backward for Cp
         double ef = 0.0, eb = 0.0;
 
-        // Partitions @ Tf / Tef
-        Q.computePartitionFunctions(Tf, P, gasmix.getCompositionObj()->getDebyeLength(Tf));
-        Q[N-1]->computePartitionFunction(Tef, P, gasmix.getCompositionObj()->getDebyeLength(Tef));
         for (int i = 0; i < N; i++) {
             if (dynamic_cast<Electron*>(gasmix(i)) != nullptr) {
                 ef += 1.5 * KB * Tef * nf[i];
@@ -145,9 +153,6 @@ void Thermodynamics::computeThermodynamics(GasMixture& gasmix) {
             }
         }
 
-        // Partitions @ Tb / Teb
-        Q.computePartitionFunctions(Tb, P, gasmix.getCompositionObj()->getDebyeLength(Tb));
-        Q[N-1]->computePartitionFunction(Teb, P, gasmix.getCompositionObj()->getDebyeLength(Teb));
         for (int i = 0; i < N; i++) {
             if (dynamic_cast<Electron*>(gasmix(i)) != nullptr) {
                 eb += 1.5 * KB * Teb * nb[i];
@@ -196,10 +201,14 @@ void Thermodynamics::computeThermodynamics(GasMixture& gasmix) {
         solver->CompositionSolve(&gasmix, &gasf);
         std::vector<double> nfP = solver->compositions();
 
+        solver->setn0(n0);
+
         gasb.setP(Pb);
         solver->setn0(n0);
         solver->CompositionSolve(&gasmix, &gasb);
         std::vector<double> nbP = solver->compositions();
+
+        solver->setn0(n0);
 
         double Rf = mass[N-1] * nfP[N-1] * Te;
         double Rb = mass[N-1] * nbP[N-1] * Te;
@@ -275,6 +284,7 @@ void Thermodynamics::computeThermodynamics(GasMixture& gasmix) {
     Td[7] = cv;
     Td[8] = gamma;
     Td[9] = vs;
+    
 }
 
 void ThermodynamicsDHcorrected::computeThermodynamics(GasMixture& gasmix) {

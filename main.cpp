@@ -153,22 +153,26 @@ int main() {
     // Ar - Ar+4
     argonCI[4]->Pot(new Polarization(new Argon, new ArgonIV, alphaAr));
     // Ar - e-
+    argonCI[5]->Load(false);
     argonCI[5]->LoadElastic();
     argonCI.info();
 
     // Krypton interactions
     // Kr - Kr
-    kryptonCI[0]->Pot(new HFD_B(6.9735391e+4,8.38802216,-2.79611543,1.06136003,0.56845577,0.42605480,4.011,1.2080,201.3));
+    // kryptonCI[0]->Pot(new HFD_B(6.9735391e+4,8.38802216,-2.79611543,1.06136003,0.56845577,0.42605480,4.011,1.2080,201.3));
+    
+    kryptonCI[0]->TCScalculator = new AvrgChiIntegrator(kryptonCI[0]->GetIntInterface(),new HFD_B(6.9735391e+4,8.38802216,-2.79611543,1.06136003,0.56845577,0.42605480,4.011,1.2080,201.3)) ; 
+
     // Kr - Kr+
     kryptonCI[1]->TCScalculator = new CsHolder(
         new MultiCs( kryptonCI[1]->GetIntInterface(),
             {
-                new AvrgChiIntegrator ( kryptonCI[1]->GetIntInterface(), new Morse3Param(1.1473497719936    , 1.53051818584054     , 2.68822023138724) ),
-                new AvrgChiIntegrator ( kryptonCI[1]->GetIntInterface(), new Morse3Param(0.1980027648448    , 1.48727664654195     , 3.30735756814375) ),
-                new AvrgChiIntegrator ( kryptonCI[1]->GetIntInterface(), new Morse3Param(0.0487257899712    , 1.12449104378486     , 4.08524806817116) ),
-                new AvrgChiIntegrator ( kryptonCI[1]->GetIntInterface(), new Morse3Param(0.013018340832     , 0.726959187763507    , 5.58811134713568) ),
-                new AvrgChiIntegrator ( kryptonCI[1]->GetIntInterface(), new Morse3Param(0.1355147288512    , 1.34117458994349     , 3.73069933686615) ),
-                new AvrgChiIntegrator ( kryptonCI[1]->GetIntInterface(), new Morse3Param(0.0261606658624    , 0.923072806176961    , 4.63030059540125) )
+                new AvrgChiIntegrator ( kryptonCI[1]->GetIntInterface(), new Morse3Param( 1.1358192415424 , 1.53051818584054  , 2.68822023138724) ),
+                new AvrgChiIntegrator ( kryptonCI[1]->GetIntInterface(), new Morse3Param( 0.193415349504  , 1.48727664654195  , 3.30735756814375) ),
+                new AvrgChiIntegrator ( kryptonCI[1]->GetIntInterface(), new Morse3Param( 0.0469900111936 , 1.12449104378486  , 4.08524806817116) ),
+                new AvrgChiIntegrator ( kryptonCI[1]->GetIntInterface(), new Morse3Param( 0.01239841984   , 0.726959187763507 , 5.58811134713568) ),
+                new AvrgChiIntegrator ( kryptonCI[1]->GetIntInterface(), new Morse3Param( 0.132043171296  , 1.34117458994349  , 3.73069933686615) ),
+                new AvrgChiIntegrator ( kryptonCI[1]->GetIntInterface(), new Morse3Param( 0.0250448080768 , 0.923072806176961 , 4.63030059540125) )
             }, 
             {
                 1./6.,1./6.,1./6.,1./6.,1./6.,1./6. 
@@ -198,12 +202,12 @@ int main() {
     xenonCI[1]->TCScalculator = new CsHolder(
         new MultiCs( xenonCI[1]->GetIntInterface(),
             {
-                new AvrgChiIntegrator ( xenonCI[1]->GetIntInterface(), new Morse3Param ( 0.9799711041536  , 1.36752358722894   , 3.11420788616415 ) ) ,
-                new AvrgChiIntegrator ( xenonCI[1]->GetIntInterface(), new Morse3Param ( 0.236189897952   , 1.32789439985817   , 3.69471528652475 ) ) ,
-                new AvrgChiIntegrator ( xenonCI[1]->GetIntInterface(), new Morse3Param ( 0.073770598048   , 1.07313869362443   , 4.39534591376032 ) ) ,
-                new AvrgChiIntegrator ( xenonCI[1]->GetIntInterface(), new Morse3Param ( 0.0200854401408  , 0.720170444102808  , 5.77438172537354 ) ) ,
-                new AvrgChiIntegrator ( xenonCI[1]->GetIntInterface(), new Morse3Param ( 0.1825047400448  , 1.29151629657865   , 3.98258768925598 ) ) ,
-                new AvrgChiIntegrator ( xenonCI[1]->GetIntInterface(), new Morse3Param ( 0.0456261850112  , 0.935076315085618  , 4.77264926513416 ) )
+                new AvrgChiIntegrator ( xenonCI[1]->GetIntInterface(), new Morse3Param ( 0.9722840838528 , 1.36752358722894   , 3.11420788616415 ) ) ,
+                new AvrgChiIntegrator ( xenonCI[1]->GetIntInterface(), new Morse3Param ( 0.2325943561984 , 1.32789439985817   , 3.69471528652475 ) ) ,
+                new AvrgChiIntegrator ( xenonCI[1]->GetIntInterface(), new Morse3Param ( 0.0721588034688 , 1.07313869362443   , 4.39534591376032 ) ) ,
+                new AvrgChiIntegrator ( xenonCI[1]->GetIntInterface(), new Morse3Param ( 0.0195895033472 , 0.720170444102808  , 5.77438172537354 ) ) ,
+                new AvrgChiIntegrator ( xenonCI[1]->GetIntInterface(), new Morse3Param ( 0.1955230808768 , 1.29151629657865   , 3.98258768925598 ) ) ,
+                new AvrgChiIntegrator ( xenonCI[1]->GetIntInterface(), new Morse3Param ( 0.0445103272256 , 0.935076315085618  , 4.77264926513416 ) )
             },
             {
                 1./6.,1./6.,1./6.,1./6.,1./6.,1./6. 
@@ -223,13 +227,28 @@ int main() {
     // Xe - Xe+4
     xenonCI[4]->Pot(new Polarization(new Xenon, new XenonIV, alphaXe)); 
     // Xe - e-
+    xenonCI[5]->Load(false);
     xenonCI[5]->LoadElastic(); 
     xenonCI.info();
 
+    std::vector<double> T2 = concatenate({300.,500.,750.},arange(1000.,30001.,1000.));
+
+    auto krkrCI = new CollisionIntegralCsv(kryptonCI[0],folder + "/CiKrypton");
+    krkrCI->Print("Kr-Kr CI",T2,krypton) ; 
+
+    auto arariCI = new CollisionIntegralCsv(argonCI[1], folder + "/CiArgon");
+    arariCI->Print("Ar-Ar+ CI",T2,argon) ; 
+
+    auto krkriCI = new CollisionIntegralCsv(kryptonCI[1], folder + "/CiKrypton");
+    krkriCI->Print("Kr-Kr+ CI",T2,krypton) ; 
+
+    auto xexeiCI = new CollisionIntegralCsv(xenonCI[1], folder + "/CiXenon");
+    xexeiCI->Print("Xe-Xe+ CI",T2,xenon) ; 
+
     // Transport printers
-    auto devAr = new DevotoTpCsv( new DevotoTP(&argonCI), folder);
-    auto devKr = new DevotoTpCsv( new DevotoTP(&kryptonCI), folder);
-    auto devXe = new DevotoTpCsv( new DevotoTP(&xenonCI)  , folder);
+    auto devAr = new DevotoTpCsv( new DevotoLteLambdaR(&argonCI  , thermAr->solver), folder);
+    auto devKr = new DevotoTpCsv( new DevotoLteLambdaR(&kryptonCI, thermKr->solver), folder);
+    auto devXe = new DevotoTpCsv( new DevotoLteLambdaR(&xenonCI  , thermXe->solver), folder);
 
     devAr->solver->setOrders( {2,2,3,2,2,3} );
     devKr->solver->setOrders( {2,2,3,2,2,3} );
@@ -250,21 +269,50 @@ int main() {
         auto compXe = new CompositionCsv(xenon->getCompositionObj(),   folder);
 
         // Equilibrium compositions
-        compAr->Print("Ar Composition " + p_strings[i], T, argon);
-        compKr->Print("Kr Composition " + p_strings[i], T, krypton); 
-        compXe->Print("Xe Composition " + p_strings[i], T, xenon); 
+        // compAr->Print("Ar Composition " + p_strings[i], T, argon);
+        // compKr->Print("Kr Composition " + p_strings[i], T, krypton); 
+        // compXe->Print("Xe Composition " + p_strings[i], T, xenon); 
 
         // Thermodynamic properties
-        thermAr->Print("Ar Thermodynamics " + p_strings[i], T, argon);
-        thermKr->Print("Kr Thermodynamics " + p_strings[i], T, krypton);
-        thermXe->Print("Xe Thermodynamics " + p_strings[i], T, xenon);
+        // thermAr->Print("Ar Thermodynamics " + p_strings[i], T, argon);
+        // thermKr->Print("Kr Thermodynamics " + p_strings[i], T, krypton);
+        // thermXe->Print("Xe Thermodynamics " + p_strings[i], T, xenon);
 
         // Transport properties
-        devAr->Print("Ar Transport " + p_strings[i], T, argon);
-        devKr->Print("Kr Transport " + p_strings[i], T, krypton); 
-        devXe->Print("Xe Transport " + p_strings[i], T, xenon); 
+        // devAr->Print("Ar Transport " + p_strings[i], T, argon);
+        // devKr->Print("Kr Transport " + p_strings[i], T, krypton); 
+        // devXe->Print("Xe Transport " + p_strings[i], T, xenon); 
 
     }
 
+    // argonCI.PrintCollisionIntegrals(T2, argon, folder + "/CiArgon");
+    // xenonCI.PrintCollisionIntegrals(T2, xenon, folder + "/CiXenon");
+    // kryptonCI.PrintCollisionIntegrals(T2, krypton, folder + "/CiKrypton");
+
+    /* auto areCI = new CollisionIntegralCsv(argonCI[5], folder + "/CiArgon");
+    areCI->Print("Ar-e CI", T2, argon);
+
+    auto xeeCI = new CollisionIntegralCsv(xenonCI[5], folder + "/CiXenon");
+    xeeCI->Print("Xe-e CI", T2, xenon);
+
+    xenonCI[5]->LoadElastic("ColonnaTCSArtXee-");
+    xeeCI->Print("Xe-e CI ColonnaTabella6", T2, xenon);
+
+    xenonCI[5]->LoadElastic("ColonnaArgonArtXee-");
+    xeeCI->Print("Xe-e CI ColonnaArgonTabella7", T2, xenon);
+
+    xenonCI[5]->LoadElastic("ColonnaArgonTABELLA6ArtXee-");
+    xeeCI->Print("Xe-e CI ColonnaArgonTabella6", T2, xenon);
+
+    xenonCI[5]->LoadElastic("ColonnaKryptonArtXee-");
+    xeeCI->Print("Xe-e CI ColonnaKrypton", T2, xenon);
+
+    xenonCI[5]->LoadElastic("Ne");
+    xeeCI->Print("Xe-e CI Colonna Neon", T2, xenon);
+
+    xenonCI[5]->LoadElastic("He");
+    xeeCI->Print("Xe-e CI Colonna Helium", T2, xenon);
+    */
+    
     return 0;
 }

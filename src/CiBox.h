@@ -76,7 +76,7 @@ class CiBox {
      * @param folder Output folder for CSV files
      * @details For each HybridInterface in CiBox, a CollisionIntegralCsv is created 
      * and used to print the corresponding integrals at the given temperatures. */
-    void PrintTransportCrossSection ( const std::vector<double>& Ti, GasMixture* gasmix, const std::string& folder );
+    void PrintTransportCrossSections ( const std::vector<double>& Ti, GasMixture* gasmix, const std::string& folder );
 
     /**
      * @brief Compute and store for each collision integral in the collection 

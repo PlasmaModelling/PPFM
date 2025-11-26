@@ -147,14 +147,15 @@ std::vector<double> Composition::totalPartitionFunctions(double T, double P, dou
     int N = mixptr->getN();
     std::vector<double> Qtot(N, 0.0);
 
-    Qbox->computePartitionFunctions(T, P, lambdaD);
+    Qbox->computePartitionFunctions(T*gasptr->theta->get(), P, lambdaD);
 
     for (int i = 0; i < N - 1; i++) {
 
         if (dynamic_cast<BiatomicMolecule*>((*mixptr)(i))) {
 
             (*Qbox)[i]->computePartitionFunction(T, P, lambdaD);
-
+            Qbox->updateCachedValues();
+            
             Qtot[i] = std::pow(((2.0 * std::numbers::pi * (*mixptr)(i)->getMass() * KB *
                 T) / (hPlanck * hPlanck)), 1.5) * std::exp(-((epsf[i]) / (KB * T))) *
                 (*Qbox)(i);

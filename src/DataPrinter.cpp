@@ -228,8 +228,13 @@ std::string DevotoTpCsv::BuildFileName(const std::string& filename) const {
 }
 
 void DevotoTpCsv::PrepareHeader() {
-    header = "Th [K], λₑ [W/(m·K)], λₕ [W/(m·K)], μ [Pa·s], σ [S/m]";
-}
+    
+    if (dynamic_cast<DevotoLteLambdaR*>(solver))
+        header = "Th [K], λₑ [W/(m·K)], λₕ [W/(m·K)], λᵣ [W/(m·K)], λint [W/(m·K)], μ [Pa·s], σ [S/m], HeatExchange[J]";    
+    else    
+        header = "Th [K], λₑ [W/(m·K)], λₕ [W/(m·K)], μ [Pa·s], σ [S/m], HeatExchange[J]";
+
+    }
 
 void DevotoTpCsv::PrintMessage(const std::string& filename) {
     std::cout << "Devoto transport properties " << filename << " printed." << std::endl;
@@ -245,20 +250,21 @@ DevotoTpCsv::DevotoTpCsv(DevotoTP* solver, const std::string& folder)
 void DevotoTpCsv::PrepareData(const std::vector<double>& temperatureRange, GasMixture* gasmix) {
 
     double T0 = gasmix->getTemperature();
-    data.resize(temperatureRange.size(), std::vector<double>(5));
+    data.resize(temperatureRange.size(), std::vector<double>(solver->Tp.size()+1));
 
     for (size_t i = 0; i < temperatureRange.size(); ++i) {
+        
         gasmix->setT(temperatureRange[i]);
         solver->computeTransport(gasmix);
 
-        data[i][0] = temperatureRange[i];
-        for (int j = 0; j < 4; ++j)
-            data[i][j + 1] = solver->Tp[j];
+        data[i] = concatenate({temperatureRange[i]}, solver->Tp) ;
+
     }
 
     gasmix->setT(T0);
     gasmix->restartComposition();
     solver->computeTransport(gasmix);
+
 }
 
 // __________________________ ZhangTpCsv __________________________ //
@@ -529,11 +535,11 @@ std::string CollisionIntegralCsv::BuildFileName(const std::string& filename) con
 
 void CollisionIntegralCsv::PrepareHeader() {
     header =
-        "Tij* [#],"
-        " Ω(1;1)[#], Ω(1;2)[#], Ω(1;3)[#], Ω(1;4)[#], Ω(1;5)[#], Ω(1;6)[#], Ω(1;7)[#],"
-        " Ω(2;2)[#], Ω(2;3)[#], Ω(2;4)[#], Ω(2;5)[#], Ω(2;6)[#],"
-        " Ω(3;3)[#], Ω(3;4)[#], Ω(3;5)[#],"
-        " Ω(4;4)[#]";
+        "Tij* [K],"
+        " πΩ(1;1)[Å^2], πΩ(1;2)[Å^2], πΩ(1;3)[Å^2], πΩ(1;4)[Å^2], πΩ(1;5)[Å^2], πΩ(1;6)[Å^2], πΩ(1;7)[Å^2],"
+        " πΩ(2;2)[Å^2], πΩ(2;3)[Å^2], πΩ(2;4)[Å^2], πΩ(2;5)[Å^2], πΩ(2;6)[Å^2],"
+        " πΩ(3;3)[Å^2], πΩ(3;4)[Å^2], πΩ(3;5)[Å^2],"
+        " πΩ(4;4)[Å^2]";
 }
 
 void CollisionIntegralCsv::PrepareData(const std::vector<double>& x, GasMixture* gasmix) {

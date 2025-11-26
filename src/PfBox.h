@@ -22,6 +22,8 @@ class PfBox {
     /// @brief Vector of pointers to partition function interfaces.
     std::vector<PFinterface*> partitionfunctions;
 
+    std::vector<double> qvalues; 
+
     public:
 
     /**
@@ -61,6 +63,10 @@ class PfBox {
      * an error message is printed and execution is terminated.
      * @throws std::exit(EXIT_FAILURE) if any computation fails. */
     void computePartitionFunctions ( double temperature, double pressure, double lambda );
+
+    /** @brief remember to call when a single partition function is 
+    ** computed through something like: Q[N-1]->computePartitionFunction */
+    void updateCachedValues() ;
 
     /// @brief Displays a summary of partition functions and associated methods.
     void info();

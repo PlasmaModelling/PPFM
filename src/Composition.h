@@ -136,6 +136,17 @@ class Composition {
     /// @brief Set which Debye model to use
     void setDebyeModel(const std::string& modelName);
 
+    protected:
+
+    friend class DevotoLteLambdaR ;
+
+    /** @brief As reaction matrix v and base/non-base vectors could serve for reactive contributions, 
+     ** getters are provided. Require advanced knowledge of the algorithm implemented in this class reference 1. 
+     ** interface methods here for friends, realizations in GodinTrepSahaSolver */
+    virtual std::vector<std::vector<double>> getReactionMatrixV() = 0 ;
+    virtual std::vector<int> getBaseIndicesB() = 0 ;
+    virtual std::vector<int> getNonBaseIndicesBs() = 0 ;
+
 };
 
 /** @brief Implementation of the Godin–Trépanier matrix-based solver for Saha equilibrium.
@@ -166,6 +177,10 @@ class GodinTrepSahaSolver : public Composition {
     void CompositionSolveLambdaFrozen( Mixture* mix, Gas* gas, double lambda );
 
     protected:
+
+    std::vector<std::vector<double>> getReactionMatrixV() override {return v;}
+    std::vector<int> getBaseIndicesB() override {return b;}
+    std::vector<int> getNonBaseIndicesBs() override {return bs;}
 
     /// @brief Number of species and elements in the mixture, respectively and L = N-M. 
     int N, M, L; 
