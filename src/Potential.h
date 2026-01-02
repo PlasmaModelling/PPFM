@@ -99,14 +99,14 @@ class Capitelli : public Potential {
     /// @param beta shape parameter [-]
     /// @param De well depth [eV]
     /// @param Re equilibrium distance [Å]
-    Capitelli(Species* sp1, Species* sp2, double beta, double De, double Re)
-        : beta(beta), De(De), Re(Re) {}
+    Capitelli(Species* t1, Species* t2, double beta, double De, double Re)
+        : t1(t1), t2(t2), beta(beta), De(De), Re(Re) {}
 
     /// @copydoc Potential::Pot
     double Pot(double r) override;
 
     // Hard-coded predefined pairs (implemented in HCPotentialDB.cpp)
-    Capitelli(Argon* t1, Argon* t2);
+    /* Capitelli(Argon* t1, Argon* t2);
     Capitelli(Argon* t1, ArgonI* t2);
     Capitelli(Argon* t1, ArgonII* t2);
     Capitelli(Argon* t1, Nitrogen* t2);
@@ -115,7 +115,7 @@ class Capitelli : public Potential {
     Capitelli(ArgonI* t1, Nitrogen* t2);
     Capitelli(ArgonI* t1, MolecularNitrogen* t2);
     Capitelli(ArgonII* t1, Nitrogen* t2);
-    Capitelli(ArgonII* t1, MolecularNitrogen* t2);
+    Capitelli(ArgonII* t1, MolecularNitrogen* t2); */
 };
 
 /// @brief Reduced Hulburt–Hirschfelder potential.

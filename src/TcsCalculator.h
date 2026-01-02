@@ -447,9 +447,14 @@ class AvrgDeflAngle : public AbInitioTcsIntegration {
     /// @brief Initialize the energy range 
     virtual void InitE() override { E = logspace ( log10(1.1501404511032503e-3), log10(433), 50 ); }
 
+    void Initws();
+
     /// @brief Construct a new AvrgDefAngle object 
     AvrgDeflAngle( InteractionInterface* i, Potential* pot ) ;
     
+    /// @brief Construct a new AvrgDefAngle object with custom r0
+    AvrgDeflAngle( InteractionInterface* i, Potential* pot , double r0, double e0 ) ;
+
     /// @brief Computes the deflection angle from model interaction potential 
     double deflectionAngle ( double Bsi, double Gsi ) override ;
 
@@ -497,6 +502,8 @@ class AvrgChiIntegrator : public AvrgDeflAngle {
 
     /// @brief Construct a new AvrgChiIntegrator object 
     AvrgChiIntegrator( InteractionInterface* i, Potential* pot ) : AvrgDeflAngle(i,pot) {}
+    /// @brief Construct a new AvrgChiIntegrator object 
+    AvrgChiIntegrator( InteractionInterface* i, Potential* pot , double r0 , double e0) : AvrgDeflAngle(i,pot,r0,e0) {}
 
     /** @brief Compute and populates Q, this method represent the start for the threefold 
      * integration to collision integral with the algorithm described in the reference to 

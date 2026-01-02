@@ -28,7 +28,7 @@ int main() {
     // Output folder
     std::string folder = "ARGON_KRIPTON_XENON";
 
-    double atm = 101325.; // Pa
+    double atm = 100000.; // Pa
 
     std::vector<double> pressures = { atm, 2.*atm, 5.*atm, 10.*atm, 20.*atm, 50.*atm, 100.*atm }; 
     std::vector<std::string> p_strings = { "1 atm","2 atm","5 atm","10 atm","20 atm","50 atm","100 atm" }; 
@@ -72,24 +72,15 @@ int main() {
     krypton->setCompositionSolver(new GTSahaDHcorrection(krypton,krypton,kryptonPF));
     xenon->setCompositionSolver(new GTSahaDHcorrection(xenon,xenon,xenonPF));
 
-    // Thermodynamic solvers + printers
-    auto thermArSolver = new ThermodynamicsDHcorrected();
-    auto thermKrSolver = new ThermodynamicsDHcorrected();
-    auto thermXeSolver = new ThermodynamicsDHcorrected();
-
-    auto thermAr = new ThermodynamicsCsv(thermArSolver, folder);
-    auto thermKr = new ThermodynamicsCsv(thermKrSolver, folder); 
-    auto thermXe = new ThermodynamicsCsv(thermXeSolver, folder); 
-
     // Polarizabilities NEW
-    // double alphaAr = 1.6423; // Å³
-    // double alphaKr = 2.4865; // Å³
-    // double alphaXe = 4.0484; // Å³
+    double alphaAr = 1.6423; // Å³
+    double alphaKr = 2.4865; // Å³
+    double alphaXe = 4.0484; // Å³
 
     // Polarizabilities OLD
-    double alphaAr = 1.62; // Å³
-    double alphaKr = 2.46; // Å³
-    double alphaXe = 3.99; // Å³
+    // double alphaAr = 1.62; // Å³
+    // double alphaKr = 2.46; // Å³
+    // double alphaXe = 3.99; // Å³
 
     // Collision Integrals
     auto argonCI = CiBox(argon);
@@ -100,6 +91,7 @@ int main() {
     
     // Ar - Ar
     argonCI[0]->Pot( new HFDTCS2_ArAr() ) ;   
+    /* argonCI[0]->Pot( new Capitelli ( new Argon, new Argon, 8.1193, 0.0116273, 3.79383 )); */
 
     // Ar - Ar+ 
     argonCI[1]->Load(false);
@@ -109,7 +101,9 @@ int main() {
     argonCI[1]->TCScalculator = new CsHolder (
 
         // Elastic integration of the potential 
-        new MultiCs (
+        /* new AdaptChiIntegrator ( arari, new Capitelli ( new Argon, new ArgonI, 8.1193, 0.0236949, 4.70232 )), */
+            
+            new MultiCs (
             arari, {
                 new AvrgChiIntegrator ( arari, new Morse3Param(1.34,1.69,2.43) ),
                 new AvrgChiIntegrator ( arari, new Morse2Param(369.,    2.031) ),
@@ -128,7 +122,8 @@ int main() {
                 
             },
             { 1./6.,1./6.,1./6.,1./6.,1./6.,1./6. }
-        ),
+        ), 
+       
         // Two different Charge Transfer Cross Sections for the two different states
         new MultiCs ( 
             arari, { 
@@ -159,12 +154,17 @@ int main() {
 
     // Krypton interactions
     // Kr - Kr
-    // kryptonCI[0]->Pot(new HFD_B(6.9735391e+4,8.38802216,-2.79611543,1.06136003,0.56845577,0.42605480,4.011,1.2080,201.3));
-    
-    kryptonCI[0]->TCScalculator = new AvrgChiIntegrator(kryptonCI[0]->GetIntInterface(),new HFD_B(6.9735391e+4,8.38802216,-2.79611543,1.06136003,0.56845577,0.42605480,4.011,1.2080,201.3)) ; 
+     kryptonCI[0]->Pot(new HFD_B(6.9735391e+4,8.38802216,-2.79611543,1.06136003,0.56845577,0.42605480,4.011,1.2080,201.3));
+    // kryptonCI[0]->Load(true);
+     /* kryptonCI[0]->Pot ( new Capitelli (new Krypton, new Krypton, 7.84589, 0.0176239, 4.02566 )) ;  */
 
     // Kr - Kr+
-    kryptonCI[1]->TCScalculator = new CsHolder(
+    kryptonCI[1]->Load(false);
+    kryptonCI[1]->TCScalculator = new CsHolder (
+
+   /*      new AdaptChiIntegrator ( kryptonCI[1]->GetIntInterface(), new Capitelli ( new Krypton, new KryptonI, 7.84589, 0.0273176, 5.13097 ) 
+        ), */
+        
         new MultiCs( kryptonCI[1]->GetIntInterface(),
             {
                 new AvrgChiIntegrator ( kryptonCI[1]->GetIntInterface(), new Morse3Param( 1.1358192415424 , 1.53051818584054  , 2.68822023138724) ),
@@ -176,9 +176,10 @@ int main() {
             }, 
             {
                 1./6.,1./6.,1./6.,1./6.,1./6.,1./6. 
-            }
+            } 
         ), 
-        new ChargeTransferCsWithEnergy(kryptonCI[1]->GetIntInterface(), 8.6483, 0.3995)
+       
+        new ChargeTransferCsWithEnergy ( kryptonCI[1]->GetIntInterface(), 8.6483, 0.3995 )
     );
 
     // WEIGHT THE ENERGIES AS IN THE ARTICLE FOR THE KR - KR+ ELASTIC COLLISION
@@ -198,9 +199,16 @@ int main() {
     // Xenon interactions
     // Xe - Xe
     xenonCI[0]->Pot(new HFD_B(5.44087277e+4,7.52958289,-3.3390428,1.00555220,0.58359858,0.47378306,4.3656,1.114,282.8));
+    /* xenonCI[0]->Pot ( new Capitelli(new Xenon, new Xenon, 7.56933, 0.0254689, 4.31627 )); */
+
+
     // Xe - Xe+
+    xenonCI[1]->Load(false);
     xenonCI[1]->TCScalculator = new CsHolder(
-        new MultiCs( xenonCI[1]->GetIntInterface(),
+        /* new AdaptChiIntegrator ( xenonCI[1]->GetIntInterface(), new Capitelli ( new Xenon, new XenonI, 7.56933, 0.0334937, 5.64973 ) 
+        ), */
+            
+            new MultiCs( xenonCI[1]->GetIntInterface(),
             {
                 new AvrgChiIntegrator ( xenonCI[1]->GetIntInterface(), new Morse3Param ( 0.9722840838528 , 1.36752358722894   , 3.11420788616415 ) ) ,
                 new AvrgChiIntegrator ( xenonCI[1]->GetIntInterface(), new Morse3Param ( 0.2325943561984 , 1.32789439985817   , 3.69471528652475 ) ) ,
@@ -212,43 +220,41 @@ int main() {
             {
                 1./6.,1./6.,1./6.,1./6.,1./6.,1./6. 
             }
-        ),
+        ), 
+       
         new ChargeTransferCsWithEnergy(xenonCI[1]->GetIntInterface(), 9.716, 0.4204)
     );
 
     // WEIGHT THE ENERGIES AS IN THE ARTICLE FOR THE XE - XE+ ELASTIC COLLISION
     auto xeixe = dynamic_cast<MultiCs*>(dynamic_cast<CsHolder*>(xenonCI[1]->TCScalculator)->Qe);
     xeixe->setEnergyWeights( { 0.,0.,0.,0.,1.3066,1.3066 } );
-
+    
     // Xe - Xe+2
     xenonCI[2]->Pot(new Polarization(new Xenon, new XenonII, alphaXe)); 
     // Xe - Xe+3
     xenonCI[3]->Pot(new Polarization(new Xenon, new XenonIII, alphaXe)); 
     // Xe - Xe+4
     xenonCI[4]->Pot(new Polarization(new Xenon, new XenonIV, alphaXe)); 
+    
+    std::vector<double> T2 = concatenate({300.,500.,750.},arange(1000.,30001.,1000.));
+    
     // Xe - e-
     xenonCI[5]->Load(false);
-    xenonCI[5]->LoadElastic(); 
+    xenonCI[5]->LoadElastic();
     xenonCI.info();
 
-    std::vector<double> T2 = concatenate({300.,500.,750.},arange(1000.,30001.,1000.));
-
-    auto krkrCI = new CollisionIntegralCsv(kryptonCI[0],folder + "/CiKrypton");
-    krkrCI->Print("Kr-Kr CI",T2,krypton) ; 
-
-    auto arariCI = new CollisionIntegralCsv(argonCI[1], folder + "/CiArgon");
-    arariCI->Print("Ar-Ar+ CI",T2,argon) ; 
-
-    auto krkriCI = new CollisionIntegralCsv(kryptonCI[1], folder + "/CiKrypton");
-    krkriCI->Print("Kr-Kr+ CI",T2,krypton) ; 
-
-    auto xexeiCI = new CollisionIntegralCsv(xenonCI[1], folder + "/CiXenon");
-    xexeiCI->Print("Xe-Xe+ CI",T2,xenon) ; 
+    // Thermodynamic solvers + printers
+    auto thermArSolver = new ThermodynamicsDHcorrected();
+    auto thermKrSolver = new ThermodynamicsDHcorrected();
+    auto thermXeSolver = new ThermodynamicsDHcorrected();
+    auto thermAr = new ThermodynamicsCsv(thermArSolver, folder +"/UPDATED_SPECIESGASEOUS");
+    auto thermKr = new ThermodynamicsCsv(thermKrSolver, folder +"/UPDATED_SPECIESGASEOUS"); 
+    auto thermXe = new ThermodynamicsCsv(thermXeSolver, folder +"/UPDATED_SPECIESGASEOUS"); 
 
     // Transport printers
-    auto devAr = new DevotoTpCsv( new DevotoLteLambdaR(&argonCI  , thermAr->solver), folder);
-    auto devKr = new DevotoTpCsv( new DevotoLteLambdaR(&kryptonCI, thermKr->solver), folder);
-    auto devXe = new DevotoTpCsv( new DevotoLteLambdaR(&xenonCI  , thermXe->solver), folder);
+    auto devAr = new DevotoTpCsv( new DevotoLteLambdaR(&argonCI  , thermAr->solver), folder +"/UPDATED_SPECIESGASEOUS/LoadingKrKrAndXeE-");
+    auto devKr = new DevotoTpCsv( new DevotoLteLambdaR(&kryptonCI, thermKr->solver), folder +"/UPDATED_SPECIESGASEOUS/LoadingKrKrAndXeE-");
+    auto devXe = new DevotoTpCsv( new DevotoLteLambdaR(&xenonCI  , thermXe->solver), folder +"/UPDATED_SPECIESGASEOUS/LoadingKrKrAndXeE-");
 
     devAr->solver->setOrders( {2,2,3,2,2,3} );
     devKr->solver->setOrders( {2,2,3,2,2,3} );
@@ -264,55 +270,103 @@ int main() {
         xenon->setP(p);
 
         // Composition printers
-        auto compAr = new CompositionCsv(argon->getCompositionObj(), folder);
-        auto compKr = new CompositionCsv(krypton->getCompositionObj(), folder);
-        auto compXe = new CompositionCsv(xenon->getCompositionObj(),   folder);
+        auto compAr = new CompositionCsv(argon->getCompositionObj(), folder +"/UPDATED_SPECIESGASEOUS");
+        auto compKr = new CompositionCsv(krypton->getCompositionObj(), folder +"/UPDATED_SPECIESGASEOUS");
+        auto compXe = new CompositionCsv(xenon->getCompositionObj(),   folder +"/UPDATED_SPECIESGASEOUS");
 
         // Equilibrium compositions
-        // compAr->Print("Ar Composition " + p_strings[i], T, argon);
-        // compKr->Print("Kr Composition " + p_strings[i], T, krypton); 
-        // compXe->Print("Xe Composition " + p_strings[i], T, xenon); 
+         compAr->Print("Ar Composition " + p_strings[i], T, argon);
+         compKr->Print("Kr Composition " + p_strings[i], T, krypton); 
+         compXe->Print("Xe Composition " + p_strings[i], T, xenon); 
 
         // Thermodynamic properties
-        // thermAr->Print("Ar Thermodynamics " + p_strings[i], T, argon);
-        // thermKr->Print("Kr Thermodynamics " + p_strings[i], T, krypton);
-        // thermXe->Print("Xe Thermodynamics " + p_strings[i], T, xenon);
+         thermAr->Print("Ar Thermodynamics " + p_strings[i], T, argon);
+         thermKr->Print("Kr Thermodynamics " + p_strings[i], T, krypton);
+         thermXe->Print("Xe Thermodynamics " + p_strings[i], T, xenon);
 
         // Transport properties
+         devAr->Print("Ar Transport " + p_strings[i], T, argon);
+         devKr->Print("Kr Transport " + p_strings[i], T, krypton); 
+         devXe->Print("Xe Transport " + p_strings[i], T, xenon); 
+
+    }
+    
+    // UPDATED SPECIESGASEOUS AND POLARIZABILITIES
+    devAr = new DevotoTpCsv( new DevotoLteLambdaR(&argonCI  , thermAr->solver), folder + "/UPDATED_SPECIESGASEOUS/PPFM_Originals");
+    devKr = new DevotoTpCsv( new DevotoLteLambdaR(&kryptonCI, thermKr->solver), folder + "/UPDATED_SPECIESGASEOUS/PPFM_Originals");
+    devXe = new DevotoTpCsv( new DevotoLteLambdaR(&xenonCI  , thermXe->solver), folder + "/UPDATED_SPECIESGASEOUS/PPFM_Originals");
+
+    // PPFM Originals
+    kryptonCI[0]->Pot(new HFD_B(6.9735391e+4,8.38802216,-2.79611543,1.06136003,0.56845577,0.42605480,4.011,1.2080,201.3));
+    xenonCI[5]->Load(false);
+    xenonCI[5]->LoadElastic();
+    for (size_t i = 0; i < pressures.size(); i++) {
+
+        double p = pressures[i]; 
+
+        argon->setP(p);
+        krypton->setP(p);
+        xenon->setP(p);
+
         // devAr->Print("Ar Transport " + p_strings[i], T, argon);
         // devKr->Print("Kr Transport " + p_strings[i], T, krypton); 
         // devXe->Print("Xe Transport " + p_strings[i], T, xenon); 
 
     }
 
-    // argonCI.PrintCollisionIntegrals(T2, argon, folder + "/CiArgon");
-    // xenonCI.PrintCollisionIntegrals(T2, xenon, folder + "/CiXenon");
-    // kryptonCI.PrintCollisionIntegrals(T2, krypton, folder + "/CiKrypton");
-
-    /* auto areCI = new CollisionIntegralCsv(argonCI[5], folder + "/CiArgon");
-    areCI->Print("Ar-e CI", T2, argon);
-
-    auto xeeCI = new CollisionIntegralCsv(xenonCI[5], folder + "/CiXenon");
-    xeeCI->Print("Xe-e CI", T2, xenon);
-
-    xenonCI[5]->LoadElastic("ColonnaTCSArtXee-");
-    xeeCI->Print("Xe-e CI ColonnaTabella6", T2, xenon);
-
-    xenonCI[5]->LoadElastic("ColonnaArgonArtXee-");
-    xeeCI->Print("Xe-e CI ColonnaArgonTabella7", T2, xenon);
-
-    xenonCI[5]->LoadElastic("ColonnaArgonTABELLA6ArtXee-");
-    xeeCI->Print("Xe-e CI ColonnaArgonTabella6", T2, xenon);
-
-    xenonCI[5]->LoadElastic("ColonnaKryptonArtXee-");
-    xeeCI->Print("Xe-e CI ColonnaKrypton", T2, xenon);
-
-    xenonCI[5]->LoadElastic("Ne");
-    xeeCI->Print("Xe-e CI Colonna Neon", T2, xenon);
-
-    xenonCI[5]->LoadElastic("He");
-    xeeCI->Print("Xe-e CI Colonna Helium", T2, xenon);
-    */
+    // Capitelli potentials 
     
+    argonCI[0]->Pot( new Capitelli ( new Argon, new Argon, 8.1193, 0.0116273, 3.79383 ));
+    argonCI[1]->TCScalculator = new CsHolder (
+        
+        new AdaptChiIntegrator ( arari, new Capitelli ( new Argon, new ArgonI, 8.1193, 0.0236949, 4.70232 )),
+        
+        new MultiCs ( 
+            arari, { 
+                
+                new ChargeTransferCsWithEnergy ( arari, 8.921, 0.3960 ) , 
+                new ChargeTransferCsWithEnergy ( arari, 6.189, 0.2934 ) 
+                
+            },
+            { 
+                1./3., 2./3. 
+            }
+        )
+    );
+    
+    kryptonCI[0]->Pot ( new Capitelli (new Krypton, new Krypton, 7.84589, 0.0176239, 4.02566 )) ; 
+    kryptonCI[1]->TCScalculator = new CsHolder (
+        
+        new AdaptChiIntegrator ( kryptonCI[1]->GetIntInterface(), new Capitelli ( new Krypton, new KryptonI, 7.84589, 0.0273176, 5.13097 ) 
+    ),
+    
+        new ChargeTransferCsWithEnergy ( kryptonCI[1]->GetIntInterface(), 8.6483, 0.3995 )
+    );
+
+    xenonCI[0]->Pot ( new Capitelli(new Xenon, new Xenon, 7.56933, 0.0254689, 4.31627 ));
+    xenonCI[1]->TCScalculator = new CsHolder(
+        new AdaptChiIntegrator ( xenonCI[1]->GetIntInterface(), new Capitelli ( new Xenon, new XenonI, 7.56933, 0.0334937, 5.64973 ) 
+    ),
+        new ChargeTransferCsWithEnergy(xenonCI[1]->GetIntInterface(), 9.716, 0.4204)
+    );
+
+    devAr = new DevotoTpCsv( new DevotoLteLambdaR(&argonCI  , thermAr->solver), folder + "/UPDATED_SPECIESGASEOUS/CapitelliPotentials");
+    devKr = new DevotoTpCsv( new DevotoLteLambdaR(&kryptonCI, thermKr->solver), folder + "/UPDATED_SPECIESGASEOUS/CapitelliPotentials");
+    devXe = new DevotoTpCsv( new DevotoLteLambdaR(&xenonCI  , thermXe->solver), folder + "/UPDATED_SPECIESGASEOUS/CapitelliPotentials");
+    for (size_t i = 0; i < pressures.size(); i++) {
+    
+        double p = pressures[i]; 
+        
+        argon->setP(p);
+        krypton->setP(p);
+        xenon->setP(p);
+        
+        // devAr->Print("Ar Transport " + p_strings[i], T, argon);
+        // devKr->Print("Kr Transport " + p_strings[i], T, krypton); 
+        // devXe->Print("Xe Transport " + p_strings[i], T, xenon); 
+
+    }
+
     return 0;
+
 }

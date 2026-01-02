@@ -121,16 +121,14 @@ void Thermodynamics::computeThermodynamics(GasMixture& gasmix) {
 
         // Forward composition
         solver->setn0(n0);
-        solver->CompositionSolve(&gasmix, &gasf);
+        gasmix.setT(Tf);
         std::vector<double> nf = solver->compositions();
 
         solver->setn0(n0);
-
-        // Backward composition
-        solver->setn0(n0);
-        solver->CompositionSolve(&gasmix, &gasb);
+        gasmix.setT(Tb);
         std::vector<double> nb = solver->compositions();
 
+        gasmix.setT(T); // reset
         solver->setn0(n0);
 
         // rho forward/backward
@@ -187,27 +185,19 @@ void Thermodynamics::computeThermodynamics(GasMixture& gasmix) {
     // --- helper: ricomputa dRdP con un dato dP ---
     auto Recompute_dRdP = [&](double dP_local,
                             double& dRdP_out) {
-        Gas gasf = gasmix;
-        Gas gasb = gasmix;
-        gasf.setT(T);
-        gasb.setT(T);
 
         double Pf = P + dP_local;
         double Pb = P - dP_local;
 
-        gasf.setP(Pf);
         auto* solver = gasmix.getCompositionObj();
-        solver->setn0(n0);
-        solver->CompositionSolve(&gasmix, &gasf);
+        gasmix.setP(Pf);
         std::vector<double> nfP = solver->compositions();
 
         solver->setn0(n0);
-
-        gasb.setP(Pb);
-        solver->setn0(n0);
-        solver->CompositionSolve(&gasmix, &gasb);
+        gasmix.setP(Pb);
         std::vector<double> nbP = solver->compositions();
 
+        gasmix.setP(P); // reset
         solver->setn0(n0);
 
         double Rf = mass[N-1] * nfP[N-1] * Te;
