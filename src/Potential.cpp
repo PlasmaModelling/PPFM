@@ -54,10 +54,10 @@ double LennardJones::Pot(double r) {
 
 // Capitelli::Pot
 double Capitelli::Pot(double r) {
-    double m = (t1->getCharge() == 0 && t2->getCharge() == 0) ? 4 : 6;
+    double m = (t1->getCharge() == 0 && t2->getCharge() == 0) ? 6 : 4;
     double x = r / Re;
     double n = beta + 4 * std::pow(x, 2);
-    return De * ((m / (n - m)) * std::pow(1 / x, n) - (n / (n - m)) * std::pow(1 / x, m));
+    return De * (((m / (n - m)) * std::pow(1 / x, n)) - ((n / (n - m)) * std::pow(1 / x, m)));
 }
 
 // HulburtHirschfelder::Pot
@@ -205,6 +205,7 @@ LennardJones::LennardJones(Helium* t1, Helium* t2) { eps = 9.39289e-04 ; sig = 2
 // Argon-Helium
 LennardJones::LennardJones(Argon* t1, Helium* t2) { eps = std::sqrt(9.39289e-04 * 0.010333); sig = (2.64 + 3.405) / 2; }
 
+/* 
 // Argon-Argon
 Capitelli::Capitelli(Argon* t1, Argon* t2) { beta = 8.12; De = 0.011603; Re = 3.794; }
 // Argon-ArgonI
@@ -225,6 +226,7 @@ Capitelli::Capitelli(ArgonI* t1, MolecularNitrogen* t2) { beta = 7.59; De = 0.11
 Capitelli::Capitelli(ArgonII* t1, Nitrogen* t2) { beta = 6.79; De = 0.581253; Re = 2.537; }
 // ArgonII-MolecularNitrogen
 Capitelli::Capitelli(ArgonII* t1, MolecularNitrogen* t2) { beta = 7.47; De = 0.784957; Re = 2.639; }
+ */
 
 HFDTCS2_ArAr::HFDTCS2_ArAr() : Potential() {}
 

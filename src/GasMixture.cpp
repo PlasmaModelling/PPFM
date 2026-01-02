@@ -20,19 +20,19 @@ void GasMixture::setCompositionSolver(Composition* solver) {
 // Setter T/P with composition recomputation
 void GasMixture::setT(double temperature) {
     T = temperature;
-    Comp->CompositionSolve(this, this);
+    Comp->CompositionSolve();
 }
 
 // Setter T/P with composition recomputation
 void GasMixture::setP(double pressure) {
     P = pressure;
-    Comp->CompositionSolve(this, this);
+    Comp->CompositionSolve();
 }
 
 // Restart composition and recompute internal state
 void GasMixture::restartComposition() {
 
     Comp->restart();
-    Comp->CompositionSolve(this, this);
+    Comp->CompositionSolve();
 
 }

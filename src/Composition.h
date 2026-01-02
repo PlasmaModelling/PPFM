@@ -31,8 +31,8 @@ class Mixture;
 class Composition {
 
     friend class GasMixture;
-    friend class Thermodynamics;
     friend class CompositionCsv;
+    friend class DevotoLteLambdaR ;
 
     protected:
 
@@ -70,7 +70,7 @@ class Composition {
 
     /** @brief Formation energies
      ** @details Null for electrons and neutral atoms
-     ** equal to the ionization energy for positive ions,
+     ** equal to the sum of ionization energies of the previous states for positive ions,
      ** bond dissociation energy and electron affinity with negative sign for molecules,
      ** and anions, respectively. To be lowered for corrections to ionization energies. */
     std::vector <double> epsf;
@@ -81,18 +81,26 @@ class Composition {
     /// @brief Debye length via Ghourui formulation
     double Debye_Ghourui(double T);
 
-    /// @brief Initialize composition values 
+    /// @brief Initialize composition values with perfect gas law 
     virtual void initializeComposition();
 
-    /// @brief Initialize formationEnergies
+    /// @brief Initialize formation energies
     virtual void initializeFormationEnergies();
 
-    /// @brief Compute Total Partition Functions
+    /// @brief Compute Total Partition Functions translational*internal
     std::vector<double> totalPartitionFunctions(double T, double P, double lambdaD);
 
+    /// @brief restart composition to be called in GasMixture 
     virtual void restart() = 0;
 
     virtual ~Composition() = default;
+
+    /** @brief As reaction matrix v and base/non-base vectors could serve for reactive contributions, 
+     ** getters are provided. Require advanced knowledge of the algorithm implemented in this class reference 1. 
+     ** interface methods here for friends classes, realizations in GodinTrepSahaSolver */
+    virtual std::vector<std::vector<double>> getReactionMatrixV() = 0 ;
+    virtual std::vector<int> getBaseIndicesB() = 0 ;
+    virtual std::vector<int> getNonBaseIndicesBs() = 0 ;
 
     public:
 
@@ -104,8 +112,7 @@ class Composition {
 
     /** @brief Compute and store in ni the particle densities of the Mixture at the Gas state.
      ** USE @p lambda only in advanced composition classes. */
-    virtual void CompositionSolve(Mixture* mix, Gas* gas, 
-        std::optional<double> lambda = std::nullopt) = 0;
+    virtual void CompositionSolve(std::optional<double> lambda = std::nullopt) = 0;
 
     /** @brief Get the Debye Length of the computed composition.
      ** @param temperature Electron or heavy-particle temperature [K].
@@ -115,13 +122,13 @@ class Composition {
     /// @brief get the i-th composition value [#/m^3]
     virtual double operator()(int i) {return ni[i];}
 
-    /// @brief get the computed composition values as a vector of double values 
+    /// @brief get the computed composition values as a vector of double values in [#/m^3]
     virtual std::vector<double> compositions() {return ni;}
 
-    /// @brief get the computed composition values multiplied by a conversion factor
+    /// @brief get the computed composition values multiplied by a conversion factor, beware units!
     virtual std::vector<double> compositions(double conversion) ;
 
-    /// @brief get the computed total composition value 
+    /// @brief get the computed total composition value in [#/m^3]
     virtual double ntot() ;
 
     /// @brief set starting composition to member ni
@@ -133,19 +140,11 @@ class Composition {
     /// @brief set for a desired PF container with desired methods
     void setPfBox(PfBox* specifiedQbox) {Qbox = specifiedQbox;}
 
-    /// @brief Set which Debye model to use
+    /** @brief Set which Debye model to use with string identifier, supported models are:
+     ** - "Rat2002Th" : Rat (2002) with heavy-particle temperature
+     ** - "Rat2002Te" : Rat (2002) with electron temperature
+     ** - "Ghourui"   : Ghourui formulation with accounting for ions shielding */
     void setDebyeModel(const std::string& modelName);
-
-    protected:
-
-    friend class DevotoLteLambdaR ;
-
-    /** @brief As reaction matrix v and base/non-base vectors could serve for reactive contributions, 
-     ** getters are provided. Require advanced knowledge of the algorithm implemented in this class reference 1. 
-     ** interface methods here for friends, realizations in GodinTrepSahaSolver */
-    virtual std::vector<std::vector<double>> getReactionMatrixV() = 0 ;
-    virtual std::vector<int> getBaseIndicesB() = 0 ;
-    virtual std::vector<int> getNonBaseIndicesBs() = 0 ;
 
 };
 
@@ -156,8 +155,8 @@ class Composition {
  ** state equation and charge neutrality. 
  ** The algorithm combines Newton method with Mass Action Law
  **
- ** @see <a href="../../articles/A Robust and Efficient Method for the Computation of Equilibrium 
- ** Composition in Gaseous Mixtures.pdf">Reference article</a> */
+ ** @see "A Robust and Efficient Method for the Computation of Equilibrium 
+ ** Composition in Gaseous Mixtures" */
 class GodinTrepSahaSolver : public Composition {
     
     public:
@@ -170,12 +169,8 @@ class GodinTrepSahaSolver : public Composition {
     
     /** @brief Solve the composition with the specified algorithm in this class reference
      ** and store results in member ni. */
-    void CompositionSolve(Mixture* mix, Gas* gas, std::optional<double> lambda) override;
+    void CompositionSolve(std::optional<double> lambda) override;
     
-    /** @brief Override of the CompositionSolve in which Debye Length is not 
-    updated during Newton steps */
-    void CompositionSolveLambdaFrozen( Mixture* mix, Gas* gas, double lambda );
-
     protected:
 
     std::vector<std::vector<double>> getReactionMatrixV() override {return v;}
@@ -238,7 +233,7 @@ class GTSahaDHcorrection : public GodinTrepSahaSolver {
     GTSahaDHcorrection(Mixture* mix, Gas* gas, PfBox* qbox);
 
     /// @brief Solve the composition including Debye–Hückel corrections.
-    void CompositionSolve(Mixture* mix, Gas* gas, std::optional<double> lambda) override;
+    void CompositionSolve(std::optional<double> lambda) override;
 
     protected:
 

@@ -195,7 +195,7 @@ GodinTrepSahaSolver::GodinTrepSahaSolver(Mixture* mix, Gas* gas)
     bs = std::vector<int> (L) ;
     A0 = std::vector<double> (M) ;
 
-    /* Being this the ideal solver Peff is always equal to gas->getPressure() 
+    /* Being this the ideal solver Peff is always equal to gasptr->getPressure() 
     and can be initialized in the constructor, this is not the case for example for 
     DH corrections */
     Peff = gasptr->getPressure() ; 
@@ -398,21 +398,21 @@ void GodinTrepSahaSolver::baseCalc(std::vector<int>& b, std::vector<int>& bs,
     delete[] n_ord;
 }
 
-void GodinTrepSahaSolver::CompositionSolve(Mixture* mix, Gas* gas, std::optional<double> lambda) {
+void GodinTrepSahaSolver::CompositionSolve( std::optional<double> lambda) {
     
-    double theta = gas->theta->get() ; 
-    double T = gas->getTemperature() ; 
+    double theta = gasptr->theta->get() ; 
+    double T = gasptr->getTemperature() ; 
 
     std::vector<Species*> species ; 
     for (int i = 0; i < N; i++)
-        species.push_back((*mix)(i)) ; 
+        species.push_back((*mixptr)(i)) ; 
 
     baseCalc ( b, bs, C );
+
     for(int i = 0;i < M; i++) 
         for(int j = 0; j < M; j++) 
             B[i][j] = C[b[i]][j];
         
-    
     for(int i=0;i<L;i++) 
         for(int j=0;j<M;j++) 
             Bs[i][j] = C[bs[i]][j];
@@ -420,7 +420,7 @@ void GodinTrepSahaSolver::CompositionSolve(Mixture* mix, Gas* gas, std::optional
     lu_inv(Binv,B,M);
     matrix_prod(v,Bs,Binv,L,M);
 
-    std::vector<std::vector<double>> A = ConservationMatrix(*mix,*gas,C) ;
+    std::vector<std::vector<double>> A = ConservationMatrix(*mixptr,*gasptr,C) ;
     
     for( int j = 0 ; j < M-1 ; j++) 
         A0[j] = 0.;
@@ -470,6 +470,7 @@ void GodinTrepSahaSolver::CompositionSolve(Mixture* mix, Gas* gas, std::optional
         // In case of frozen lambda GodinTrepSahaSolver::CompositionSolve 
         // has to be called with lambda value assigned.
         double lambdaEff = lambda.has_value() ? *lambda : getDebyeLength(T);
+
         // Total partition functions calculation 
         std::vector<double> Qtot = totalPartitionFunctions(T, Peff, lambdaEff);
         
@@ -508,7 +509,9 @@ void GodinTrepSahaSolver::CompositionSolve(Mixture* mix, Gas* gas, std::optional
 GTSahaDHcorrection::GTSahaDHcorrection(Mixture* mix, Gas* gas)
     : GodinTrepSahaSolver(mix, gas) {
 
+    // Default Debye model for Debye-Huckle corrections
     setDebyeModel("Ghourui");
+
     /* Peff changes during computatio, has to be assigned in Solve */
 
 }  
@@ -564,9 +567,9 @@ std::vector<double> GTSahaDHcorrection::formationEnergyDHcorrected (double lambd
 
 }
 
-void GTSahaDHcorrection::CompositionSolve(Mixture* mix, Gas* gas, std::optional<double> lambda) {
+void GTSahaDHcorrection::CompositionSolve( std::optional<double> lambda ) {
 
-    double T = gas->getTemperature();
+    double T = gasptr->getTemperature();
     
     // Convergence on Debye Length
     double lambdaOld = getDebyeLength(T);
@@ -574,7 +577,7 @@ void GTSahaDHcorrection::CompositionSolve(Mixture* mix, Gas* gas, std::optional<
     double deltaLambda = 1.0;
 
     // Convergence on Peff
-    double PeffOld = gas->getPressure();
+    double PeffOld = gasptr->getPressure();
     double PeffNew = PeffOld;
     double deltaPeff = 1.0;
 
@@ -595,7 +598,7 @@ void GTSahaDHcorrection::CompositionSolve(Mixture* mix, Gas* gas, std::optional<
         Peff = PeffMixed;
 
         // Risolve la composizione con le energie corrette
-        GodinTrepSahaSolver::CompositionSolve(mix, gas, lambdaOld);
+        GodinTrepSahaSolver::CompositionSolve( lambdaOld );
 
         // Relaxing on Debye Length
         lambdaNew = getDebyeLength(T);
@@ -613,7 +616,7 @@ void GTSahaDHcorrection::CompositionSolve(Mixture* mix, Gas* gas, std::optional<
         // Debug log
         if (iter>=maxIter) {
 
-            std::cout << "[IterMax reached] T=" << T << " K "
+            std::cout << "[Warning: IterMax reached] T=" << T << " K "
             << "λ_D=" << lambdaMixed << " m, "
             << "Δλ/λ=" << deltaLambda << ", "
             << "Peff=" << Peff << " Pa, "

@@ -183,7 +183,7 @@ void GasMixture::setMoleFractions ( std::initializer_list<double> values , speci
 
     // compute composition with newer mole fractions
     restartComposition() ;
-    Comp->CompositionSolve(this,this) ;
+    Comp->CompositionSolve() ;
 }
 
 

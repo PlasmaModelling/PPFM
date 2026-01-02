@@ -589,17 +589,31 @@ AvrgDeflAngle::AvrgDeflAngle( InteractionInterface* i, Potential* pot ) : AbInit
 
     InitE() ; 
 
-    // interparticle distance 1/R interval
-    ws = logspace ( log10(1. / 1000.), log10(1. / 0.0001), N) ; 
+    Initws() ;
+    
+}
 
-    // potential psi(w) = phi(1/R) 
-    v.resize(ws.size());
-    #pragma omp parallel for
-    for (int i = 0; i < ws.size(); i++)
-        v[i] = pot->Pot(r0/ws[i]) ;
+AvrgDeflAngle::AvrgDeflAngle( InteractionInterface* i, Potential* pot , double r0 , double e0) : AbInitioTcsIntegration(i,pot) , r0(r0), e0(e0) {
+
+    InitE() ; 
+
+    Initws() ;
     
-    ws[0] = 0.;
+}
+
+void AvrgDeflAngle::Initws() {
     
+        // interparticle distance 1/R interval
+        ws = logspace ( log10(1. / 1000.), log10(1. / 0.0001), N) ; 
+    
+        // potential psi(w) = phi(1/R) 
+        v.resize(ws.size());
+        #pragma omp parallel for
+        for (int i = 0; i < ws.size(); i++)
+            v[i] = pot->Pot(r0/ws[i]) ;
+        
+        ws[0] = 0.;
+
 }
 
 double AvrgDeflAngle::deflectionAngle ( double Bs, double Gst ) {
