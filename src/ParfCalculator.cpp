@@ -137,7 +137,7 @@ double PfPoly::compute(double T, double P, double debye) {
     for (int i = coefficients.size() - 1, j = 0; i > -1 && j < coefficients.size(); i--, j++) 
         Qint += coefficients[j] * pow(T, i);
     
-    return Qint;
+    return std::abs(Qint);
 }
 
 void PfTtable::ParseFile(std::ifstream& file) {

@@ -32,7 +32,7 @@ int CarbonII::getCharge() { return 2 ; }
 
 std::string CarbonII::getFormula() { return "C+2" ; }
 
-double CarbonII::formationEnergy() { return 35.6436 * eVtoJ ; }
+double CarbonII::formationEnergy() { return (11.2603+24.3833) * eVtoJ ; }
 
 double CarbonII::IonLim() { return 47.887 * eVtoJ ; }
 
@@ -44,11 +44,23 @@ int CarbonIII::getCharge() { return 3 ; }
 
 std::string CarbonIII::getFormula() { return "C+3" ; }
 
-double CarbonIII::formationEnergy() { return 83.5306 * eVtoJ ; }
+double CarbonIII::formationEnergy() { return (11.2603+24.3833+47.887) * eVtoJ ; }
 
-double CarbonIII::IonLim() { return 9999999999.0 * eVtoJ ; }
+double CarbonIII::IonLim() { return 64.49352 * eVtoJ ; }
 
 Element* CarbonIII::Constituent() { return new Carbon; }
+
+double CarbonIV::getMass() { return (12.00905 - 4*eamu) * amuKg ; }
+
+int CarbonIV::getCharge() { return 4 ; }
+
+std::string CarbonIV::getFormula() { return "C+4" ; }
+
+double CarbonIV::formationEnergy() { return (11.2603+24.3833+47.887+64.49352) * eVtoJ ; }
+
+double CarbonIV::IonLim() { return 392.09056 * eVtoJ ; } // Theoretical value 
+
+Element* CarbonIV::Constituent() { return new Carbon; }
 
 double Bromine::getMass() { return 79.904 * amuKg ; }
 
