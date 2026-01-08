@@ -27,7 +27,7 @@ Beryllium BerylliumI BerylliumII BerylliumIII
 Boron BoronI BoronII BoronIII
 Bromine BromineI BromineII BromineIII
 Calcium CalciumI CalciumII CalciumIII
-Carbon CarbonI CarbonII CarbonIII
+Carbon CarbonI CarbonII CarbonIII CarbonIV
 Cesium CesiumI CesiumII CesiumIII
 Chlorine ChlorineI ChlorineII ChlorineIII
 Chromium ChromiumI ChromiumII ChromiumIII
@@ -52,7 +52,7 @@ Neon NeonI NeonII NeonIII
 Nickel NickelI NickelII NickelIII
 Niobium NiobiumI NiobiumII NiobiumIII
 Nitrogen NitrogenI NitrogenII NitrogenIII
-Oxygen OxygenI OxygenII OxygenIII
+Oxygen OxygenI OxygenII OxygenIII OxygenIV
 Phosphorus PhosphorusI PhosphorusII PhosphorusIII
 Platinum PlatinumI PlatinumII PlatinumIII
 Potassium PotassiumI PotassiumII PotassiumIII
@@ -74,7 +74,9 @@ Zirconium ZirconiumI ZirconiumII ZirconiumIII
 HydrogenAnion NitrogenAnion OxygenAnion
 MolecularHydrogen MolecularHydrogenI MolecularNitrogen
 MolecularNitrogenI MolecularOxygen MolecularOxygenAnion
-MolecularOxygenI Ozone
+MolecularOxygenI Ozone 
+CarbonMonoxide CarbonDioxide 
+CarbonMonoxideI CarbonDioxideI
 """
 
 # === PARSING ===

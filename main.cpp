@@ -252,9 +252,9 @@ int main() {
     auto thermXe = new ThermodynamicsCsv(thermXeSolver, folder +"/UPDATED_SPECIESGASEOUS"); 
 
     // Transport printers
-    auto devAr = new DevotoTpCsv( new DevotoLteLambdaR(&argonCI  , thermAr->solver), folder +"/UPDATED_SPECIESGASEOUS/LoadingKrKrAndXeE-");
-    auto devKr = new DevotoTpCsv( new DevotoLteLambdaR(&kryptonCI, thermKr->solver), folder +"/UPDATED_SPECIESGASEOUS/LoadingKrKrAndXeE-");
-    auto devXe = new DevotoTpCsv( new DevotoLteLambdaR(&xenonCI  , thermXe->solver), folder +"/UPDATED_SPECIESGASEOUS/LoadingKrKrAndXeE-");
+    auto devAr = new DevotoTpCsv( new DevotoLteLambdaR(&argonCI  , thermAr->solver), folder +"/UPDATED_SPECIESGASEOUS");
+    auto devKr = new DevotoTpCsv( new DevotoLteLambdaR(&kryptonCI, thermKr->solver), folder +"/UPDATED_SPECIESGASEOUS");
+    auto devXe = new DevotoTpCsv( new DevotoLteLambdaR(&xenonCI  , thermXe->solver), folder +"/UPDATED_SPECIESGASEOUS");
 
     devAr->solver->setOrders( {2,2,3,2,2,3} );
     devKr->solver->setOrders( {2,2,3,2,2,3} );
@@ -288,82 +288,6 @@ int main() {
          devAr->Print("Ar Transport " + p_strings[i], T, argon);
          devKr->Print("Kr Transport " + p_strings[i], T, krypton); 
          devXe->Print("Xe Transport " + p_strings[i], T, xenon); 
-
-    }
-    
-    // UPDATED SPECIESGASEOUS AND POLARIZABILITIES
-    devAr = new DevotoTpCsv( new DevotoLteLambdaR(&argonCI  , thermAr->solver), folder + "/UPDATED_SPECIESGASEOUS/PPFM_Originals");
-    devKr = new DevotoTpCsv( new DevotoLteLambdaR(&kryptonCI, thermKr->solver), folder + "/UPDATED_SPECIESGASEOUS/PPFM_Originals");
-    devXe = new DevotoTpCsv( new DevotoLteLambdaR(&xenonCI  , thermXe->solver), folder + "/UPDATED_SPECIESGASEOUS/PPFM_Originals");
-
-    // PPFM Originals
-    kryptonCI[0]->Pot(new HFD_B(6.9735391e+4,8.38802216,-2.79611543,1.06136003,0.56845577,0.42605480,4.011,1.2080,201.3));
-    xenonCI[5]->Load(false);
-    xenonCI[5]->LoadElastic();
-    for (size_t i = 0; i < pressures.size(); i++) {
-
-        double p = pressures[i]; 
-
-        argon->setP(p);
-        krypton->setP(p);
-        xenon->setP(p);
-
-        // devAr->Print("Ar Transport " + p_strings[i], T, argon);
-        // devKr->Print("Kr Transport " + p_strings[i], T, krypton); 
-        // devXe->Print("Xe Transport " + p_strings[i], T, xenon); 
-
-    }
-
-    // Capitelli potentials 
-    
-    argonCI[0]->Pot( new Capitelli ( new Argon, new Argon, 8.1193, 0.0116273, 3.79383 ));
-    argonCI[1]->TCScalculator = new CsHolder (
-        
-        new AdaptChiIntegrator ( arari, new Capitelli ( new Argon, new ArgonI, 8.1193, 0.0236949, 4.70232 )),
-        
-        new MultiCs ( 
-            arari, { 
-                
-                new ChargeTransferCsWithEnergy ( arari, 8.921, 0.3960 ) , 
-                new ChargeTransferCsWithEnergy ( arari, 6.189, 0.2934 ) 
-                
-            },
-            { 
-                1./3., 2./3. 
-            }
-        )
-    );
-    
-    kryptonCI[0]->Pot ( new Capitelli (new Krypton, new Krypton, 7.84589, 0.0176239, 4.02566 )) ; 
-    kryptonCI[1]->TCScalculator = new CsHolder (
-        
-        new AdaptChiIntegrator ( kryptonCI[1]->GetIntInterface(), new Capitelli ( new Krypton, new KryptonI, 7.84589, 0.0273176, 5.13097 ) 
-    ),
-    
-        new ChargeTransferCsWithEnergy ( kryptonCI[1]->GetIntInterface(), 8.6483, 0.3995 )
-    );
-
-    xenonCI[0]->Pot ( new Capitelli(new Xenon, new Xenon, 7.56933, 0.0254689, 4.31627 ));
-    xenonCI[1]->TCScalculator = new CsHolder(
-        new AdaptChiIntegrator ( xenonCI[1]->GetIntInterface(), new Capitelli ( new Xenon, new XenonI, 7.56933, 0.0334937, 5.64973 ) 
-    ),
-        new ChargeTransferCsWithEnergy(xenonCI[1]->GetIntInterface(), 9.716, 0.4204)
-    );
-
-    devAr = new DevotoTpCsv( new DevotoLteLambdaR(&argonCI  , thermAr->solver), folder + "/UPDATED_SPECIESGASEOUS/CapitelliPotentials");
-    devKr = new DevotoTpCsv( new DevotoLteLambdaR(&kryptonCI, thermKr->solver), folder + "/UPDATED_SPECIESGASEOUS/CapitelliPotentials");
-    devXe = new DevotoTpCsv( new DevotoLteLambdaR(&xenonCI  , thermXe->solver), folder + "/UPDATED_SPECIESGASEOUS/CapitelliPotentials");
-    for (size_t i = 0; i < pressures.size(); i++) {
-    
-        double p = pressures[i]; 
-        
-        argon->setP(p);
-        krypton->setP(p);
-        xenon->setP(p);
-        
-        // devAr->Print("Ar Transport " + p_strings[i], T, argon);
-        // devKr->Print("Kr Transport " + p_strings[i], T, krypton); 
-        // devXe->Print("Xe Transport " + p_strings[i], T, xenon); 
 
     }
 

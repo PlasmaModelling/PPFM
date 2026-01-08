@@ -142,7 +142,7 @@ std::string OxygenI::getFormula() { return "O+" ; }
 
 double OxygenI::formationEnergy() { return 13.61806 * eVtoJ ; }
 
-double OxygenI::IonLim() { return 35.1173 * eVtoJ ; }
+double OxygenI::IonLim() { return 35.12112 * eVtoJ ; }
 
 Element* OxygenI::Constituent() { return new Oxygen; }
 
@@ -152,7 +152,7 @@ int OxygenII::getCharge() { return 2 ; }
 
 std::string OxygenII::getFormula() { return "O+2" ; }
 
-double OxygenII::formationEnergy() { return 48.73536 * eVtoJ ; }
+double OxygenII::formationEnergy() { return (13.61806 + 35.12112) * eVtoJ ; }
 
 double OxygenII::IonLim() { return 54.9355 * eVtoJ ; }
 
@@ -164,11 +164,23 @@ int OxygenIII::getCharge() { return 3 ; }
 
 std::string OxygenIII::getFormula() { return "O+3" ; }
 
-double OxygenIII::formationEnergy() { return 103.67086 * eVtoJ ; }
+double OxygenIII::formationEnergy() { return (13.61806 + 35.12112 + 54.9355) * eVtoJ ; }
 
-double OxygenIII::IonLim() { return 9999999999.0 * eVtoJ ; }
+double OxygenIII::IonLim() { return 77.4135 * eVtoJ ; }
 
 Element* OxygenIII::Constituent() { return new Oxygen; }
+
+double OxygenIV::getMass() { return (15.99743 - 4*eamu) * amuKg ; }
+
+int OxygenIV::getCharge() { return 4 ; }
+
+std::string OxygenIV::getFormula() { return "O+4" ; }
+
+double OxygenIV::formationEnergy() { return (13.61806 + 35.12112 + 54.9355 + 77.4135) * eVtoJ ; }
+
+double OxygenIV::IonLim() { return 113.899 * eVtoJ ; }
+
+Element* OxygenIV::Constituent() { return new Oxygen; }
 
 double OxygenAnion::getMass() { return (15.9994 + eamu) * amuKg ; }
 
