@@ -2389,6 +2389,7 @@ class CarbonMonoxideI : public HeteroNuclearBiatomicMolecule, public ChargedSpec
     std::string getFormula() override;
     double      formationEnergy() override;
     double      IonLim() override;
+    Element*    Constituent() override;
 
 };
 
@@ -2424,6 +2425,8 @@ class CarbonDioxideI : public PolyAtomicMolecule, public ChargedSpecies {
     std::string getFormula() override;
     double      formationEnergy() override;
     double      IonLim() override;
+    Element*    Constituent() override;
+
 };
 
 class Ozone : public PolyAtomicMolecule {

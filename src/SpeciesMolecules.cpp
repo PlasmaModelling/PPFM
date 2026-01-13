@@ -9,10 +9,10 @@
 // ---------------- CarbonMonoxide ----------------
 
 CarbonMonoxide::CarbonMonoxide() {
-    costituents.push_back(new Carbon);
-    costituents.push_back(new Oxygen);
-    abundancy.push_back(1);
-    abundancy.push_back(1);
+    costituents[0] = (new Carbon);
+    costituents[1] = (new Oxygen);
+    abundancy[0] = (1);
+    abundancy[1] = (1);
 }
 
 int CarbonMonoxide::numberOfCostituents() { return 2; }
@@ -28,10 +28,10 @@ double CarbonMonoxide::IonLim() { return 14.014 * eVtoJ; }
 // ---------------- CarbonMonoxideI ----------------
 
 CarbonMonoxideI::CarbonMonoxideI() {
-    costituents.push_back(new Carbon);
-    costituents.push_back(new Oxygen);
-    abundancy.push_back(1);
-    abundancy.push_back(1);
+    costituents[0] = (new Carbon);
+    costituents[1] = (new Oxygen);
+    abundancy[0] = (1);
+    abundancy[1] = (1);
 }
 
 int CarbonMonoxideI::numberOfCostituents() { return 2; }
@@ -43,6 +43,7 @@ int CarbonMonoxideI::getCharge() { return 1; }
 std::string CarbonMonoxideI::getFormula() { return "CO+"; }
 double CarbonMonoxideI::formationEnergy() { return 4.5792e-19; } // J (efCO + IonLim(CO))
 double CarbonMonoxideI::IonLim() { return 14.014 * eVtoJ; }
+Element* CarbonMonoxideI::Constituent() { std::cerr<<"Asked for constituent of an HeteroNuclearMolecule. aborting...\n"; abort(); return nullptr; }
 
 // ---------------- CarbonDioxide ----------------
 
@@ -81,6 +82,7 @@ int CarbonDioxideI::getCharge() { return 1; }
 std::string CarbonDioxideI::getFormula() { return "CO2+"; }
 double CarbonDioxideI::formationEnergy() { return 1.3236e-18; } // J
 double CarbonDioxideI::IonLim() { return 9999999999999999; }
+Element* CarbonDioxideI::Constituent() { std::cerr<<"Asked for constituent of an PolyAtomicMolecule. aborting...\n"; abort(); return nullptr; }
 
 // ---------------- Ozone ----------------
 
