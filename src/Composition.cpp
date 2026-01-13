@@ -231,13 +231,7 @@ std::vector<double> GodinTrepSahaSolver::Crow(Species* specie,
         if (colmap.find(tipo(elem)) != colmap.end())
             row[colmap.at(tipo(elem))] = 1.0;
 
-    } else if (ChargedSpecies* chrgd = dynamic_cast<ChargedSpecies*>(specie)) {
-
-        elem = chrgd->Constituent();
-        if ((elem != nullptr) && (colmap.find(tipo(elem)) != colmap.end()))
-            row[colmap.at(tipo(elem))] = 1.0;
-
-    } else if (PolyAtomicMolecule* poly = dynamic_cast<PolyAtomicMolecule*>(specie)) {
+    }  else if (PolyAtomicMolecule* poly = dynamic_cast<PolyAtomicMolecule*>(specie)) {
 
         for (int i = 0; i < poly->numberOfCostituents(); i++) {
 
@@ -247,6 +241,12 @@ std::vector<double> GodinTrepSahaSolver::Crow(Species* specie,
                 row[colmap.at(tipo(elem))] = (double)part;
 
         }
+
+    }else if (ChargedSpecies* chrgd = dynamic_cast<ChargedSpecies*>(specie)) {
+
+        elem = chrgd->Constituent();
+        if ((elem != nullptr) && (colmap.find(tipo(elem)) != colmap.end()))
+            row[colmap.at(tipo(elem))] = 1.0;
 
     } else {
 
