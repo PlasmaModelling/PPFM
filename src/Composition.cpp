@@ -148,10 +148,11 @@ std::vector<double> Composition::totalPartitionFunctions(double T, double P, dou
     std::vector<double> Qtot(N, 0.0);
 
     Qbox->computePartitionFunctions(T*gasptr->theta->get(), P, lambdaD);
+    Qbox->updateCachedValues() ;
 
     for (int i = 0; i < N - 1; i++) {
 
-        if (dynamic_cast<BiatomicMolecule*>((*mixptr)(i))) {
+        if (dynamic_cast<PolyAtomicMolecule*>((*mixptr)(i))) {
 
             (*Qbox)[i]->computePartitionFunction(T, P, lambdaD);
             Qbox->updateCachedValues();

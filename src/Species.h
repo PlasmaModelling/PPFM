@@ -2296,8 +2296,8 @@ class PolyAtomicMolecule : public virtual Species {
     public : 
 
     virtual int             numberOfCostituents()   = 0 ;
-    virtual int             operator()(int i )      = 0 ;
-    virtual Element*        operator[](int i )      = 0 ; 
+    virtual int             operator()(int i )      {return abundancy[i] ; } ;
+    virtual Element*        operator[](int i )      {return costituents[i] ;}
 
 } ;
 
@@ -2524,4 +2524,224 @@ public:
     double      IonLim() override;
 };
 
+/* 
+ Dummy implementation of molecules missing from POM mixture 
+ C C+ C+2 C- C2 C2+ C2H C2H2 C2H4 C2O C3 CH CH2 CH2O CH3 CH4 
+ CHO CHO+ CO CO+ CO2 CO2+ H H+ H- H2 H2+ H2O HO2 
+ O O+ O+2 O- O2 O2+ OH OH+ e-.
+ implementation is called dummy for the missing of formation energies 
+ which are not required for collision integrals calculations neither 
+ if the chemical composition is loaded from external files.
+ */
+class CarbonAnion : public ChargedSpecies {
+public:
+    double getMass() override;
+    int getCharge() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+    Element* Constituent() override;
+};
+
+class DiCarbon : public HomoNuclearBiatomicMolecule {
+public:
+    DiCarbon();
+
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class DiCarbonI : public HomoNuclearBiatomicMolecule, public ChargedSpecies {
+public:
+    DiCarbonI();
+
+    double getMass() override;
+    int getCharge() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+    Element* Constituent() override;
+};
+
+class EthynilRadical : public PolyAtomicMolecule {
+public:
+    EthynilRadical();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class Acetylene : public PolyAtomicMolecule {
+public:
+    Acetylene();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class Ethylene : public PolyAtomicMolecule {
+public:
+    Ethylene();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class DiCarbonMonoxide : public PolyAtomicMolecule {
+public:
+    DiCarbonMonoxide();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class TriCarbon : public PolyAtomicMolecule {
+public:
+    TriCarbon();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class MethylidineRadical : public PolyAtomicMolecule {
+public:
+    MethylidineRadical();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class Methylene : public PolyAtomicMolecule {
+public:
+    Methylene();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class MethylRadical : public PolyAtomicMolecule {
+public:
+    MethylRadical();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class Methane : public PolyAtomicMolecule {
+public:
+    Methane();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class FormylRadical : public PolyAtomicMolecule {
+public:
+    FormylRadical();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class FormylRadicalI : public PolyAtomicMolecule, public ChargedSpecies {
+public:
+    FormylRadicalI();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    int getCharge() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+    Element* Constituent() override;
+};
+
+class Formaldehyde : public PolyAtomicMolecule {
+public:
+    Formaldehyde();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class Water : public PolyAtomicMolecule {
+public:
+    Water();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class HydroPeroxyRadical : public PolyAtomicMolecule {
+public:
+    HydroPeroxyRadical();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class HydroxilRadical : public HeteroNuclearBiatomicMolecule {
+public:
+    HydroxilRadical();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class HydroxilRadicalI : public HeteroNuclearBiatomicMolecule, public ChargedSpecies {
+public:
+    HydroxilRadicalI();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    int getCharge() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+    Element* Constituent() override;
+};
 #endif
