@@ -76,7 +76,12 @@ MolecularHydrogen MolecularHydrogenI MolecularNitrogen
 MolecularNitrogenI MolecularOxygen MolecularOxygenAnion
 MolecularOxygenI Ozone 
 CarbonMonoxide CarbonDioxide 
-CarbonMonoxideI CarbonDioxideI
+CarbonMonoxideI CarbonDioxideI CarbonAnion
+DiCarbon DiCarbonI EthynilRadical Acetylene 
+Ethylene Formaldehyde DiCarbonMonoxide TriCarbon MethylidineRadical
+Methylene MethylRadical Methane FormylRadical 
+FormylRadicalI Water HydroPeroxyRadical 
+HydroxilRadical HydroxilRadicalI
 """
 
 # === PARSING ===

@@ -188,3 +188,309 @@ double MolecularNitrogenI::formationEnergy() {
 int MolecularNitrogenI::getCharge() { return 1; }
 Element* MolecularNitrogenI::Constituent() { return new Nitrogen; }
 double MolecularNitrogenI::IonLim() { return 999999999999; }
+
+/* 
+ Dummy implementation of molecules missing from POM mixture 
+ C C+ C+2 C- C2 C2+ C2H C2H2 C2H4 C2O C3 CH CH2 CH2O CH3 CH4 
+ CHO CHO+ CO CO+ CO2 CO2+ H H+ H- H2 H2+ H2O HO2 
+ O O+ O+2 O- O2 O2+ OH OH+ e-.
+ implementation is called dummy for the missing of formation energies 
+ which are not required for collision integrals calculations neither 
+ if the chemical composition is loaded from external files.
+ */
+
+ // -------------------- CarbonAnion --------------------
+double CarbonAnion::getMass() { return ((new Carbon)->getMass() + 1. * eamu); }
+int CarbonAnion::getCharge() { return -1; }
+std::string CarbonAnion::getFormula() { return "C-"; }
+double CarbonAnion::formationEnergy() { return 0.0; }
+double CarbonAnion::IonLim() { return 0.0; }
+Element* CarbonAnion::Constituent() { return new Carbon(); }
+
+// -------------------- DiCarbon --------------------
+DiCarbon::DiCarbon() {
+    costituents[0] = new Carbon();
+}
+
+double DiCarbon::getMass() { return 2. * (new Carbon)->getMass(); }
+std::string DiCarbon::getFormula() { return "C2"; }
+double DiCarbon::formationEnergy() { return 0.0; }
+double DiCarbon::IonLim() { return 0.0; }
+
+// -------------------- DiCarbonI --------------------
+DiCarbonI::DiCarbonI() {
+    costituents[0] = new Carbon();
+}
+
+double DiCarbonI::getMass() { return 2. * (new Carbon)->getMass(); }
+int DiCarbonI::getCharge() { return 1; }
+std::string DiCarbonI::getFormula() { return "C2+"; }
+double DiCarbonI::formationEnergy() { return 0.0; }
+double DiCarbonI::IonLim() { return 0.0; }
+Element* DiCarbonI::Constituent() { return new Carbon(); }
+
+// -------------------- EthynilRadical --------------------
+EthynilRadical::EthynilRadical() {
+    costituents.resize(2);
+    abundancy.resize(2);
+    costituents[0] = new Carbon();
+    costituents[1] = new Hydrogen();
+    abundancy[0] = 2;
+    abundancy[1] = 1;
+}
+
+int EthynilRadical::numberOfCostituents() { return 2; }
+double EthynilRadical::getMass() { return (2. * (new Carbon)->getMass()) + (new Hydrogen)->getMass(); }
+std::string EthynilRadical::getFormula() { return "C2H"; }
+double EthynilRadical::formationEnergy() { return 0.0; }
+double EthynilRadical::IonLim() { return 0.0; }
+
+// -------------------- Acetylene --------------------
+Acetylene::Acetylene() {
+    costituents.resize(2);
+    abundancy.resize(2);
+    costituents[0] = new Carbon();
+    costituents[1] = new Hydrogen();
+    abundancy[0] = 2;
+    abundancy[1] = 2;
+}
+
+int Acetylene::numberOfCostituents() { return 2; }
+double Acetylene::getMass() { return (2. * (new Carbon)->getMass()) + (2. * (new Hydrogen)->getMass()); }
+std::string Acetylene::getFormula() { return "C2H2"; }
+double Acetylene::formationEnergy() { return 0.0; }
+double Acetylene::IonLim() { return 0.0; }
+
+// -------------------- Ethylene --------------------
+Ethylene::Ethylene() {
+    costituents.resize(2);
+    abundancy.resize(2);
+    costituents[0] = new Carbon();
+    costituents[1] = new Hydrogen();
+    abundancy[0] = 2;
+    abundancy[1] = 4;
+}
+
+int Ethylene::numberOfCostituents() { return 2; }
+double Ethylene::getMass() { return (2. * (new Carbon)->getMass()) + (4. * (new Hydrogen)->getMass()); }
+std::string Ethylene::getFormula() { return "C2H4"; }
+double Ethylene::formationEnergy() { return 0.0; }
+double Ethylene::IonLim() { return 0.0; }
+
+// -------------------- DiCarbonMonoxide --------------------
+DiCarbonMonoxide::DiCarbonMonoxide() {
+    costituents.resize(2);
+    abundancy.resize(2);
+    costituents[0] = new Carbon();
+    costituents[1] = new Oxygen();
+    abundancy[0] = 2;
+    abundancy[1] = 1;
+}
+
+int DiCarbonMonoxide::numberOfCostituents() { return 2; }
+double DiCarbonMonoxide::getMass() { return (2. * (new Carbon)->getMass()) + (new Oxygen)->getMass(); }
+std::string DiCarbonMonoxide::getFormula() { return "C2O"; }
+double DiCarbonMonoxide::formationEnergy() { return 0.0; }
+double DiCarbonMonoxide::IonLim() { return 0.0; }
+
+// -------------------- TriCarbon --------------------
+TriCarbon::TriCarbon() {
+    costituents.resize(1);
+    abundancy.resize(1);
+    costituents[0] = new Carbon();
+    abundancy[0] = 3;
+}
+
+int TriCarbon::numberOfCostituents() { return 1; }
+double TriCarbon::getMass() { return 3. * (new Carbon)->getMass(); }
+std::string TriCarbon::getFormula() { return "C3"; }
+double TriCarbon::formationEnergy() { return 0.0; }
+double TriCarbon::IonLim() { return 0.0; }
+
+// -------------------- MethylidineRadical --------------------
+MethylidineRadical::MethylidineRadical() {
+    costituents.resize(2);
+    abundancy.resize(2);
+    costituents[0] = new Carbon();
+    costituents[1] = new Hydrogen();
+    abundancy[0] = 1;
+    abundancy[1] = 1;
+}
+
+int MethylidineRadical::numberOfCostituents() { return 2; }
+double MethylidineRadical::getMass() { return (new Carbon)->getMass() + (new Hydrogen)->getMass(); }
+std::string MethylidineRadical::getFormula() { return "CH"; }
+double MethylidineRadical::formationEnergy() { return 0.0; }
+double MethylidineRadical::IonLim() { return 0.0; }
+
+// -------------------- Methylene --------------------
+Methylene::Methylene() {
+    costituents.resize(2);
+    abundancy.resize(2);
+    costituents[0] = new Carbon();
+    costituents[1] = new Hydrogen();
+    abundancy[0] = 1;
+    abundancy[1] = 2;
+}
+
+int Methylene::numberOfCostituents() { return 2; }
+double Methylene::getMass() { return (new Carbon)->getMass() + 2. * (new Hydrogen)->getMass(); }
+std::string Methylene::getFormula() { return "CH2"; }
+double Methylene::formationEnergy() { return 0.0; }
+double Methylene::IonLim() { return 0.0; }
+
+// -------------------- MethylRadical --------------------
+MethylRadical::MethylRadical() {
+    costituents.resize(2);
+    abundancy.resize(2);
+    costituents[0] = new Carbon();
+    costituents[1] = new Hydrogen();
+    abundancy[0] = 1;
+    abundancy[1] = 3;
+}
+
+int MethylRadical::numberOfCostituents() { return 2; }
+double MethylRadical::getMass() { return (new Carbon)->getMass() + 3. * (new Hydrogen)->getMass(); }
+std::string MethylRadical::getFormula() { return "CH3"; }
+double MethylRadical::formationEnergy() { return 0.0; }
+double MethylRadical::IonLim() { return 0.0; }
+
+// -------------------- Methane --------------------
+Methane::Methane() {
+    costituents.resize(2);
+    abundancy.resize(2);
+    costituents[0] = new Carbon();
+    costituents[1] = new Hydrogen();
+    abundancy[0] = 1;
+    abundancy[1] = 4;
+}
+
+int Methane::numberOfCostituents() { return 2; }
+double Methane::getMass() { return (new Carbon)->getMass() + 4. * (new Hydrogen)->getMass(); }
+std::string Methane::getFormula() { return "CH4"; }
+double Methane::formationEnergy() { return 0.0; }
+double Methane::IonLim() { return 0.0; }
+
+// -------------------- FormylRadical --------------------
+FormylRadical::FormylRadical() {
+    costituents.resize(3);
+    abundancy.resize(3);
+    costituents[0] = new Carbon();
+    costituents[1] = new Hydrogen();
+    costituents[2] = new Oxygen();
+    abundancy[0] = 1;
+    abundancy[1] = 1;
+    abundancy[2] = 1;
+}
+
+int FormylRadical::numberOfCostituents() { return 3; }
+double FormylRadical::getMass() {
+    return (new Carbon)->getMass() + (new Hydrogen)->getMass() + (new Oxygen)->getMass();
+}
+std::string FormylRadical::getFormula() { return "CHO"; }
+double FormylRadical::formationEnergy() { return 0.0; }
+double FormylRadical::IonLim() { return 0.0; }
+
+// -------------------- FormylRadicalI --------------------
+FormylRadicalI::FormylRadicalI() {
+    costituents.resize(3);
+    abundancy.resize(3);
+    costituents[0] = new Carbon();
+    costituents[1] = new Hydrogen();
+    costituents[2] = new Oxygen();
+    abundancy[0] = 1;
+    abundancy[1] = 1;
+    abundancy[2] = 1;
+}
+
+int FormylRadicalI::numberOfCostituents() { return 3; }
+double FormylRadicalI::getMass() {
+    return (new Carbon)->getMass() + (new Hydrogen)->getMass() + (new Oxygen)->getMass();
+}
+int FormylRadicalI::getCharge() { return 1; }
+std::string FormylRadicalI::getFormula() { return "CHO+"; }
+double FormylRadicalI::formationEnergy() { return 0.0; }
+double FormylRadicalI::IonLim() { return 0.0; }
+Element* FormylRadicalI::Constituent() { return new Carbon(); }
+
+// -------------------- Formaldehyde --------------------
+Formaldehyde::Formaldehyde() {
+    costituents.resize(3);
+    abundancy.resize(3);
+    costituents[0] = new Carbon();
+    costituents[1] = new Hydrogen();
+    costituents[2] = new Oxygen();
+    abundancy[0] = 1;
+    abundancy[1] = 2;
+    abundancy[2] = 1;
+}
+
+int Formaldehyde::numberOfCostituents() { return 3; }
+double Formaldehyde::getMass() {
+    return (new Carbon)->getMass() + (2. * (new Hydrogen)->getMass()) + (new Oxygen)->getMass();
+}
+std::string Formaldehyde::getFormula() { return "CH2O"; }
+double Formaldehyde::formationEnergy() { return 0.0; }
+double Formaldehyde::IonLim() { return 0.0; }
+
+// -------------------- Water --------------------
+Water::Water() {
+    costituents.resize(2);
+    abundancy.resize(2);
+    costituents[0] = new Hydrogen();
+    costituents[1] = new Oxygen();
+    abundancy[0] = 2;
+    abundancy[1] = 1;
+}
+
+int Water::numberOfCostituents() { return 2; }
+double Water::getMass() { return (2. * (new Hydrogen)->getMass()) + (new Oxygen)->getMass(); }
+std::string Water::getFormula() { return "H2O"; }
+double Water::formationEnergy() { return 0.0; }
+double Water::IonLim() { return 0.0; }
+
+// -------------------- HydroPeroxyRadical --------------------
+HydroPeroxyRadical::HydroPeroxyRadical() {
+    costituents.resize(2);
+    abundancy.resize(2);
+    costituents[0] = new Hydrogen();
+    costituents[1] = new Oxygen();
+    abundancy[0] = 1;
+    abundancy[1] = 2;
+}
+
+int HydroPeroxyRadical::numberOfCostituents() { return 2; }
+double HydroPeroxyRadical::getMass() { return (new Hydrogen)->getMass() + (2. * (new Oxygen)->getMass()); }
+std::string HydroPeroxyRadical::getFormula() { return "HO2"; }
+double HydroPeroxyRadical::formationEnergy() { return 0.0; }
+double HydroPeroxyRadical::IonLim() { return 0.0; }
+
+// -------------------- HydroxilRadical --------------------
+HydroxilRadical::HydroxilRadical() {
+    costituents[0] = new Hydrogen();
+    costituents[1] = new Oxygen();
+}
+
+int HydroxilRadical::numberOfCostituents() { return 2; }
+double HydroxilRadical::getMass() { return (new Hydrogen)->getMass() + (new Oxygen)->getMass(); }
+std::string HydroxilRadical::getFormula() { return "OH"; }
+double HydroxilRadical::formationEnergy() { return 0.0; }
+double HydroxilRadical::IonLim() { return 0.0; }
+
+// -------------------- HydroxilRadicalI --------------------
+HydroxilRadicalI::HydroxilRadicalI() {
+    costituents[0] = new Hydrogen();
+    costituents[1] = new Oxygen();
+}
+
+int HydroxilRadicalI::numberOfCostituents() { return 2; }
+double HydroxilRadicalI::getMass() { return (new Hydrogen)->getMass() + (new Oxygen)->getMass(); }
+int HydroxilRadicalI::getCharge() { return 1; }
+std::string HydroxilRadicalI::getFormula() { return "OH+"; }
+double HydroxilRadicalI::formationEnergy() { return 0.0; }
+double HydroxilRadicalI::IonLim() { return 0.0; }
+
+Element* HydroxilRadicalI::Constituent() {
+    std::cerr << "Error: Constituent() not implemented for HydroxilRadicalI." << std::endl;
+    return nullptr;
+}
