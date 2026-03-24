@@ -76,14 +76,14 @@ class DevotoTP : public Appendix {
      ** Viscosity,
      ** Electrical Conductivity, respectively. */
     DevotoTP (  CiBox* cbx  ) : Appendix ( cbx ) {
-        orders = {3,4,3,2,1,4} ;
+        orders = {3,3,3,2,2,3} ;
     } 
 
     /** @brief Constructor with default CiBox created from GasMixture. 
      ** @details Default orders assigned for transport properties.
      ** @see DevotoTP (  CiBox* cbx  ) constructor for details. */
     DevotoTP ( GasMixture* mix ) : Appendix ( mix ) {
-        orders = {3,4,3,2,1,4} ;
+        orders = {3,3,3,2,2,3} ;
     } 
     
     /** @brief Function that computes and store the Transport Coefficients in 
@@ -91,10 +91,9 @@ class DevotoTP : public Appendix {
      ** @param gasmix GasMixture object */
     void computeTransport ( GasMixture* gasmix ) override ;
 
-} ;
+    void lightComputeTransport ( GasMixture* gasmix ) ;
 
-// forward declaration of thermodynamics class
-class Thermodynamics ;
+} ;
 
 /**
  * @brief Class that extends DevotoTP adding the reactive contribution to heavy species thermal conductivity
@@ -103,8 +102,6 @@ class Thermodynamics ;
 class DevotoLteLambdaR : public DevotoTP {
 
     protected : 
-
-    Thermodynamics* thermo ;
 
     double Dbinij(int i,int j, GasMixture* gasmix) ;  
 
@@ -119,15 +116,15 @@ class DevotoLteLambdaR : public DevotoTP {
      ** Heavy species Thermal Conductivity,
      ** Viscosity,
      ** Electrical Conductivity, respectively. */
-    DevotoLteLambdaR (  CiBox* cbx , Thermodynamics* thermo  ) 
-    : DevotoTP ( cbx ) , thermo ( thermo ) {}
+    DevotoLteLambdaR (  CiBox* cbx ) 
+    : DevotoTP ( cbx ) {}
 
     /**
      * @brief Constructor with default CiBox created from GasMixture and Thermodynamics object.
      * @details Default orders assigned for transport properties.
      * @see DevotoLteLambdaR (  CiBox* cbx , Thermodynamics* thermo  ) constructor for details. */
-    DevotoLteLambdaR ( GasMixture* mix , Thermodynamics* thermo ) 
-    : DevotoTP ( mix ) , thermo ( thermo ) {}
+    DevotoLteLambdaR ( GasMixture* mix ) 
+    : DevotoTP ( mix ) {}
 
     /** @brief Computes as in Devoto and add the reactive contributions 
      * to heavy particle thermal conductivity following Brokaw et al. and 

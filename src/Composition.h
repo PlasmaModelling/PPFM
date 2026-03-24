@@ -8,6 +8,7 @@
 #define COMPOSITION_H
 
 #include "PfBox.h"
+#include "DataLoader.h"
 
 #include <map>
 #include <string>
@@ -250,6 +251,45 @@ class GTSahaDHcorrection : public GodinTrepSahaSolver {
     int maxIter = 500;
 
     virtual void restart() override;
+
+};
+
+
+class CompositionLoader : public GodinTrepSahaSolver, public DataLoader {
+    
+    private:
+
+    std::vector<double> Tgrid ; 
+    std::vector<std::vector<double>> nFunctions ;
+    
+    std::vector<std::vector<double>> rawDataReader(std::ifstream& file) ;
+    
+    /* Composition overrides */
+    
+    // Base constructors have to be private. 
+    // Composition Loading cannot have standard csv filename, 
+    // filename have to be specified when initializing the object.
+    
+    /// @brief Base constructor
+    CompositionLoader(Mixture* mix, Gas* gas) ;
+    /// @brief Constructor with qbox assignment
+    CompositionLoader(Mixture* mix , Gas* gas, PfBox* qbox) ;
+    ~CompositionLoader() noexcept override = default;
+
+    /* DataLoader overrides */
+    void Init() override ;
+    std::string BuildFileName(const std::string& name) override;
+    void ParseFile(std::ifstream& file) override ;
+
+    public:
+    
+    /* Composition overrides */
+    CompositionLoader(Mixture* mix, Gas* gas, const std::string& filename);
+    CompositionLoader(Mixture* mix, Gas* gas, PfBox* qbox, const std::string& filename);
+
+    void CompositionSolve(std::optional<double> lambda) override ;
+
+    void restart() override ;    
 
 };
 
