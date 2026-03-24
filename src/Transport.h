@@ -193,6 +193,19 @@ class Appendix : public Properties {
      ** @param N_specs Number of species */
     virtual double Qmpil ( GasMixture* gasmix , int l , int s , int i , int j ) ; 
 
+    /** @brief Delta function needed for 1st order approcimations 
+     ** @param gasmix object of class GasMixture
+     ** @param i-th specie
+     ** @param j-th specie */
+    double DeltaIJ1 (GasMixture* gasmix , int i , int j ) ;
+    double DeltaIJ2 (GasMixture* gasmix , int i , int j ) ;
+
+    double alphaIJ(std::vector<double> mass, int i, int j ) ;
+
+    double Ktr1(GasMixture* gasmix);
+    double Viscosity1(GasMixture* gasmix);
+    double Sigma1(GasMixture* gasmix);
+
 } ;
 
 #endif

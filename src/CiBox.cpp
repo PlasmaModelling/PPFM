@@ -114,16 +114,27 @@ int CiBox::InteractionsNumber() {
 
 void CiBox::info() {
 
-    std::cout << std::left ; 
-    std::cout << themix << std::endl;
-    std::cout << "[i] |    Interaction    |             Calculator type             " << std::endl ; 
-    std::cout << "‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾" << std::endl ;
-    for(int i = 0; i< integrals.size() ; i++ ) {
-        std::cout << std::left ; 
-        std::cout << std::setw(8) << i; integrals[i]->info() ; std::cout << std::endl ; 
-    }
-    std::cout << std::endl ;
+    const int page = 800;
 
+    std::cout << std::left;
+    std::cout << themix << std::endl;
+    std::cout << "[i] |    Interaction    |             Calculator type             " << std::endl;
+    std::cout << "‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾" << std::endl;
+
+    for(int i = 0; i < integrals.size(); i++) {
+
+        std::cout << std::left ; 
+        std::cout << std::setw(8) << i;
+        integrals[i]->info();
+        std::cout << std::endl;
+
+        if((i+1) % page == 0) {
+            std::cout << "-- press ENTER --";
+            std::cin.get();
+        }
+    }
+
+    std::cout << std::endl;
 }
 
 void CiBox::loadAll( bool b ) {
@@ -135,6 +146,9 @@ void CiBox::loadAll( bool b ) {
 void CiBox::PrintCollisionIntegrals ( const std::vector<double>& Ti, GasMixture* gasmix, const std::string& folder ) {
 
     for ( auto* ci : integrals ) {
+
+        if ( (ci->GetIntInterface()->GetSp1()->getCharge() != 0) && (ci->GetIntInterface()->GetSp2()->getCharge() != 0) )
+            continue ; // skip ion-ion interactions.
 
         CollisionIntegralCsv writer ( ci ) ; 
 

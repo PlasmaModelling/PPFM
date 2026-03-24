@@ -82,6 +82,12 @@ Ethylene Formaldehyde DiCarbonMonoxide TriCarbon MethylidineRadical
 Methylene MethylRadical Methane FormylRadical 
 FormylRadicalI Water HydroPeroxyRadical 
 HydroxilRadical HydroxilRadicalI
+DiCarbonAnion TetraCarbon PentaCarbon 
+EsaCarbon CarbonTrioxide CarbonTrioxideAnion
+PropadieneDione PropadieneDioneI CarbonDioxideAnion
+CNCRadical Cyanogen CyanoEthynilRadical TwoButyneDiNitrile 
+HydrogenCyanide CyanoRadical IsoCyanatoRadical Imidogen 
+NitrusOxide Ammonia NitricOxide NitricOxideI
 """
 
 # === PARSING ===

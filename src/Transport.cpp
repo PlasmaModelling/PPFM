@@ -49,17 +49,25 @@ void Properties::setOrders ( const std::vector<int>& ord ) {
             "please, provide orders for all transport properties between 1 and 4." ) ; 
     } else {
 
-        for (const auto& i : ord){
+        for (const auto& i : ord){            
 
-            if (i < 2 || i > 4) {
+            if (i < 1 || i > 4) {
             
                 throw std::invalid_argument("Error in Properties::setOrders - "
                     "invalid order value found: " + std::to_string(i) + ".\n"
-                    "please, provide orders for all transport properties between 2 and 4. \n"
-                    "Note: order 1 is not supported YET in methods." 
+                    "please, provide orders for all transport properties between 1 and 4. \n"
                 ) ;
             }
         }
+
+        if (ord[2] == 1 || ord[3] == 1) {
+
+            std::cout<<"WARNING: order 1 is set to electrons or heavier species thermal conductivity. \n"
+            <<"2T separation is not implemented yet for order 1;\n"
+            <<"printers will have the same values for the thermal conductivity of electrons and heavier species \n (LTE is assumed).\n";
+
+        }        
+
     }
 
     orders = ord ; 
@@ -521,70 +529,175 @@ double Appendix::qsimpmpij( GasMixture* gasmix , int m , int p ) {
 
 double Appendix::qcapmpij( GasMixture* gasmix, int m, int p, int i, int j) {
 
-std::vector<double> n = gasmix->getCompositionObj()->compositions(1.e-18) ; 
-std::vector<double> mass = gasmix->masses(1.e+03) ;
-int N_SPC = gasmix->getN() ;
+    std::vector<double> n = gasmix->getCompositionObj()->compositions(1.e-18) ; 
+    std::vector<double> mass = gasmix->masses(1.e+03) ;
+    int N_SPC = gasmix->getN() ;
 
-int l;
-double sum = 0.;
+    int l;
+    double sum = 0.;
 
-double mi = mass[i];
-double mj = mass[j];
-double mj2 = mj * mj;
+    double mi = mass[i];
+    double mj = mass[j];
+    double mj2 = mj * mj;
 
-switch (m)
-{
-case 0:
-    switch (p)
+    switch (m)
     {
     case 0:
-
-        for (l = 0; l < N_SPC; l++)
+        switch (p)
         {
-            double ml = mass[l];
-            sum += 8. * (n[l] * sqrt(ml) / pow(mi + ml, 1.5)) * ((10. / 3) * Qmpil ( gasmix , 1, 1, i, l )  * (delta(i, j) - delta(j, l)) * mj + 2. * ml * Qmpil ( gasmix , 2, 2, i, l )  * (delta(i, j) + delta(j, l)));
+        case 0:
+
+            for (l = 0; l < N_SPC; l++)
+            {
+                double ml = mass[l];
+                sum += 8. * (n[l] * sqrt(ml) / pow(mi + ml, 1.5)) * ((10. / 3) * Qmpil ( gasmix , 1, 1, i, l )  * (delta(i, j) - delta(j, l)) * mj + 2. * ml * Qmpil ( gasmix , 2, 2, i, l )  * (delta(i, j) + delta(j, l)));
+            }
+            sum *= n[i] * (mi / mj);
+            break;
+        case 1:
+
+            for (l = 0; l < N_SPC; l++)
+            {
+                double ml = mass[l];
+                sum += 8. * (n[l] * pow(ml, 1.5) / pow(mi + ml, 2.5)) * ((delta(i, j) - delta(j, l)) * mj * ((35. / 3) * Qmpil ( gasmix , 1, 1, i, l )  - 14. * Qmpil ( gasmix , 1, 2, i, l ) ) + (delta(i, j) + delta(j, l)) * ml * (7. * Qmpil ( gasmix , 2, 2, i, l )  - 8. * Qmpil ( gasmix , 2, 3, i, l ) ));
+            }
+            sum *= n[i] * pow(mi / mj, 2);
+            break;
         }
-        sum *= n[i] * (mi / mj);
         break;
     case 1:
-
-        for (l = 0; l < N_SPC; l++)
+        switch (p)
         {
-            double ml = mass[l];
-            sum += 8. * (n[l] * pow(ml, 1.5) / pow(mi + ml, 2.5)) * ((delta(i, j) - delta(j, l)) * mj * ((35. / 3) * Qmpil ( gasmix , 1, 1, i, l )  - 14. * Qmpil ( gasmix , 1, 2, i, l ) ) + (delta(i, j) + delta(j, l)) * ml * (7. * Qmpil ( gasmix , 2, 2, i, l )  - 8. * Qmpil ( gasmix , 2, 3, i, l ) ));
+        case 0:
+
+            for (l = 0; l < N_SPC; l++)
+            {
+                double ml = mass[l];
+                sum += 8. * (n[l] * pow(ml, 1.5) / pow(mi + ml, 2.5)) * ((delta(i, j) - delta(j, l)) * mj * ((35. / 3) * Qmpil ( gasmix , 1, 1, i, l )  - 14. * Qmpil ( gasmix , 1, 2, i, l ) ) + (delta(i, j) + delta(j, l )) * ml * (7. * Qmpil ( gasmix , 2, 2, i, l )  - 8. * Qmpil ( gasmix , 2, 3, i, l ) ));
+            }
+            sum *= n[i] * (mi / mj);
+            break;
+        case 1:
+
+            for (l = 0; l < N_SPC; l++)
+            {
+                double ml = mass[l];
+                double ml2 = ml * ml;
+
+                sum += 8. * (n[l] * sqrt(ml) / pow(mi + ml, 3.5)) *
+                        ((delta(i, j) - delta(j, l)) * mj * ((1. / 6.) * (140. * mj2 + 245. * ml2) * Qmpil ( gasmix , 1, 1, i, l )  - ml2 * (98. * Qmpil ( gasmix , 1, 2, i, l )  - 64. * Qmpil ( gasmix , 1, 3, i, l )  - 24. * Qmpil ( gasmix , 3, 3, i, l ) )) +
+                        (delta(i, j) + delta(j, l)) * ml * ((1. / 6.) * (154 * mj2 + 147. * ml2) * Qmpil ( gasmix , 2, 2, i, l )  - ml2 * (56. * Qmpil ( gasmix , 2, 3, i, l )  - 40. * Qmpil ( gasmix , 2, 4, i, l ) )));
+            }
+            sum *= n[i] * pow(mi / mj, 2);
+            break;
         }
-        sum *= n[i] * pow(mi / mj, 2);
         break;
     }
-    break;
-case 1:
-    switch (p)
-    {
-    case 0:
-
-        for (l = 0; l < N_SPC; l++)
-        {
-            double ml = mass[l];
-            sum += 8. * (n[l] * pow(ml, 1.5) / pow(mi + ml, 2.5)) * ((delta(i, j) - delta(j, l)) * mj * ((35. / 3) * Qmpil ( gasmix , 1, 1, i, l )  - 14. * Qmpil ( gasmix , 1, 2, i, l ) ) + (delta(i, j) + delta(j, l )) * ml * (7. * Qmpil ( gasmix , 2, 2, i, l )  - 8. * Qmpil ( gasmix , 2, 3, i, l ) ));
-        }
-        sum *= n[i] * (mi / mj);
-        break;
-    case 1:
-
-        for (l = 0; l < N_SPC; l++)
-        {
-            double ml = mass[l];
-            double ml2 = ml * ml;
-
-            sum += 8. * (n[l] * sqrt(ml) / pow(mi + ml, 3.5)) *
-                    ((delta(i, j) - delta(j, l)) * mj * ((1. / 6.) * (140. * mj2 + 245. * ml2) * Qmpil ( gasmix , 1, 1, i, l )  - ml2 * (98. * Qmpil ( gasmix , 1, 2, i, l )  - 64. * Qmpil ( gasmix , 1, 3, i, l )  - 24. * Qmpil ( gasmix , 3, 3, i, l ) )) +
-                    (delta(i, j) + delta(j, l)) * ml * ((1. / 6.) * (154 * mj2 + 147. * ml2) * Qmpil ( gasmix , 2, 2, i, l )  - ml2 * (56. * Qmpil ( gasmix , 2, 3, i, l )  - 40. * Qmpil ( gasmix , 2, 4, i, l ) )));
-        }
-        sum *= n[i] * pow(mi / mj, 2);
-        break;
-    }
-    break;
-}
-return sum;
+    return sum;
 };
 
+double Appendix::DeltaIJ1(GasMixture* gasmix, int i, int j) {
+    
+    std::vector<double> n = gasmix->getCompositionObj()->compositions(1.e-18) ;
+    std::vector<double> mass = gasmix->masses(1.e+03) ; 
+    double T = gasmix->getTemperature() ;
+
+    double delta1 = (8./3.) * sqrt((2.*mass[i]*mass[j] )/(std::numbers::pi*kB*T*(mass[i]+mass[j]))) * Qmpil( gasmix , 1, 1, i, j ) ;
+
+    return delta1 ;
+
+}
+
+double Appendix::DeltaIJ2(GasMixture* gasmix, int i, int j) {
+    
+    std::vector<double> n = gasmix->getCompositionObj()->compositions(1.e-18) ;
+    std::vector<double> mass = gasmix->masses(1.e+03) ; 
+    double T = gasmix->getTemperature() ;
+
+    double delta2 = (16./5.) * sqrt((2.*mass[i]*mass[j] )/(std::numbers::pi*kB*T*(mass[i]+mass[j]))) * Qmpil( gasmix , 2, 2, i, j ) ;
+
+    return delta2 ;
+    
+}
+
+double Appendix::alphaIJ(std::vector<double> mass, int i, int j) {
+
+    double mi = mass[i];
+    double mj = mass[j];
+
+    double alphaij = 1+(((1-(mi/mj))*(0.45-2.54*(mi/mj)))/pow(1+(mi/mj),2.));
+
+    return alphaij ;
+
+}
+
+double Appendix::Ktr1(GasMixture* gasmix) {
+
+    std::vector<double> n = gasmix->getCompositionObj()->compositions(1.e-18) ;
+    std::vector<double> mass = gasmix->masses(1.e+03) ; 
+    double T = gasmix->getTemperature() ;
+
+    int N = gasmix->getN() ;
+
+    double ktr = 0.;
+    for (size_t i = 0; i < gasmix->getN(); i++)
+    {
+        double sum = 0.;
+        for (size_t j = 0; j < gasmix->getN(); j++)
+        {
+            double delta2_ij = DeltaIJ2(gasmix,i,j);
+            double alpha_ij = alphaIJ(mass,i,j);
+            sum += alpha_ij * n[j] * delta2_ij;
+        }
+        ktr += n[i]/sum;        
+    }
+    
+    ktr *= (15./4.)*kB;
+    return ktr  * 1e-13 * 1e4 ;
+
+}
+
+double Appendix::Viscosity1(GasMixture* gasmix) {
+
+    std::vector<double> n = gasmix->getCompositionObj()->compositions(1.e-18) ;
+    std::vector<double> mass = gasmix->masses(1.e+03) ; 
+    double T = gasmix->getTemperature() ;
+    int N = gasmix->getN() ;
+
+    double visc = 0.;
+    for (size_t i = 0; i < N; i++)
+    {
+        double sum = 0.;
+        for (size_t j = 0; j < N; j++)
+        {
+            double delta2_ij = DeltaIJ2(gasmix,i,j);
+            sum += n[j] * delta2_ij;
+        }
+        
+        visc += (mass[i]*n[i])/sum;
+    }
+
+    return visc * 1e7 * 1e-4 ;
+
+}
+
+double Appendix::Sigma1(GasMixture* gasmix) {
+
+    std::vector<double> n = gasmix->getCompositionObj()->compositions(1.e-18) ;
+    std::vector<double> mass = gasmix->masses(1.e+03) ; 
+    double T = gasmix->getTemperature()*gasmix->theta->get() ;
+    int e = gasmix->getN() -1 ;
+
+    double sigma1 = 0.;
+    for (size_t i = 0; i < e; i++) {
+
+        double delta1_ie = DeltaIJ1(gasmix,e,i);
+        sigma1 += n[i] * delta1_ie;
+
+    }
+
+    double sigma = (qe*qe*n[e])/((kB*T)*sigma1);
+
+    return sigma * 1e33 * 1e-12 ;
+
+}

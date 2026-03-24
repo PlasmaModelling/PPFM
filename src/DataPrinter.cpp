@@ -156,7 +156,6 @@ void CompositionCsv::PrepareData(const std::vector<double>& temperatureRange, Ga
     for (int i = 0; i < temperatureRange.size(); i++) {
         
         mix->setT(temperatureRange[i]);
-        solver->CompositionSolve();
 
         ns[i] = solver->compositions();
 
@@ -256,14 +255,14 @@ void DevotoTpCsv::PrepareData(const std::vector<double>& temperatureRange, GasMi
         
         gasmix->setT(temperatureRange[i]);
         solver->computeTransport(gasmix);
-
+        // solver->lightComputeTransport(gasmix);
+        
         data[i] = concatenate({temperatureRange[i]}, solver->Tp) ;
 
     }
 
     gasmix->setT(T0);
     gasmix->restartComposition();
-    solver->computeTransport(gasmix);
 
 }
 

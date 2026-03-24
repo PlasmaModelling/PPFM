@@ -8,6 +8,7 @@
 #include <numbers>
 #include <typeindex>
 #include <cmath>
+#include <regex>
 #include "Composition.h"
 #include "PfBox.h"
 #include "PartitionFunction.h"
@@ -60,7 +61,8 @@ std::vector<double> Composition::compositions(double conversion) {
     
     std::vector<double> ns;
     ns.reserve(ni.size());
-    for (double val : ni) ns.push_back(val * conversion);
+    for (double val : ni) 
+            ns.push_back(val * conversion);
     return ns;
 
 }
@@ -627,4 +629,223 @@ void GTSahaDHcorrection::CompositionSolve( std::optional<double> lambda ) {
         }
        
     }
+}
+
+// ___________________________ CompositionLoader __________________________ //
+
+std::string CompositionLoader::BuildFileName(const std::string& name) {
+    return customPrefix+name+".csv";
+};
+
+void CompositionLoader::Init() {if(!loaded) LoadData("Compositions","");};
+
+CompositionLoader::CompositionLoader(Mixture* mix, Gas* gas) 
+    : GodinTrepSahaSolver(mix, gas) {};
+
+CompositionLoader::CompositionLoader(Mixture* mix, Gas* gas, PfBox* qbox) 
+    : GodinTrepSahaSolver(mix, gas, qbox) {};
+
+CompositionLoader::CompositionLoader(Mixture* mix, Gas* gas, const std::string& filename) 
+    : CompositionLoader(mix, gas) {
+        customPrefix = filename ;
+        Init();
+};
+
+CompositionLoader::CompositionLoader(Mixture* mix, Gas* gas, PfBox* qbox, const std::string& filename) 
+    : CompositionLoader(mix, gas, qbox) {
+        customPrefix = filename ;
+        Init();
+};
+
+std::vector<std::vector<double>>
+CompositionLoader::rawDataReader(std::ifstream& file) {
+
+    std::vector<std::vector<double>> rawData;
+
+    std::string line;
+    std::size_t ncols = 0;
+    std::size_t row   = 0;
+
+    while (std::getline(file, line)) {
+
+        // skip empty rows
+        if (line.find_first_not_of(" \t\r\n") == std::string::npos)
+            continue;
+
+        std::stringstream ss(line);
+        std::string token;
+        std::vector<double> values;
+
+        while (std::getline(ss, token, ',')) {
+            try {
+                // skip empty OR whitespace-only tokens (handles trailing ",\r\n" cases)
+                if (token.find_first_not_of(" \t\r\n") == std::string::npos)
+                    continue;
+                values.push_back(std::stod(token));
+            } catch (...) {
+                throw std::invalid_argument(
+                    "CompositionLoader::rawDataReader: non-numeric value at data row "
+                    + std::to_string(row + 1)
+                );
+            }
+        }
+
+        if (row == 0) {
+            ncols = values.size();
+            if (ncols == 0) {
+                throw std::invalid_argument(
+                    "CompositionLoader::rawDataReader: first data row is empty."
+                );
+            }
+        } else if (values.size() != ncols) {
+            throw std::invalid_argument(
+                "CompositionLoader::rawDataReader: inconsistent column count at data row "
+                + std::to_string(row + 1)
+            );
+        }
+
+        rawData.push_back(std::move(values));
+        ++row;
+    }
+
+    if (rawData.empty()) {
+        throw std::invalid_argument(
+            "CompositionLoader::rawDataReader: no numeric data found."
+        );
+    }
+
+    return rawData;
+}
+
+void CompositionLoader::ParseFile(std::ifstream& file) {
+
+    // Check open file 
+    if (!file.is_open() || !file.good()) {
+        throw std::invalid_argument(
+            "CompositionLoader::ParseFile: input stream not open or not readable."
+        );
+    }
+    
+    // Ordered formulas from Mixture
+    std::vector<std::string> orderedFormulas;
+    for (size_t i = 0; i < mixptr->getN(); i++)
+        orderedFormulas.push_back( (*mixptr)(i)->getFormula() ) ;
+    
+    // Header reading
+    std::string headerLine;
+    if (!std::getline(file, headerLine)) {
+        throw std::invalid_argument(
+            "CompositionLoader::ParseFile: empty file or failed to read header line."
+        );
+    }
+
+    // Splitting fields 
+    std::vector<std::string> headerVector;
+    std::stringstream ss(headerLine);
+    std::string field;
+
+    while (std::getline(ss, field, ',')) 
+        headerVector.push_back(field);
+    
+    std::vector<std::vector<double>> rawData = rawDataReader(file);
+    
+    // Helper: escape '+' and '-' for regex literals
+    auto escapeRegex = [](const std::string& s) {
+        std::string out;
+        out.reserve(s.size() * 2);
+        for (char c : s) {
+            if (c == '+' || c == '-') out.push_back('\\');
+            out.push_back(c);
+        }
+        return out;
+    };
+
+    // Reset the member
+    nFunctions.clear();
+
+    // For each species formula as defined by the Mixture order...
+    for (const auto& formula : orderedFormulas) {
+
+        // Convert the formula into a safe literal regex fragment.
+        const std::string lit = escapeRegex(formula);
+
+        // Build a boundary-aware regex to avoid false matches.
+        // The exact formula escaped have to be matcheed, no other 
+        // character will match beside the exact formula. 
+        // ES: H2+ CH2 will not match H2 or CH2-
+        const std::regex re(
+            "(^|[^A-Za-z0-9])(" + lit + ")(?![A-Za-z0-9\\+\\-])"
+        );
+
+        int found = -1;
+
+        for (int j = 0; j < static_cast<int>(headerVector.size()); ++j) {
+
+            // regex_search looks for the exact formula inside headerVector[j].
+            if (std::regex_search(headerVector[j], re)) {
+
+                // Ambiguity.
+                if (found != -1) {
+                    throw std::invalid_argument(
+                        "CompositionLoader::ParseFile: multiple header columns match species '" + formula +
+                        "'. Example: '" + headerVector[found] + "' and '" + headerVector[j] + "'."
+                    );
+                }
+
+                found = j;
+            }
+        }
+
+        // If no column matches this species, nFunctions cannot be build consistently.
+        if (found == -1) {
+            throw std::invalid_argument(
+                "CompositionLoader::ParseFile: species '" + formula + "' not found in header."
+            );
+        }
+
+        // Extract the numeric column 
+        nFunctions.push_back(column(rawData, found));
+    }
+
+    // Extract Tgrid from first column
+    Tgrid = column(rawData, 0);
+
+}
+
+void CompositionLoader::CompositionSolve( std::optional<double> lambda ) {
+
+    ni.clear();
+    ni.resize(mixptr->getN(), 0.0) ;
+
+    double T = gasptr->getTemperature() ;
+    for(size_t i=0; i<mixptr->getN(); i++){
+        ni[i] = interpolateSpline(Tgrid, nFunctions[i], T) ;
+        if (ni[i]<=1.)
+        ni[i] = 1.;
+    }
+
+    baseCalc ( b, bs, C );
+
+    for(int i = 0;i < M; i++) 
+        for(int j = 0; j < M; j++) 
+            B[i][j] = C[b[i]][j];
+        
+    for(int i=0;i<L;i++) 
+        for(int j=0;j<M;j++) 
+            Bs[i][j] = C[bs[i]][j];
+        
+    lu_inv(Binv,B,M);
+    matrix_prod(v,Bs,Binv,L,M);
+    
+}
+
+void CompositionLoader::restart(){
+    *this = CompositionLoader(
+    
+        this->mixptr,
+        this->gasptr,
+        this->Qbox,
+        this->customPrefix
+    
+    ) ;
 }

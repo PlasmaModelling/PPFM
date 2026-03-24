@@ -193,3 +193,15 @@ double SulfurIII::formationEnergy() { return 68.52065 * eVtoJ ; }
 double SulfurIII::IonLim() { return 9999999999.0 * eVtoJ ; }
 
 Element* SulfurIII::Constituent() { return new Sulfur; }
+
+double CarbonAnion::getMass() { return ((new Carbon)->getMass() + (1. * eamu * amuKg)); }
+
+int CarbonAnion::getCharge() { return -1; }
+
+std::string CarbonAnion::getFormula() { return "C-"; }
+
+double CarbonAnion::formationEnergy() { return -1.262114*eVtoJ; }
+
+double CarbonAnion::IonLim() { return 0.0; }
+
+Element* CarbonAnion::Constituent() { return new Carbon(); }
