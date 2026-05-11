@@ -226,10 +226,11 @@ Please ensure your contributions are well-documented and tested. All changes wil
 
 - **Alberto Vagnoni** — University of Bologna, Italy  
 - **Emanuele Ghedini** — University of Bologna, Italy  
+- **Paolo Sanibondi** (past contributor, former Research Assistant University of Bologna, Italy)
 
 ## Scientific roots
 
-PPFM has its scientific roots in the plasma modelling and transport-property research tradition developed by **Vittorio Colombo** and collaborators at the University of Bologna.
+This project has its roots in the 2008-2011 activities performed by some of the contributors in the Group for Industrial Applications of Plasmas, led by Prof. Vittorio Colombo, whose contributions to plasma modelling and transport theory have been an important source of inspiration for the present developments.
 
 The authors gratefully acknowledge this scientific influence on the theoretical and methodological foundations of the present work.
 
