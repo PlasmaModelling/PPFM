@@ -25,11 +25,17 @@ data/Partition_Functions/*
 
 data/Collision_Integrals/*
 !data/Collision_Integrals/Q4th_Ar_Ar.txt
+!data/Collision_Integrals/Q4th_Ar_H.txt
+!data/Collision_Integrals/Q4th_Ar_H+.txt
+!data/Collision_Integrals/Q4th_Ar_e-.txt
+!data/Collision_Integrals/Q4th_Ar+_H.txt
 !data/Collision_Integrals/Q4th_Ar_Ar+.txt
 !data/Collision_Integrals/Q4th_Ar_Ar+2.txt
 !data/Collision_Integrals/Q4th_Ar_e-.txt
 !data/Collision_Integrals/Q4th_H2_H2.txt
 !data/Collision_Integrals/Q4th_H_H.txt
+!data/Collision_Integrals/Q4th_H_H+.txt
+!data/Collision_Integrals/Q4th_H_e-.txt
 !data/Collision_Integrals/Q4th_H_H2.txt
 
 data/Differential_Cross_Sections/*
