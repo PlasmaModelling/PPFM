@@ -101,6 +101,15 @@ int MultiCs::Size() {
 
 void MultiCs::Compute() { for ( int i = 0; i < Qs.size(); i++ ) { Qs[i]->Compute(); } computed = true; }
 
+
+void MultiCs::setEnergyWeights( std::vector<double> ew ) { 
+    
+    if ( ew.size() != Qs.size() ) 
+        throw std::invalid_argument("MultiCs::setEnergyWeights size mismatch between calculators and weights.") ;
+    energyWeights = ew ; 
+    energyWeighted = true ; 
+}
+
 // ______________________ Implementation ThresholdCs _____________________
 
 // Constructor
@@ -580,17 +589,31 @@ AvrgDeflAngle::AvrgDeflAngle( InteractionInterface* i, Potential* pot ) : AbInit
 
     InitE() ; 
 
-    // interparticle distance 1/R interval
-    ws = logspace ( log10(1. / 1000.), log10(1. / 0.0001), N) ; 
+    Initws() ;
+    
+}
 
-    // potential psi(w) = phi(1/R) 
-    v.resize(ws.size());
-    #pragma omp parallel for
-    for (int i = 0; i < ws.size(); i++)
-        v[i] = pot->Pot(r0/ws[i]) ;
+AvrgDeflAngle::AvrgDeflAngle( InteractionInterface* i, Potential* pot , double r0 , double e0) : AbInitioTcsIntegration(i,pot) , r0(r0), e0(e0) {
+
+    InitE() ; 
+
+    Initws() ;
     
-    ws[0] = 0.;
+}
+
+void AvrgDeflAngle::Initws() {
     
+        // interparticle distance 1/R interval
+        ws = logspace ( log10(1. / 1000.), log10(1. / 0.0001), N) ; 
+    
+        // potential psi(w) = phi(1/R) 
+        v.resize(ws.size());
+        #pragma omp parallel for
+        for (int i = 0; i < ws.size(); i++)
+            v[i] = pot->Pot(r0/ws[i]) ;
+        
+        ws[0] = 0.;
+
 }
 
 double AvrgDeflAngle::deflectionAngle ( double Bs, double Gst ) {
@@ -1188,7 +1211,29 @@ void ChargeTransferCs::Compute() {
         double gij = sqrt ( ( 8.*(E[i]/amuKg)*qe ) / ( std::numbers::pi * mu ) ) ; 
         
         for ( int j = 0; j < 5; j++ )
-            Q[i][j] = (1./2.) * pow ( A - B*log(gij) , 2.) ; 
+            Q[i][j] = pow ( A - B*log(gij) , 2.) ; 
+
+    }
+
+    computed = true;
+
+}
+
+// ______________________ Implementation ChargeTransferCsWithEnergy _____________________
+
+ChargeTransferCsWithEnergy::ChargeTransferCsWithEnergy( InteractionInterface* i, double A, 
+    double B ) : ChargeTransferCs(i,A,B) {};
+
+
+void ChargeTransferCsWithEnergy::Compute() {
+
+    Q.resize(E.size(), std::vector<double>(4));
+
+    #pragma omp parallel for
+    for ( int i = 0; i < E.size(); i++ ) {
+        
+        for ( int j = 0; j < 5; j++ )
+            Q[i][j] = 2.* pow ( A - B*log(E[i]) , 2.) ; 
 
     }
 

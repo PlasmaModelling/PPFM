@@ -7,6 +7,7 @@
 #include "PfBox.h"
 #include "PartitionFunction.h"
 #include "Mixture.h"
+#include "DataPrinter.h"
 
 PfBox::PfBox(Mixture* mix) {
     
@@ -16,6 +17,9 @@ PfBox::PfBox(Mixture* mix) {
             partitionfunctions.push_back(partitionFunction) ;
         }, mix->cispecies[i] );
     }   
+
+    qvalues.resize(partitionfunctions.size());
+
 }
 
 PFinterface* PfBox::operator[](int i){
@@ -29,16 +33,14 @@ double PfBox::operator()(int i){
     if (i<0 || i>= partitionfunctions.size())
         throw std::out_of_range("Index out of PfBox::partitionfunctions range") ;
     else
-        return partitionfunctions[i]->getPf() ;     
+        return qvalues[i] ;     
 }
 
 void PfBox::PrintPartitionFunctions(const std::vector<double>& Ti, GasMixture* gasmix, const std::string& folder) {
  
     for (auto& pf : partitionfunctions) {
 
-        PartitionFunctionCsv writer(pf);
-
-        writer.customFolder = folder;
+        PartitionFunctionCsv writer(pf, folder);
 
         writer.Print(pf->getSp()->getFormula(), Ti, gasmix);
 
@@ -56,6 +58,7 @@ void PfBox::computePartitionFunctions(double temperature, double pressure, doubl
         try {
 
             partitionfunctions[i]->computePartitionFunction(temperature, pressure, lambda);
+            qvalues[i] = partitionfunctions[i]->getPf(); 
 
         } catch (const std::exception& e) {
 
@@ -79,6 +82,12 @@ void PfBox::computePartitionFunctions(double temperature, double pressure, doubl
     }
 }
 
+void PfBox::updateCachedValues(){ 
+
+    for (size_t i = 0; i < partitionfunctions.size(); i++) 
+        qvalues[i] = partitionfunctions[i]->getPf(); 
+
+}
 
 void PfBox::info() {
     
@@ -91,3 +100,9 @@ void PfBox::info() {
     std::cout << std::endl ;
 }
 
+void PfBox::AllAbInitio() { 
+    
+    for ( int i = 0; i < partitionfunctions.size()-1; i++ )         
+        partitionfunctions[i]->setAbInitio(); 
+
+}

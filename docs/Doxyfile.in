@@ -1,0 +1,36 @@
+PROJECT_NAME           = "PPFM"
+PROJECT_BRIEF          = "Plasma Properties and Flow Modeling"
+
+OUTPUT_DIRECTORY       = doxygen/
+
+INPUT                  = ../src
+RECURSIVE              = NO
+FILE_PATTERNS          = *.h *.hpp 
+
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+
+GENERATE_LATEX         = YES
+GENERATE_XML           = NO
+GENERATE_MAN           = NO
+GENERATE_RTF           = NO
+
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+
+HIDE_UNDOC_CLASSES     = YES
+HIDE_UNDOC_MEMBERS     = YES
+
+JAVADOC_AUTOBRIEF      = YES
+QT_AUTOBRIEF           = YES
+MARKDOWN_SUPPORT       = YES
+
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES
+WARN_NO_PARAMDOC       = NO
+
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+
+QUIET                  = NO

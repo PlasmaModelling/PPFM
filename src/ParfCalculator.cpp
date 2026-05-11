@@ -137,7 +137,7 @@ double PfPoly::compute(double T, double P, double debye) {
     for (int i = coefficients.size() - 1, j = 0; i > -1 && j < coefficients.size(); i--, j++) 
         Qint += coefficients[j] * pow(T, i);
     
-    return Qint;
+    return std::abs(Qint);
 }
 
 void PfTtable::ParseFile(std::ifstream& file) {
@@ -343,7 +343,7 @@ ElectronicAtomicPF::ElectronicAtomicPF ( const std::string& prefix, Species* sp 
 ElectronicAtomicPF::ElectronicAtomicPF(Species* sp, const std::string& hyperref ) : sp(sp) {
 
     std::string speciesName = sp->getFormula();
-    std::filesystem::path datadir = std::filesystem::current_path() / "data/Electronic_Configurations";
+    std::filesystem::path datadir = std::filesystem::path(PPFM_PROJECT_ROOT) / "data/Electronic_Configurations";
     std::string filename = (datadir / (speciesName + "_ElConfig.csv")).string();
     
     try {
@@ -363,7 +363,7 @@ double ElectronicAtomicPF::compute(double T, double P, double debye) {
     // From Capitelli Fundamental Aspects of Chemical Plasma Physics (FACPP)
 
     // FACPP formula 8.3: Lowering Ionization Potential
-    double DeltaIs = (std::pow(qe,2)*(sp->getCharge()+1)) / (4*std::numbers::pi*eps0*debye);
+    double DeltaIs = (std::pow(qe,2.)*pow(sp->getCharge()+1.,1.)) / (4.*std::numbers::pi*eps0*debye);
 
     // Debye-Hückel cutoff for partition function
     double epsMax = sp->IonLim() - DeltaIs;

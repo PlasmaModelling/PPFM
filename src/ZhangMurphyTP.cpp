@@ -22,43 +22,43 @@ void ZhangMurphyTP::computeTransport( GasMixture* gasmix ) {
     
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
-            D[i][j] = Dij(gasmix, 3, i, j);
+            D[i][j] = Dij(gasmix, orders[0], i, j);
         }
     }
 
     DT.resize(N, 0.);
 
     for (int i = 0; i < N; i++) {
-        DT[i] = DiT(gasmix, 3, i);
+        DT[i] = DiT(gasmix, orders[1], i);
     }
 
     Tp.resize(6, 0.);
 
     // Calculate properties in parallel or sequentially
-    Tp[0] = ThermalCondEl(gasmix, 3);
+    Tp[0] = ThermalCondEl(gasmix, orders[2]);
 
-    Tp[1] = ThermalCondHeavy(gasmix, 2);
+    Tp[1] = ThermalCondHeavy(gasmix, orders[3]);
 
-    Tp[2] = Viscosity(gasmix, 1);
+    Tp[2] = Viscosity(gasmix, orders[4]);
 
-    Tp[3] = ElCond(gasmix, 4);
+    Tp[3] = ElCond(gasmix, orders[5]);
 
-    Tp[4] = NeThermalCondEl(gasmix, 3);
+    Tp[4] = NeThermalCondEl(gasmix, orders[6]);
 
-    Tp[5] = NeThermalCondHeavy(gasmix, 2);
+    Tp[5] = NeThermalCondHeavy(gasmix, orders[7]);
 
     DiffTheta.resize(N, std::vector<double>(N));
 
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
-            DiffTheta[i][j] = DijTheta(gasmix, 3, i, j);
+            DiffTheta[i][j] = DijTheta(gasmix, orders[8], i, j);
         }
     }
 
     Dtheta.resize(N, 0.);
 
     for (int i = 0; i < N; i++) {
-        Dtheta[i] = DiTheta(gasmix, 3, i);
+        Dtheta[i] = DiTheta(gasmix, orders[9], i);
     }
 
     auto end = std::chrono::high_resolution_clock::now();
@@ -450,58 +450,5 @@ double ZhangMurphyTP::ThermalCondHeavy ( GasMixture* gasmix, int order ) {
     }
     
     return lambdaH * 1.e-13 * 1.e+4 ; 
-
-}
-
-
-std::string ZhangTpCsv::BuildFileName(const std::string& filename ) const  {
-
-    return "TP_" + filename + ".csv";  
-
-}
-
-void ZhangTpCsv::PrepareHeader() {
-
-    header = "Th [K], kₑ [W/(m·K)], kₕ [W/(m·K)], μ [Pa·s], σ [S/m], kₑθ [W/m], kₕθ [W/m]";
-
-}
-
-void ZhangTpCsv::PrintMessage(const std::string& filename)  { 
-
-    std::cout << "Zhang, Murphy et.al. Transport Properties " << filename << " printed." << std::endl ;
-
-}
-
-ZhangTpCsv::ZhangTpCsv(CiBox* cbx) : ZhangMurphyTP(cbx) {};
-
-ZhangTpCsv::ZhangTpCsv(CiBox* cbx, const std::string& folder ) : ZhangMurphyTP(cbx) { customFolder = folder; };
-
-void ZhangTpCsv::PrepareData ( const std::vector<double>& temperatureRange, GasMixture* gasmix) {
-    
-    double T0 = temperatureRange[0] ;
-    double theta = gasmix->theta->get() ;
-
-    data.resize(temperatureRange.size(),std::vector<double>(7));
-
-    for (int i = 0; i < temperatureRange.size(); i++)
-    {
-        gasmix->setT(temperatureRange[i]) ; 
-        computeTransport(gasmix) ; 
-
-        // Te
-        data[i][0] = temperatureRange[i] ; 
-        data[i][1] = Tp[0] ;
-        data[i][2] = Tp[1] ;
-        data[i][3] = Tp[2] ;
-        data[i][4] = Tp[3] ;
-        data[i][5] = Tp[4] ;
-        data[i][6] = Tp[5] ;
-
-    }
-    
-    // SETBACK
-    gasmix->setT(T0);
-    gasmix->restartComposition();
-    computeTransport(gasmix);
 
 }

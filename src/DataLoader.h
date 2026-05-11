@@ -4,6 +4,13 @@
  // To view a copy of this license, visit:           // 
  // https://creativecommons.org/licenses/by/4.0/     // 
 
+/**
+ * @file DataLoader.h
+ * @brief This file contains the DataLoader class, an abstract base class for loading
+ * data from files. It provides a generic interface for building file paths, parsing data,
+ * and handling loading logic. Derived classes must implement file naming and parsing.
+*/
+
 #ifndef DATALOADER_H
 #define DATALOADER_H
 
@@ -14,7 +21,8 @@
 /**
  * @brief Abstract base class for loading data from files
  * @details Provides a generic interface to build file paths, parse data, 
- * and handle loading logic. Derived classes must implement file naming and parsing. */
+ * and handle loading logic. Derived classes must implement file naming and parsing. 
+*/
 class DataLoader {
     
     protected:
@@ -25,25 +33,28 @@ class DataLoader {
     /// @brief Prefix used for custom file naming in derived classes
     std::string customPrefix; 
 
-    /**
-     * @brief Initializes internal state (to be defined in derived classes) */
+    
+    /// @brief Initializes internal state (to be defined in derived classes) 
     virtual void Init() = 0;
 
     /**
      * @brief Constructs the full path to the data folder
      * @param folderName Name of the subfolder inside the "data" directory
-     * @return Full filesystem path */
+     * @return Full filesystem path 
+    */
     virtual std::filesystem::path BuildFilePath(const std::string& folderName);
 
     /**
      * @brief Constructs the file name from a given base name
      * @param name Base name to complete into a file name
-     * @return File name string */
+     * @return File name string 
+    */
     virtual std::string BuildFileName(const std::string& name) = 0;
 
     /**
      * @brief Parses the file content
-     * @param file Input file stream */
+     * @param file Input file stream 
+    */
     virtual void ParseFile(std::ifstream& file) = 0;
 
     public:
@@ -52,7 +63,8 @@ class DataLoader {
      * @param folderName Name of the folder inside the "data" directory
      * @param name Base name used to construct the file name
      * @details Builds the full file path, opens the file, and calls ParseFile. 
-     * Throws if the file is not found or parsing fails. */
+     * Throws if the file is not found or parsing fails. 
+    */
     void LoadData(const std::string& folderName, const std::string& name);
 
 };

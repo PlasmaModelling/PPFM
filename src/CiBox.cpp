@@ -7,6 +7,7 @@
 #include "CiBox.h"
 #include "CollisionIntegral.h"
 #include "GasMixture.h"
+#include "DataPrinter.h"
 
 CiBox::CiBox(Mixture* mix ) {
     
@@ -113,16 +114,27 @@ int CiBox::InteractionsNumber() {
 
 void CiBox::info() {
 
-    std::cout << std::left ; 
-    std::cout << themix << std::endl;
-    std::cout << "[i] |    Interaction    |             Calculator type             " << std::endl ; 
-    std::cout << "‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾" << std::endl ;
-    for(int i = 0; i< integrals.size() ; i++ ) {
-        std::cout << std::left ; 
-        std::cout << std::setw(8) << i; integrals[i]->info() ; std::cout << std::endl ; 
-    }
-    std::cout << std::endl ;
+    const int page = 800;
 
+    std::cout << std::left;
+    std::cout << themix << std::endl;
+    std::cout << "[i] |    Interaction    |             Calculator type             " << std::endl;
+    std::cout << "‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾" << std::endl;
+
+    for(int i = 0; i < integrals.size(); i++) {
+
+        std::cout << std::left ; 
+        std::cout << std::setw(8) << i;
+        integrals[i]->info();
+        std::cout << std::endl;
+
+        if((i+1) % page == 0) {
+            std::cout << "-- press ENTER --";
+            std::cin.get();
+        }
+    }
+
+    std::cout << std::endl;
 }
 
 void CiBox::loadAll( bool b ) {
@@ -135,6 +147,9 @@ void CiBox::PrintCollisionIntegrals ( const std::vector<double>& Ti, GasMixture*
 
     for ( auto* ci : integrals ) {
 
+        if ( (ci->GetIntInterface()->GetSp1()->getCharge() != 0) && (ci->GetIntInterface()->GetSp2()->getCharge() != 0) )
+            continue ; // skip ion-ion interactions.
+
         CollisionIntegralCsv writer ( ci ) ; 
 
         writer.customFolder = folder;
@@ -144,13 +159,39 @@ void CiBox::PrintCollisionIntegrals ( const std::vector<double>& Ti, GasMixture*
     }
 }
 
-void CiBox::PrintTransportCrossSection ( const std::vector<double>& Ti, GasMixture* gasmix, const std::string& folder ) {
+void CiBox::PrintTransportCrossSections ( const std::vector<double>& Ti, GasMixture* gasmix, const std::string& folder ) {
 
     for ( TcsInterface* tcs : integrals ) {
+
+        if ( (tcs->GetIntInterface()->GetSp1()->getCharge() != 0) && (tcs->GetIntInterface()->GetSp2()->getCharge() != 0) )
+            continue ; // skip ion-ion interactions.
 
         TransportCrossSectionCsv writer(tcs) ; 
 
         writer.customFolder = folder;
+
+        writer.Print ( tcs->GetIntInterface()->InteractionName(), Ti, gasmix );
+
+    }
+}
+
+void CiBox::PrintDeflectionAngles ( const std::vector<double>& Ti, GasMixture* gasmix, const std::string& folder ) {
+
+    for ( TcsInterface* tcs : integrals ) {
+
+        if ( (tcs->GetIntInterface()->GetSp1()->getCharge() != 0) && (tcs->GetIntInterface()->GetSp2()->getCharge() != 0) )
+            continue ; // skip ion-ion interactions.
+
+        DeflectionAngleCsv writer(tcs) ; 
+
+        writer.customFolder = folder;
+
+        if (writer.ToSkip()) {
+            std::cerr << "Skipping deflection angle print for interaction " 
+                      << tcs->GetIntInterface()->InteractionName() 
+                      << " due to incompatible solver type." << std::endl;
+            continue;
+        }
 
         writer.Print ( tcs->GetIntInterface()->InteractionName(), Ti, gasmix );
 

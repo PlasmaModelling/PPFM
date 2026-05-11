@@ -7,6 +7,12 @@
 #ifndef PARF_CALCULATOR_H
 #define PARF_CALCULATOR_H
 
+/**
+ * @file ParfCalculator.h
+ * @brief This file contains the QCalculator class hierarchy for partition function calculation.
+ * Still in development, lacks an ab-initio model for molecular partition functions.
+*/
+
 // forward declaration of class Species
 #include"DataLoader.h"
 #include"Species.h"
@@ -17,7 +23,8 @@
 /** @class QCalculator
  *  @brief Base class for partition function calculation methods
  *  @details This is an abstract class that defines the interface for computing 
- *  partition functions using different methods (e.g., polynomial, tabulated data or Ab-initio Calculations). */
+ *  partition functions using different methods (e.g., polynomial, tabulated data or Ab-initio Calculations). 
+*/
 class QCalculator {
 
     public:
@@ -49,6 +56,7 @@ class PfPoly : public QCalculator {
      * coefficients[1]*T + coefficients[0] */
     std::vector<double> coefficients;
 
+    /// @brief Initializes the polynomial coefficients and sets the method name.
     void Init( std::vector<double> cfs ) { 
 
         metodo = "Polinomial" ; 
@@ -85,6 +93,10 @@ class PfPoly : public QCalculator {
 
 };
 
+/**
+ * @class PfTtable
+ * @brief Class for computing partition functions using tabulated temperature-only data.
+*/
 class PfTtable : public QCalculator, public DataLoader {
     
     /// @brief Temperatures red from the file 
@@ -100,6 +112,7 @@ class PfTtable : public QCalculator, public DataLoader {
     /// @brief Builds the filename based on species name and optional prefix
     std::string BuildFileName(const std::string& name) override;
 
+    /// @brief Initializes the loader. Realization of DataLoader method.
     void Init() override {}
 
     public:
@@ -121,6 +134,10 @@ class PfTtable : public QCalculator, public DataLoader {
     double compute(double T, double P, double debye) override;
 };
 
+/**
+ * @class PfTPtable
+ * @brief Class for computing partition functions using tabulated temperature and pressure data.
+*/
 class PfTPtable : public QCalculator, public DataLoader {
     
     /// @brief Temperatures red from the file     
@@ -160,6 +177,11 @@ class PfTPtable : public QCalculator, public DataLoader {
 
 };
 
+/**
+ * @class ElectronicAtomicPF
+ * @brief Class for computing the electronic partition function of 
+ * atomic species using energy levels data. See constructor for details on data acquisition.
+*/
 class ElectronicAtomicPF : public QCalculator, public DataLoader {
 
     /** @brief Stores electronic energy levels: 
@@ -178,6 +200,7 @@ class ElectronicAtomicPF : public QCalculator, public DataLoader {
     /// @brief Builds the filename based on species name and optional prefix
     std::string BuildFileName(const std::string& name) override;
 
+    /// @brief Initializes the loader. Realization of DataLoader method.
     void Init() override {}
     
     public:

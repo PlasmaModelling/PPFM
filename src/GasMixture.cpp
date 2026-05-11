@@ -6,21 +6,34 @@
 
 #include "GasMixture.h"
 
-void GasMixture::setT (double temperature ) {
+// Destructor
+GasMixture::~GasMixture() {
+    delete Comp;
+}
+
+// Composition solver setter
+void GasMixture::setCompositionSolver(Composition* solver) {
+    if (Comp) delete Comp;
+    Comp = solver;
+}
+
+// Setter T/P with composition recomputation
+void GasMixture::setT(double temperature) {
     T = temperature;
-    Comp->compositionSolve ( this , this ) ;
-};
+    Comp->CompositionSolve();
+}
 
-void GasMixture::setP ( double pressure    ) {
-    P = pressure ;
-    Comp->compositionSolve ( this , this ) ;
-};
+// Setter T/P with composition recomputation
+void GasMixture::setP(double pressure) {
+    P = pressure;
+    Comp->Peff = pressure; // Update effective pressure for ideal solver, override in non-ideal ones
+    Comp->CompositionSolve();
+}
 
+// Restart composition and recompute internal state
 void GasMixture::restartComposition() {
-    
-    PfBox* tempPFBOX = this->Comp->Qbox;
-    this->Comp = new Composition (this,this) ;
-    this->Comp->setPfBox(tempPFBOX) ;
-    Comp->compositionSolve (this,this) ;
+
+    Comp->restart();
+    Comp->CompositionSolve();
 
 }

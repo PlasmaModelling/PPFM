@@ -52,21 +52,25 @@ int main() {
         // Setting temperature, composition is computed.
         mix->setT(T[i]) ;
         
-        // compute 
+        // compute transport coefficients
         transp.computeTransport(mix) ;        
 
         auto end = std::chrono::high_resolution_clock::now() ; 
         std::chrono::duration<double> duration = end - start ; 
-        std::cout <<"Devoto  elapsed in: "<< duration.count() << "s" << std::endl ;
+        std::cout <<"Devoto elapsed in: "<< duration.count() << "s" << std::endl ;
         
         start = end ; 
 
         zmtransp.computeTransport(mix) ;
 
         end = std::chrono::high_resolution_clock::now() ; 
-        std::cout <<"Zhang   elapsed in: "<< duration.count() << "s" << std::endl ;
+        duration = end - start ; 
+        std::cout <<"Zhang elapsed in: "<< duration.count() << "s" << std::endl ;
 
     }
 
+    std::cout << "Test completed." << std::endl;
+
     return 0 ;
+    
 } 

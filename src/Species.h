@@ -11,34 +11,163 @@
 #include <variant>
 #include <stdexcept>
 
+/**
+ * @file Species.h
+ * @brief This file contains the Species class hierarchy, 
+ * which represents different chemical species and their properties.
+ * The Species class is an abstract base class that defines the interface for all species,
+ * then, species separates in Elements, which are neutral and basis for plasma composition, 
+ * Charged Species, which are charged and have a reference to their neutral constituent,
+ * and molecules, divided into polyatomic, diatomic etc... 
+*/
 
 #define amuKg 1.66054e-27 
 #define eVtoJ 1.60217663e-19 
 #define eamu  5.4858e-4 
 
+/**
+ * @brief Abstract base class for representing chemical species.
+ * @details Defines the interface for all chemical species, 
+ * including their properties and behavior. 
+ * Each chemical specie is implemented as a class and realize interface 
+ * methods when defining mass, charge, energy, ionization limit etc...
+*/
 class Species {
 
     public:
     
-    ///@todo implement electronic configuration placeholder
-
+    /// virtual method to get the chemical formula of the species
     virtual std::string getFormula()        = 0 ;
+    
+    /// @brief virtual method to get the mass of the species in kg 
     virtual double      getMass()           = 0 ;           ///< unit: kg 
+
+    /// @brief virtual method to get the charge of the species in elementary charge units   
     virtual int         getCharge()         { return 0 ; }  ///< unit: # 
+    
+    /// @brief virtual method to get the formation energy of the species in joules
     virtual double      formationEnergy()   = 0 ;           ///< unit: J 
+
+    /// @brief virtual method to get the ionization limit of the species in joules
     virtual double      IonLim()            = 0 ;           ///< unit: J
+
 } ;
 
+/** @brief Class representing a chemical element.
+ * @details Elements are neutral species and serve as the basis for plasma composition.
+*/
 class Element : public Species {};
 
+/** @brief Class representing a charged chemical species.
+ * @details Charged species are particles that have a net electric charge
+ *  and are derived from neutral elements.
+*/
 class ChargedSpecies : public virtual Species {
 
     public : 
 
+    /** @brief virtual method to get the neutral constituent of the charged species
+     * @return pointer to the neutral constituent element, fundamental for chemical 
+     * composition algorithms.
+    */
     virtual Element* Constituent() = 0 ;
     
 } ;
 
+/// @brief Class representing a generic polyatomic chemical molecule.
+class PolyAtomicMolecule : public virtual Species {
+
+    protected : 
+
+    /// @brief vector of pointers to the constituent elements of the molecule.
+    std::vector<Element*>   costituents ; 
+
+    /// @brief vector of integers representing the abundancy of each constituent element in the molecule.
+    std::vector<int>        abundancy ;
+
+    public : 
+
+    /// @brief virtual method to get the number of constituent elements in the molecule
+    virtual int             numberOfCostituents()   = 0 ;
+
+    /// @brief virtual method to get the abundancy of the i-th constituent element in the molecule
+    virtual int             operator()(int i )      {return abundancy[i] ; } ;
+
+    /// @brief virtual method to get a pointer to the i-th constituent element in the molecule
+    virtual Element*        operator[](int i )      {return costituents[i] ;}
+
+} ;
+
+/** @brief Class representing a generic biatomic chemical molecule, derived from PolyAtomicMolecule.
+ * @details class meant to lock the number of costituents to 2, 
+ * and to implement the operator() and operator[] methods so that derived classes do not have to. 
+*/
+class BiatomicMolecule : public PolyAtomicMolecule { 
+
+    public : 
+    
+    int     operator()(int i)   override { 
+        if ( i < 0 || i > 1 )
+            throw std::invalid_argument("Error in Species costituents") ; 
+        else
+            return abundancy[i] ; 
+    } 
+
+    Element* operator[](int i)  override {
+        if ( i < 0 || i > 1 )
+            throw std::invalid_argument("Error in Species costituents") ; 
+        else
+            return costituents[i] ; 
+    }
+
+} ;
+
+/**
+ * @brief Class representing a homonuclear biatomic molecule, derived from BiatomicMolecule.
+ * @details This class represents a molecule composed of two identical atoms.
+ * It is intended to lock the number of constituents to 1 and to set the abundancy to 2.
+*/
+class HomoNuclearBiatomicMolecule : public BiatomicMolecule {
+    
+    // behavior of energy levels ond so on 
+    public : 
+    
+    HomoNuclearBiatomicMolecule() {
+        costituents.resize(1) ;
+        abundancy.resize(1) ; 
+        abundancy[0] = 2 ;
+    }
+
+    int numberOfCostituents()   override { 
+        return  1 ; 
+    } 
+
+} ;
+
+/**
+ * @brief Class representing a heteronuclear biatomic molecule, derived from BiatomicMolecule.
+ * @details This class represents a molecule composed of two different atoms.
+ * It is intended to lock the number of constituents to 2 and to set the abundancy to 1 for each constituent.
+*/
+class HeteroNuclearBiatomicMolecule : public BiatomicMolecule {
+
+    public : 
+    
+    HeteroNuclearBiatomicMolecule() {
+        costituents.resize(2) ;
+        abundancy.resize(2) ; 
+        abundancy[0] = 1 ;
+        abundancy[1] = 1 ;
+    }
+
+    int numberOfCostituents()   override { 
+        return  2 ; 
+    } 
+
+} ;
+
+
+/// @brief e-
 class Electron : public ChargedSpecies {
     
     public:
@@ -441,6 +570,15 @@ public:
     Element* Constituent() override ;
 } ;
 
+class CarbonIV : public ChargedSpecies {
+public:
+    double getMass() override ;
+    int getCharge() override ;
+    std::string getFormula() override ;
+    double formationEnergy() override ;
+    double IonLim() override ;
+    Element* Constituent() override ;
+} ;
 
 class Cesium : public Element {
 public:
@@ -1468,6 +1606,15 @@ public:
     Element* Constituent() override ;
 } ;
 
+class OxygenIV : public ChargedSpecies {
+public:
+    double getMass() override ;
+    int getCharge() override ;
+    std::string getFormula() override ;
+    double formationEnergy() override ;
+    double IonLim() override ;
+    Element* Constituent() override ;
+} ;
 
 class Phosphorus : public Element {
 public:
@@ -2267,339 +2414,628 @@ public:
     Element* Constituent() override ;
 } ;
 
+class CarbonMonoxide : public HeteroNuclearBiatomicMolecule {
+    
+    public:
+    
+    CarbonMonoxide();
 
-class PolyAtomicMolecule : public virtual Species {
+    int numberOfCostituents() override;
+    int operator()(int i) override;
+    Element* operator[](int i) override;
 
-    protected : 
+    double      getMass() override;
+    int         getCharge() override;
+    std::string getFormula() override;
+    double      formationEnergy() override;
+    double      IonLim() override;
 
-    std::vector<Element*>   costituents ; 
-    std::vector<int>        abundancy ;
+};
 
-    public : 
+class CarbonMonoxideI : public HeteroNuclearBiatomicMolecule, public ChargedSpecies {
+    
+    public:
+    
+    CarbonMonoxideI();
 
-    virtual int             numberOfCostituents()   = 0 ;
-    virtual int             operator()(int i )      = 0 ;
-    virtual Element*        operator[](int i )      = 0 ; 
+    int numberOfCostituents() override;
+    int operator()(int i) override;
+    Element* operator[](int i) override;
 
-} ;
+    double      getMass() override;
+    int         getCharge() override;
+    std::string getFormula() override;
+    double      formationEnergy() override;
+    double      IonLim() override;
+    Element*    Constituent() override;
 
-class Ozone : public PolyAtomicMolecule{
+};
+
+class CarbonDioxide : public PolyAtomicMolecule {
+    
+    public:
+    
+    CarbonDioxide();
+
+    int numberOfCostituents() override;
+    int operator()(int i) override;
+    Element* operator[](int i) override;
+
+    double      getMass() override;
+    int         getCharge() override;
+    std::string getFormula() override;
+    double      formationEnergy() override;
+    double      IonLim() override;
+};
+
+class CarbonDioxideI : public PolyAtomicMolecule, public ChargedSpecies {
+    
+    public:
+    
+    CarbonDioxideI();
+
+    int numberOfCostituents() override;
+    int operator()(int i) override;
+    Element* operator[](int i) override;
+
+    double      getMass() override;
+    int         getCharge() override;
+    std::string getFormula() override;
+    double      formationEnergy() override;
+    double      IonLim() override;
+    Element*    Constituent() override;
+
+};
+
+class CarbonDioxideAnion : public PolyAtomicMolecule, public ChargedSpecies {
+    
+    public:
+    
+    CarbonDioxideAnion();
+
+    int numberOfCostituents() override;
+    int operator()(int i) override;
+    Element* operator[](int i) override;
+
+    double      getMass() override;
+    int         getCharge() override;
+    std::string getFormula() override;
+    double      formationEnergy() override;
+    double      IonLim() override;
+    Element*    Constituent() override;
+
+};
+
+class Ozone : public PolyAtomicMolecule {
 
     public:
 
-    Ozone(){
-        costituents.push_back(new Oxygen) ; 
-        abundancy.push_back(3) ;
-    }
-    int numberOfCostituents() override {return 3;}
-    int operator()(int i) override {return abundancy[0];}
-    Element* operator[](int i) override {return costituents[0];}
-    
-    double      getMass()           override { return (47.9982) * amuKg ; } 
-    int         getCharge()         override { return 0 ; }
-    std::string getFormula()        override { return "O3" ; }
-    double      formationEnergy()   override { return (-1.478671) * eVtoJ ; }
-    double      IonLim()            override { return 999999999999 ; }
+    Ozone();
 
-} ; 
+    int numberOfCostituents() override;
+    int operator()(int i) override;
+    Element* operator[](int i) override;
 
-class BiatomicMolecule : public PolyAtomicMolecule { 
-
-    public : 
-    
-    int     operator()(int i)   override { 
-        if ( i < 0 || i > 1 )
-            throw std::invalid_argument("Error in Species costituents") ; 
-        else
-            return abundancy[i] ; 
-    } 
-
-    Element* operator[](int i)  override {
-        if ( i < 0 || i > 1 )
-            throw std::invalid_argument("Error in Species costituents") ; 
-        else
-            return costituents[i] ; 
-    }
-
-} ;
-
-class HomoNuclearBiatomicMolecule : public BiatomicMolecule {
-    
-    // behavior of energy levels ond so on 
-    public : 
-    
-    HomoNuclearBiatomicMolecule() {
-        costituents.resize(1) ;
-        abundancy.resize(1) ; 
-        abundancy[0] = 2 ;
-    }
-
-    int numberOfCostituents()   override { 
-        return  1 ; 
-    } 
-
-} ;
-
-class HeteroNuclearBiatomicMolecule : public BiatomicMolecule {
-
-    public : 
-    
-    HeteroNuclearBiatomicMolecule() {
-        costituents.resize(2) ;
-        abundancy.resize(2) ; 
-        abundancy[0] = 1 ;
-        abundancy[1] = 1 ;
-    }
-
-    int numberOfCostituents()   override { 
-        return  2 ; 
-    } 
-
-} ;
+    double      getMass() override;
+    int         getCharge() override;
+    std::string getFormula() override;
+    double      formationEnergy() override;
+    double      IonLim() override;
+};
 
 class MolecularHydrogen : public HomoNuclearBiatomicMolecule {
-    
-    public : 
+public:
+    MolecularHydrogen();
 
-    MolecularHydrogen() {
-        costituents[0] = new Hydrogen ;
-    }
-
-    double      getMass()           override { return 2.01588 * amuKg ; }
-    std::string getFormula()        override { return "H2" ; }
-    double      formationEnergy()   override { return -7.174875e-19 /* -7.240152773e-19 */ ; }
-    double      IonLim()            override { return 999999999999 ; }
-
-} ; 
+    double      getMass() override;
+    std::string getFormula() override;
+    double      formationEnergy() override;
+    double      IonLim() override;
+};
 
 class MolecularNitrogen : public HomoNuclearBiatomicMolecule {
-    
-    public : 
+public:
+    MolecularNitrogen();
 
-    MolecularNitrogen() {
-        costituents[0] = new Nitrogen ;
-    }
-
-    double      getMass()           override { return 28.0134 * amuKg ; }
-    std::string getFormula()        override { return "N2" ; }
-    double      formationEnergy()   override { return -1.563614e-18 /* -7.240152773e-19 */ ; }
-    double      IonLim()            override { return 999999999999 ; }
-
-} ; 
+    double      getMass() override;
+    std::string getFormula() override;
+    double      formationEnergy() override;
+    double      IonLim() override;
+};
 
 class MolecularOxygen : public HomoNuclearBiatomicMolecule {
-    
-    public : 
+public:
+    MolecularOxygen();
 
-    MolecularOxygen() {
-        costituents[0] = new Oxygen ;
-    }
+    double      getMass() override;
+    std::string getFormula() override;
+    double      formationEnergy() override;
+    double      IonLim() override;
+};
 
-    double      getMass()           override { return 31.9988 * amuKg ; }
-    std::string getFormula()        override { return "O2" ; }
-    double      formationEnergy()   override { return -5.11672987 * eVtoJ ; }
-    double      IonLim()            override { return 999999999999 ; }
-
-} ; 
-
-// charged molecules
 class MolecularHydrogenI : public HomoNuclearBiatomicMolecule, public ChargedSpecies {
-    
-    public : 
+public:
+    MolecularHydrogenI();
 
-    MolecularHydrogenI() {
-        costituents[0] = new Hydrogen ;
-    }
+    double      getMass() override;
+    std::string getFormula() override;
+    double      formationEnergy() override;
+    int         getCharge() override;
+    Element*    Constituent() override;
+    double      IonLim() override;
+};
 
-    double      getMass()           override { return ( 2.01588 - eamu ) * amuKg ; }
-    std::string getFormula()        override { return "H2+" ; }
-    double      formationEnergy()   override { return -7.174875e-19 + (15.42593 * eVtoJ) ; }
-    
-    int         getCharge()         override { return 1 ; }
-    Element*    Constituent()       override { return new Hydrogen ; }
-    double      IonLim()            override { return 999999999999 ; }
-    
-} ; 
-
-
-// charged molecules
 class MolecularOxygenI : public HomoNuclearBiatomicMolecule, public ChargedSpecies {
-    
-    public : 
+public:
+    MolecularOxygenI();
 
-    MolecularOxygenI() {
-        costituents[0] = new Oxygen ;
-    }
-
-    double      getMass()           override { return ( 31.9988 - eamu ) * amuKg ; }
-    std::string getFormula()        override { return "O2+" ; }
-    double      formationEnergy()   override { return (new MolecularOxygen)->formationEnergy() + (12.0697 * eVtoJ); }
-    
-    int         getCharge()         override { return 1 ; }
-    Element*    Constituent()       override { return new Oxygen ; }
-    double      IonLim()            override { return 999999999999 ; }
-    
-} ; 
+    double      getMass() override;
+    std::string getFormula() override;
+    double      formationEnergy() override;
+    int         getCharge() override;
+    Element*    Constituent() override;
+    double      IonLim() override;
+};
 
 class MolecularOxygenAnion : public HomoNuclearBiatomicMolecule, public ChargedSpecies {
-    
-    public : 
+public:
+    MolecularOxygenAnion();
 
-    MolecularOxygenAnion() {
-        costituents[0] = new Oxygen ;
-    }
+    double      getMass() override;
+    std::string getFormula() override;
+    double      formationEnergy() override;
+    int         getCharge() override;
+    Element*    Constituent() override;
+    double      IonLim() override;
+};
 
-    double      getMass()           override { return ( 31.9988 + eamu ) * amuKg ; }
-    std::string getFormula()        override { return "O2-" ; }
-    double      formationEnergy()   override { return (new MolecularOxygen)->formationEnergy() + (-0.448 * eVtoJ); }
-    
-    int         getCharge()         override { return -1 ; }
-    Element*    Constituent()       override { return new Oxygen ; }
-    double      IonLim()            override { return 999999999999 ; }
-    
-} ; 
-
-
-// charged molecules
 class MolecularNitrogenI : public HomoNuclearBiatomicMolecule, public ChargedSpecies {
+public:
+    MolecularNitrogenI();
     
-    public : 
+    double      getMass() override;
+    std::string getFormula() override;
+    double      formationEnergy() override;
+    int         getCharge() override;
+    Element*    Constituent() override;
+    double      IonLim() override;
+};
 
-    MolecularNitrogenI() {
-        costituents[0] = new Nitrogen ;
-    }
+class CarbonAnion : public ChargedSpecies {
+public:
+    double getMass() override;
+    int getCharge() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+    Element* Constituent() override;
+};
 
-    double      getMass()           override { return (new MolecularNitrogen)->getMass()-(eamu*amuKg) ; }
-    std::string getFormula()        override { return "N2+" ; }
-    double      formationEnergy()   override { return (new MolecularNitrogen)->formationEnergy() + (15.581*eVtoJ); }
+class DiCarbon : public HomoNuclearBiatomicMolecule {
+public:
+    DiCarbon();
+
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class DiCarbonI : public HomoNuclearBiatomicMolecule, public ChargedSpecies {
+public:
+    DiCarbonI();
+
+    double getMass() override;
+    int getCharge() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+    Element* Constituent() override;
+};
+
+class DiCarbonAnion : public HomoNuclearBiatomicMolecule, public ChargedSpecies {
+public:
+    DiCarbonAnion();
+
+    double getMass() override;
+    int getCharge() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+    Element* Constituent() override;
+};
+
+class EthynilRadical : public PolyAtomicMolecule {
+public:
+    EthynilRadical();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class Acetylene : public PolyAtomicMolecule {
+public:
+    Acetylene();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class Ethylene : public PolyAtomicMolecule {
+public:
+    Ethylene();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class DiCarbonMonoxide : public PolyAtomicMolecule {
+public:
+    DiCarbonMonoxide();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class TriCarbon : public PolyAtomicMolecule {
+public:
+    TriCarbon();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class MethylidineRadical : public PolyAtomicMolecule {
+public:
+    MethylidineRadical();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class Methylene : public PolyAtomicMolecule {
+public:
+    Methylene();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class MethylRadical : public PolyAtomicMolecule {
+public:
+    MethylRadical();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class Methane : public PolyAtomicMolecule {
+public:
+    Methane();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class FormylRadical : public PolyAtomicMolecule {
+public:
+    FormylRadical();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class FormylRadicalI : public PolyAtomicMolecule, public ChargedSpecies {
+public:
+    FormylRadicalI();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    int getCharge() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+    Element* Constituent() override;
+};
+
+class Formaldehyde : public PolyAtomicMolecule {
+public:
+    Formaldehyde();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class Water : public PolyAtomicMolecule {
+public:
+    Water();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class HydroPeroxyRadical : public PolyAtomicMolecule {
+public:
+    HydroPeroxyRadical();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class HydroxilRadical : public HeteroNuclearBiatomicMolecule {
+public:
+    HydroxilRadical();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class HydroxilRadicalI : public HeteroNuclearBiatomicMolecule, public ChargedSpecies {
+public:
+    HydroxilRadicalI();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    int getCharge() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+    Element* Constituent() override;
+};
+
+class PropadieneDione : public PolyAtomicMolecule {
+public:
+    PropadieneDione();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class PropadieneDioneI : public PropadieneDione , public ChargedSpecies {
+public:
+    PropadieneDioneI();
+
+    std::string getFormula() override;
+    double formationEnergy() override;
+    Element* Constituent() override;
+
+};
+
+class TetraCarbon : public PolyAtomicMolecule {
+public: 
+    TetraCarbon();
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class PentaCarbon : public PolyAtomicMolecule {
+public: 
+    PentaCarbon();
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class EsaCarbon : public PolyAtomicMolecule {
+public: 
+    EsaCarbon();
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class CarbonTrioxide : public PolyAtomicMolecule {
+public: 
+
+    CarbonTrioxide() ; 
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class CarbonTrioxideAnion : public CarbonTrioxide, public ChargedSpecies {
+public: 
     
-    int         getCharge()         override { return 1 ; }
-    Element*    Constituent()       override { return new Nitrogen ; }
-    double      IonLim()            override { return 999999999999 ; }
+    CarbonTrioxideAnion() ; 
+
+    int getCharge() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    Element* Constituent() override;
+};
+class CNCRadical : public PolyAtomicMolecule {
+public:
     
-} ; 
+    CNCRadical();
 
-// using AcceptedSpecies = 
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
 
-//     std::variant
+class Cyanogen : public PolyAtomicMolecule {
+public:
+    
+    Cyanogen();
 
-//         <   
-//             /* Electron */
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
 
-//             /* Aluminum*, AluminumI*, AluminumII*, AluminumIII*, */
-            
-//             /* Argon*, ArgonI*, ArgonII*, ArgonIII*, ArgonIV*, */
-            
-//             /* Arsenic*, ArsenicI*, ArsenicII*, ArsenicIII*,
-            
-//             Barium*, BariumI*, BariumII*, BariumIII*,
-            
-//             Beryllium*, BerylliumI*, BerylliumII*, BerylliumIII*,
-            
-//             Boron*, BoronI*, BoronII*, BoronIII*,
-            
-//             Bromine*, BromineI*, BromineII*, BromineIII*,
-            
-//             Calcium*, CalciumI*, CalciumII*, CalciumIII*,
-            
-//             Carbon*, CarbonI*, CarbonII*, CarbonIII*,
-            
-//             Cesium*, CesiumI*, CesiumII*, CesiumIII*,
-            
-//             Chlorine*, ChlorineI*, ChlorineII*, ChlorineIII*,
-            
-//             Chromium*, ChromiumI*, ChromiumII*, ChromiumIII*,
-            
-//             Cobalt*, CobaltI*, CobaltII*, CobaltIII*,
-            
-//             Copper*, CopperI*, CopperII*, CopperIII*,
-            
-//             Fluorine*, FluorineI*, FluorineII*, FluorineIII*,
-            
-//             Gallium*, GalliumI*, GalliumII*, GalliumIII*,
-            
-//             Germanium*, GermaniumI*, GermaniumII*, GermaniumIII*,
-            
-//             Gold*, GoldI*, GoldII*, GoldIII*,
-            
-//             Helium*, HeliumI*, HeliumII*,
-            
-//             Hydrogen*, HydrogenI*,
-            
-//             Iodine*, IodineI*, IodineII*, IodineIII*,
-            
-//             Iron*, IronI*, IronII*, IronIII*,
-            
-//             Krypton*, KryptonI*, KryptonII*, KryptonIII*,
-            
-//             Lead*, LeadI*, LeadII*, LeadIII*,
-            
-//             Lithium*, LithiumI*, LithiumII*, LithiumIII*,
-            
-//             Magnesium*, MagnesiumI*, MagnesiumII*, MagnesiumIII*,
-            
-//             Manganese*, ManganeseI*, ManganeseII*, ManganeseIII*,
-            
-//             Mercury*, MercuryI*, MercuryII*, MercuryIII*,
-            
-//             Molybdenum*, MolybdenumI*, MolybdenumII*, MolybdenumIII*,
-            
-//             Neon*, NeonI*, NeonII*, NeonIII*,
-            
-//             Nickel*, NickelI*, NickelII*, NickelIII*,
-            
-//             Niobium*, NiobiumI*, NiobiumII*, NiobiumIII*,
-            
-//             Nitrogen*, NitrogenI*, NitrogenII*, NitrogenIII*,
-            
-//             Oxygen*, OxygenI*, OxygenII*, OxygenIII*,
-            
-//             Phosphorus*, PhosphorusI*, PhosphorusII*, PhosphorusIII*,
-            
-//             Platinum*, PlatinumI*, PlatinumII*, PlatinumIII*,
-            
-//             Potassium*, PotassiumI*, PotassiumII*, PotassiumIII*,
-            
-//             Radon*, RadonI*, RadonII*, RadonIII*,
-            
-//             Rhenium*, RheniumI*, RheniumII*, RheniumIII*,
-            
-//             Rubidium*, RubidiumI*, RubidiumII*, RubidiumIII*,
-            
-//             Silicon*, SiliconI*, SiliconII*, SiliconIII*,
-            
-//             Silver*, SilverI*, SilverII*, SilverIII*,
-            
-//             Sodium*, SodiumI*, SodiumII*, SodiumIII*,
-            
-//             Strontium*, StrontiumI*, StrontiumII*, StrontiumIII*,
-            
-//             Sulfur*, SulfurI*, SulfurII*, SulfurIII*,
-            
-//             Tantalum*, TantalumI*, TantalumII*, TantalumIII*,
-            
-//             Titanium*, TitaniumI*, TitaniumII*, TitaniumIII*,
-            
-//             Tungsten*, TungstenI*, TungstenII*, TungstenIII*,
-            
-//             Vanadium*, VanadiumI*, VanadiumII*, VanadiumIII*,
-            
-//             Xenon*, XenonI*, XenonII*, XenonIII*,
-            
-//             Zinc*, ZincI*, ZincII*, ZincIII*,
-            
-//             Zirconium*, ZirconiumI*, ZirconiumII*, ZirconiumIII*,
-            
-//             HydrogenAnion*, NitrogenAnion*, OxygenAnion*, 
-            
-//             MolecularHydrogen*, MolecularHydrogenI*, MolecularNitrogen*, 
-            
-//             MolecularNitrogenI*, MolecularOxygen*, MolecularOxygenAnion*, 
-            
-//             MolecularOxygenI*, */ /* Ozone*   */
-        
-//         >
-//     ;
-// ;
+class CyanoEthynilRadical : public PolyAtomicMolecule {
+public:
+    
+    CyanoEthynilRadical();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class TwoButyneDiNitrile : public PolyAtomicMolecule {
+public:
+    
+    TwoButyneDiNitrile();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class HydrogenCyanide : public PolyAtomicMolecule {
+public:
+    
+    HydrogenCyanide();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class CyanoRadical : public PolyAtomicMolecule {
+public:
+    
+    CyanoRadical();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class IsoCyanatoRadical : public PolyAtomicMolecule {
+public:
+    
+    IsoCyanatoRadical();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class Imidogen : public PolyAtomicMolecule {
+public:
+    
+    Imidogen();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class NitrusOxide : public PolyAtomicMolecule {
+public:
+    
+    NitrusOxide();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class Ammonia : public PolyAtomicMolecule {
+public:
+    
+    Ammonia();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+
+class NitricOxide : public PolyAtomicMolecule {
+public:
+
+    NitricOxide();
+
+    int numberOfCostituents() override;
+    double getMass() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    double IonLim() override;
+};
+class NitricOxideI : public NitricOxide, public ChargedSpecies {
+public:
+    NitricOxideI();
+
+    int getCharge() override;
+    std::string getFormula() override;
+    double formationEnergy() override;
+    Element* Constituent() override;
+};
 
 #endif

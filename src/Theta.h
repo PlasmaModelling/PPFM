@@ -7,6 +7,12 @@
 #ifndef NON_EQUILIBRIUM_PARAMETER   
 #define NON_EQUILIBRIUM_PARAMETER   
 
+/**
+ * @file Theta.h
+ * @brief Skeleton of a non - equilibrium parameter class in case 
+ * of future developments of more complex behaviour of 
+ * non-equilibrium plasma models in PPFM.
+*/
 class Theta {
     
     double nonEquilibriumParameter ;

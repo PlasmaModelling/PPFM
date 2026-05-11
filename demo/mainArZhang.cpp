@@ -22,11 +22,12 @@
 #include "ZhangMurphyTP.h"
 #include "Potential.h"
 #include "CollisionIntegral.h"
+#include "DataPrinter.h"
 
 int main() {
 
     // Output folder
-    std::string folder = "PureAr4Species";
+    std::string folder = "demo/PureAr4Species";
 
     // GasMixture definition
     GasMixture* mix = new GasMixture ( 
@@ -43,28 +44,32 @@ int main() {
     // Set LTE T range to compute on 
     const std::vector<double> T = arange ( 300., 30100., 100. );
 
-    auto pp = mix->Comp->Qbox ;
+    // Editable Qbox for partition functions methods, setting computation from electronic configurations 
+    auto pp = mix->getCompositionObj()->getPfBox() ;
 
-    (*pp)[0]->setAbInitio();
-    (*pp)[1]->setAbInitio();
-    (*pp)[2]->setAbInitio();
+    // Setting all partition functions to be computed from ab initio electronic configurations, 
+    // with the implemented methods in the class PartitionFunction and derived.
+    pp->AllAbInitio() ;
 
-    (mix->Comp->Qbox)->info() ; 
+    // info post editing of the Qbox
+    pp->info() ;
 
+    // Editable CiBox for collision integrals definition.
     CiBox cibox (mix) ; 
 
     // Ar - Ar
-    
     cibox[0]->Pot( new HFDTCS2_ArAr() ) ;   
 
     // Ar - Ar+ 
-    cibox[1]->Load(false);
+    cibox[1]->Load(false); // Suppress the raw loading
+
+    //get the interaction interface to pass to calculators
     auto arari = cibox[1]->GetIntInterface();
 
     // Elastic + Inelastic collision
     cibox[1]->TCScalculator = new CsHolder (
 
-        // Elastic integration of the potential 
+        // Elastic integration of the potential, multiple states interaction
         new MultiCs (
             arari, {
                 new AvrgChiIntegrator ( arari, new Morse3Param(1.34,1.69,2.43) ),
@@ -83,6 +88,7 @@ int main() {
                 new AvrgChiIntegrator ( arari, new Morse2Param(1.65e+4,3.88) ),
                 
             },
+            // statistical degenracies for elastic processes
             {
                 1.,
                 1.,
@@ -116,14 +122,23 @@ int main() {
 
     // Ar - e-
     cibox[3]->Load(false);    
+    
+    // Loads Momentum transfer cross section for Ar-e- interaction
     cibox[3]->LoadElastic(); 
 
+    // Check the editing of the CiBox
     cibox.info() ; 
 
-    ZhangTpCsv zhangmurphy ( &cibox , folder ) ; 
+    cibox.PrintDeflectionAngles ( T, mix, folder + "/DeflectionAngles" ) ;
+    cibox.PrintTransportCrossSections ( T, mix, folder + "/TransportCrossSections" ) ;
+    cibox.PrintCollisionIntegrals ( T, mix, folder + "/CollisionIntegrals" ) ;
+
+    // Initialization of the Zhang-Murphy transport properties calculator, with the edited CiBox and custom output folder.
+    ZhangTpCsv zhangmurphy ( new ZhangMurphyTP(&cibox) , folder+ "/Transport" ) ; 
 
     std::vector<double> Th = T ;
 
+    // Looping on different non-equilibrium parameters
     for (size_t i = 0; i < NEparam.size(); i++) {
 
         Th = T ; 

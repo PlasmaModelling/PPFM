@@ -1,20 +1,32 @@
- // PPFM © 2025 by Emanuele Ghedini, Alberto Vagnoni // 
- // (University of Bologna, Italy)                   // 
- // Licensed under CC BY 4.0.                        // 
- // To view a copy of this license, visit:           // 
- // https://creativecommons.org/licenses/by/4.0/     // 
+// PPFM © 2025 by Emanuele Ghedini, Alberto Vagnoni // 
+// (University of Bologna, Italy)                   // 
+// Licensed under CC BY 4.0.                        // 
+// To view a copy of this license, visit:           // 
+// https://creativecommons.org/licenses/by/4.0/     // 
 
 #ifndef THERMODYNAMICS_H
 #define THERMODYNAMICS_H
 
-#include<vector>
-#include<stdexcept>
-#include<string>
-#include"DataPrinter.h"
+/**
+ * @file Thermodynamics.h
+ * @brief This file contains the Thermodynamics class hierarchy for computing thermodynamic properties of gas mixtures.
+ * The Thermodynamics class computes properties such as density, specific heats, and speed of sound based on the composition and state of a GasMixture. 
+ * The ThermodynamicsDHcorrected class applies Debye–Hückel corrections to the computed properties for charged species.
+*/
 
-class GasMixture ;
+#include <vector>
+#include <stdexcept>
+#include <string>
 
-/// @brief Computes thermodynamic properties for a given gas mixture.
+// Forward declarations
+class GasMixture;
+
+/**
+ * @class Thermodynamics
+ * @brief Class for computing thermodynamic properties of a gas mixture.
+ * @details Iterative dT and dP are implemented for stability of properties 
+ * finite differences and Partition Functions derivates. 
+*/
 class Thermodynamics {
 
     protected:
@@ -33,6 +45,15 @@ class Thermodynamics {
     * [9] a [m/s] */
     std::vector<double> Td;
 
+    /// @brief Vector of hentalphy values for species in the mixture [J/kg] (per particle).
+    std::vector<double> henthalpies ;
+
+    /// @brief Vector of dH/dT values for species in the mixture [J/(kg·K)] (per particle).
+    std::vector<double> dhdT ; 
+
+    /// @brief saving final dRdP to correct speed of sound in DH corrections 
+    double dRdP_final ; 
+
     public:
     
     /// @brief Constructs the object and initializes the thermodynamic vector.
@@ -40,53 +61,36 @@ class Thermodynamics {
 
     /**
      * @brief Computes thermodynamic properties from a given gas mixture state.
-     * @param gasmix Reference to the GasMixture object (provides composition, T, P).
-     * @details 
-     * - Uses finite differences to estimate derivatives via shifted thermodynamic states.
-     * - Partition functions are recomputed at T ± ΔT and P ± ΔP.
-     * - Uses the Godin formulation (eqs. 41–43) to compute Cₚ, Cᵥ, γ, and a.
-     * - Restores the mixture to its original state after computation.
-     * @see class PfBox for partition function evaluation.
-     * @see class GasMixture for thermodynamic context.  */
+     * @param gasmix Reference to the GasMixture object (provides composition, T, P). */
     void computeThermodynamics(GasMixture& gasmix);
+
+    // ---------------- Getters ---------------- //
+
+    double rho()   const { return Td[0]; }
+    double R()     const { return Td[1]; }
+    double he()    const { return Td[2]; }
+    double hh()    const { return Td[3]; }
+    double ee()    const { return Td[4]; }
+    double eh()    const { return Td[5]; }
+    double cp()    const { return Td[6]; }
+    double cv()    const { return Td[7]; }
+    double gamma() const { return Td[8]; }
+    double a()     const { return Td[9]; }
+    
+    double h(int i) const{ return henthalpies.at(i); }
+    double dHdT(int i) const{ return dhdT.at(i); }
 };
 
+/**
+ * @class ThermodynamicsDHcorrected
+ * @brief Computes thermodynamic properties with Debye–Hückel corrections. 
+*/
+class ThermodynamicsDHcorrected : public Thermodynamics {
 
-//______________________________ Implementation ______________________________
-
-/// @brief Outputs thermodynamic properties to CSV.
-/// @see class Thermodynamics for property computation.
-/// @see class DataPrinter for CSV interface.
-class ThermodynamicsCsv : public Thermodynamics, public DataPrinter {
-
-    /// @brief Builds the output filename with "TH_" prefix.
-    std::string BuildFileName(const std::string& filename) const;
-
-    /// @brief Prepares the CSV header row.
-    void PrepareHeader();
-
-    /**
-     * @brief Computes thermodynamic properties over a temperature range.
-     * @param x Vector of electron temperatures (Te/θ).
-     * @param gasmix Pointer to the gas mixture.
-     * @details For each temperature, the following properties are computed and stored:
-     * ρ [kg/m³], Cp [J/kg·K], hₑ + hₕ [J/kg], γ, a [m/s]. Initial gas state is restored at the end.
-     * @see Thermodynamics::computeThermodynamics */
-    void PrepareData(const std::vector<double>& x, GasMixture* gasmix) override;
-
-    /**
-     * @brief Prints a message confirming successful output.
-     * @param filename Name of the generated file. */
-    void PrintMessage(const std::string& filename) override;
-
-    public:
+    /** @brief Computes thermodynamic properties as parent class 
+     * and just applies for DH corrections */
+    void computeThermodynamics(GasMixture& gasmix);
     
-    /// @brief Default constructor.
-    ThermodynamicsCsv();
-
-    /// @brief Constructor with output folder specification.
-    ThermodynamicsCsv(const std::string& folder);
-
 };
 
 #endif

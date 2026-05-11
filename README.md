@@ -63,32 +63,83 @@ on your terminal.
 
 ## Running a calculation
 
-To run a calculation edit your own main.cpp file in the main folder of the program. There are some demo mainfiles to try in the demo folder, just substitute and rename the main.cpp with the desired demo file. Data required for the demo are provided. Please, ask the author for more data or to compute them from common data sources.
+To run a calculation a main file has to be written, and represent the user environment for the usage of PPFM.
+In there, you can include the header files you need for your computations, initialize variables, classes, and use their methods to perform the calculations you need with (in principle) little knowledge of C++ syntax. 
+
+Output classes are provided for writing of computed properties.
+
+See the demo files in the demo folder, or documentation for further details. 
+
+Next, you will need to configure and build the file you implemented as follows
 
 ## Build Instructions
 
-Building and launching can be done through terminal command line in the main folder of the program (where the main.cpp file is).  
+Building and launching can be done through terminal command line in the main folder of the program. 
 
 ### 🐧 Ubuntu / Linux - command line
 
-To build, just prompt the following commands into a terminal while on .../yourPathTo/PPFM$ :
+The default build will have the ```main.cpp``` file in the main folder of PPFM as its target.
+You can do it by command line with 
 
 ```bash
 cmake -B build -S .
 cmake --build build
 ```
 
-And to execute :
+This will generate an executable named ```main.out``` in the ```/executables``` folder.
+Then, to execute, you just have to run that file. 
+You can do it in the executables folder 
 
 ```bash
-./rooster
+./main.out
 ```
+
+or from the main one
+
+```bash
+./executables/main.out
+```
+
+When building, you can designate the main file to be build by specifying a ```-DMAIN``` argument, the main file can be labeled as you prefer, as long as it contain an int main() {} section
+
+```bash
+cmake -B build -S . -DMAIN=Your/Path/To/MainFileName.cpp
+cmake --build build
+```
+
+For reason of simplicity, the generated executable will be labeled as ```MainFileName.out``` and put in the ```/executables``` folder.
+
+In case of printing of properties, output will be put on an ```/out``` folder
+
+### ⌨️ Ubuntu / Linux - bash scripts
+
+Some bash .sh files are provided to give PPFM a quick try. They can be executed from a terminal into PPFM source folder :   
+
+```bash
+./BuildAndRun.sh
+```
+
+will build the default main.cpp into PPFM source folder, generate and run the related executable in the executables folder.
+
+```bash
+./demo/DemoBuilding.sh
+```
+
+will build all the demos in the demo folder and generate the related executables in the executables folder
+
+```bash
+./executables/RunAll.sh
+```
+
+will run all the executables in the executables folder.
+
+You should be able to run the .sh scripts also by right clicking on them and clicking on "Run as a program". 
 
 ### ⌨️ Ubuntu / Linux - IDE !
 
 IDE that supports CMake can be used to build, execute and debug the code much easier! Development and testing has been carried out through **VisualStudio Code** with **CMake, C++ and Python extension** installed. 
 VScode extensions usually don't install things on your PC, they just tell Code how to behave in some cases. So, remember to satisfy prerequisites for Ubuntu described before. 
-Building, and, Release and Debug activities can be run through the cmake toolbar appearing in below the VScode GUI.  
+Building, and, Release and Debug activities can be run through the cmake toolbar appearing in below the VScode GUI but remember only default option i.e. the main.cpp file in the main folder, will be compiled and executed. 
 
 ### 🪟 Windows - command line
 
@@ -108,9 +159,14 @@ If you familiar with Windows development and want to improve PPFM capabilities p
 
 Remember, your favourite IDE has to support CMake to run the program.
 
+#### Notes on building : 
+
+PPFM uses a compile-time selection of chemical species through a generated `std::variant` type (`AcceptedSpecies.h`).  
+Each executable is associated with a specific set of species inferred from the selected main source file, this is the reason every main file needs its own configure and building to generate an executable.
+
 ## 📂 Directory Structure
 
-For being in its very first release PPFM handle data paths by hard-coding them into strings. Further Development will see better data handling. 
+For being in its very first release PPFM handle data paths by hard-coding them into strings and macros. Further Development will see better data handling. 
 Please, do not rename any existing folder, do whatever inside the out/ folder for further data processing. PPFM also include routines to sistematically print data in desired folders. Check demo mainArH2.cpp for an example. 
 
 ```text
@@ -125,10 +181,15 @@ PPFM/
   ├──Partition_Functions
   ├──Phase_Shifts
 ├── demo/             # Some main.cpp files for demo running
+├── docs/
 ├── build/            # Build directory (ignored by git)
+├── executables/      # Executables will be placed here
 ├── CMakeLists.txt    # Project configuration
-├── main.cpp          # The current environment for users. 
+├── main.cpp          # The default environment for users, default "-DMAIN=" argument to build.
 ├── README.md
+├── LICENSE.md
+├── AUTHORS.md
+
 ```
 
 ## Author disclaimer
@@ -161,8 +222,26 @@ If you'd like to contribute to PPFM:
 
 Please ensure your contributions are well-documented and tested. All changes will be reviewed and must be approved by the owner before being merged.
 
+## Authors
+
+- **Alberto Vagnoni** — University of Bologna, Italy  
+- **Emanuele Ghedini** — University of Bologna, Italy  
+
+## Scientific roots
+
+PPFM has its scientific roots in the plasma modelling and transport-property research tradition developed by **Vittorio Colombo** and collaborators at the University of Bologna.
+
+The authors gratefully acknowledge this scientific influence on the theoretical and methodological foundations of the present work.
+
 ## License
 
-This project is licensed under the Creative Common License.
+This project is licensed under the Creative Commons Attribution 4.0 International License (CC BY 4.0).
 
-<a href="https://creativecommons.org">PPFM</a> © 2025 by <a href="https://creativecommons.org">Emanuele Ghedini, Alberto Vagnoni (University of Bologna, Italy)</a> is licensed under <a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International</a><img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">
+<a href="https://creativecommons.org/licenses/by/4.0/">
+PPFM © 2025 by Emanuele Ghedini, Alberto Vagnoni (University of Bologna, Italy)
+</a> is licensed under 
+<a href="https://creativecommons.org/licenses/by/4.0/">
+Creative Commons Attribution 4.0 International
+</a>
+<img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="CC" style="max-width: 1em;max-height:1em;margin-left: .2em;">
+<img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="BY" style="max-width: 1em;max-height:1em;margin-left: .2em;">

@@ -7,6 +7,17 @@
 #ifndef MIXTURE_H
 #define MIXTURE_H
 
+/**
+ * @file Mixture.h
+ * @brief This file contains the Mixture class, 
+ * which represents a gas mixture and its composition.
+ * The Mixture class is an abstract base class that defines the interface for gas mixtures,
+ * including methods for accessing species, masses, and mole fractions. 
+ * It also defines a Gas class for representing the thermodynamic state of the mixture.
+ * The Mixture class is designed to be inherited by specific gas mixture implementations, 
+ * such as GasMixture.
+*/
+
 #include "AcceptedSpecies.h"
 #include "Theta.h"
 
@@ -15,13 +26,11 @@ class Species;
 class Element;
 class Electron;
 
-
 /// @brief Abstract base class for gas mixtures with chemical species.
 class Mixture {
 
     friend class CiBox;
     friend class PfBox;
-    friend class Composition;
 
     protected:
 
@@ -36,6 +45,9 @@ class Mixture {
 
     /// @brief Number of elemental species (atoms or electrons).
     int M;
+
+    /// @brief Virtual destructor.
+    virtual ~Mixture() = 0;
 
     public:
 
@@ -53,44 +65,38 @@ class Mixture {
      * @brief Returns the i-th species as a base pointer.
      * @param i Index of the species.
      * @return Pointer to the species.
-     * @throws std::out_of_range if i is out of bounds.
-     */
+     * @throws std::out_of_range if i is out of bounds. */
     Species* operator()(int i);
 
     /**
      * @brief Returns a vector of species masses.
-     * @return Vector of masses [amu].
-     */
+     * @return Vector of masses [amu]. */
     std::vector<double> masses();
 
     /**
      * @brief Returns a vector of converted species masses.
      * @param conversion Multiplicative factor (e.g. amu to kg).
-     * @return Vector of converted masses.
-     */
+     * @return Vector of converted masses. */
     std::vector<double> masses(double conversion);
-
-    /// @brief Virtual destructor.
-    virtual ~Mixture() = 0;
-
-    private:
-
-    /// @brief Orders species by their chemical formula.
-    void order();
 
     /**
      * @brief Checks if a species belongs to the base set.
      * @param specie Pointer to the species.
-     * @return True if it matches a base species in molefractions.
-     */
+     * @return True if it matches a base species in molefractions. */
     bool isBase(Species* specie);
+    
+    std::tuple<std::vector<Species*>, std::vector<double>> getMoleFractions() ;
 
+    private:
+    
+    /// @brief Orders species by their chemical formula.
+    void order();
+    
     /**
      * @brief Resets the composition of the mixture.
-     * @details Must be implemented in derived classes to reset mole fractions or species states.
-     */
+     * @details Must be implemented in derived classes. */
     virtual void restartComposition() = 0;
-
+    
 };
 
 /// @brief Basic thermodynamic state: temperature and pressure.

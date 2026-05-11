@@ -7,6 +7,15 @@
 #ifndef TCS_CALCULATOR_H
 #define TCS_CALCULATOR_H 
 
+/**
+ * @file TcsCalculator.h
+ * @brief This file contains the CsCalculator class hierarchy for computing transport cross sections.
+ * @details Cross sections can be found in different ways apart from the usual potential integration
+ * when facing transport properties determinations. 
+ * Since they're different mathematical object than collision integrals, 
+ * and, in fact, can be treated in different ways to obtain the latter, they're kept separated.
+*/
+
 #include"DataLoader.h"
 #include<string>
 #include<vector>
@@ -15,8 +24,9 @@
 // forward declarations
 class InteractionInterface ; 
 class Potential ; 
+class DeflectionAngleCsv ; 
 
-/// @brief Abstract base class for transport cross section calculators. 
+/// @class CsCalculator @brief Abstract base class for transport cross section calculators. 
 class CsCalculator {
 
     public:
@@ -34,9 +44,15 @@ class CsCalculator {
      * @brief Returns the vector Q^l(E) for a given order l = 1..4.
      * @param l Order of the momentum transfer (1–4).
      * @return Vector of cross sections for given l.
-     * @throws std::invalid_argument if l is out of range.  */
+     * @throws std::invalid_argument if l is out of range.  
+    */
     std::vector<double> operator()(int l);
 
+    /** @brief Flag indicating whether the cross sections have been computed.
+     * @details As cross sections are computer as a function of a broad spectrum of energy,
+     * that is then treated the Boltzmann way when integrating collision integrals as a 
+     * function of temperatures, there's no reason to compute them more than once.
+    */
     bool computed = false ; 
 
     /// @brief Computes the cross sections. Must be implemented in derived classes.
@@ -46,14 +62,15 @@ class CsCalculator {
 
     /**
      * @brief Constructs a CsCalculator with interaction metadata.
-     * @param i Pointer to the interaction. */
+     * @param i Pointer to the interaction. 
+    */
     CsCalculator(InteractionInterface* i);
 
     CsCalculator() = default;
     virtual ~CsCalculator() = default;
 };
 
-/// @brief Combines elastic and inelastic cross section calculators.
+/// @class CsHolder @brief Combines elastic and inelastic cross section calculators.
 class CsHolder : public CsCalculator {
 
     public:
@@ -80,7 +97,7 @@ class CsHolder : public CsCalculator {
 
 };
 
-/// @brief Container for multiple cross section calculators (e.g., multi-channel).
+/// @class MultiCs @brief Container for multiple cross section calculators (e.g., multi-state).
 class MultiCs : public CsCalculator {
 
     public:
@@ -91,15 +108,23 @@ class MultiCs : public CsCalculator {
     /// @brief State degeneracies "g" vector 
     std::vector<double> statesG ; 
 
+    /** @brief LATEST espilons weights for energyweighting like in formula 1 of 
+     * Thermodynamic and Transport coefficients of arc lamp plasmas: argon, krypton, and xenon 
+    */
+    std::vector<double> energyWeights ;
+
+    /// @brief LATEST, flag to set energy weighting or not, default is false. Implementation to be revised.
+    bool energyWeighted{false} ;
+
+    /// @brief LATEST, energies to weight the different states with energies. Implementation to be revised.
+    void setEnergyWeights( std::vector<double> ew ) ;
+
     /// @brief Construct MultiCs object, calculators must be passed by the user.
     MultiCs ( InteractionInterface* i, std::vector<CsCalculator*> c, std::vector<double> gs );
 
     /// @brief Access calculator by index.
     CsCalculator*& operator[](int i);
-
-/*     /// @brief Access Q^l of s-th calculator.
-    std::vector<double> operator()(int s, int l);
- */
+    
     /// @brief Returns number of calculators.
     int Size();
 
@@ -111,13 +136,22 @@ class MultiCs : public CsCalculator {
     /**
      * @brief USE ONLY on logics of multpiple cross sections 
      * without state degeneracies
-     * @example ThresholdCs */
+     * @example ThresholdCs 
+    */
     MultiCs ( InteractionInterface* i, std::vector<CsCalculator*> c) ; 
 
     ~MultiCs() = default;
 
 };
 
+/**
+ * @class ThresholdCs 
+ * @brief MultiCs subclass, similar to multi-state concept. 
+ * Some cross sections in interactions may be better described 
+ * by a potential (or some other data) below a certain energy, 
+ * and by a different model above it. 
+ * This class allows to combine multiple CsCalculators with user-defined energy thresholds. 
+*/
 class ThresholdCs : public MultiCs {
 
     protected:
@@ -137,10 +171,15 @@ class ThresholdCs : public MultiCs {
 
 };
 
-/// @brief Abstract class to implement default CSV parser for TCS_ datafiles.
+/**
+ * @class TcsParser  
+ * @brief Abstract class to implement default CSV parser for TCS_ 
+ * datafiles to be used for loading. 
+*/
 class TcsParser {
 
     protected:
+
     /**
      * @brief Parses a default TCS_ CSV file.
      * @param file Input file stream (already opened).
@@ -155,17 +194,22 @@ class TcsParser {
     void TcsParse(std::ifstream& file, std::vector<double>& E, std::vector<std::vector<double>>& Q);
 
 };
-/// @brief Loads elastic transport cross section data from CSV files.
-/// @see class CsCalculator for interface to cross section computation.
-/// @see class DataLoader for file handling.
-/// @see class TcsParser for CSV parsing.
+
+/** 
+ * @class ElasticLoader
+ * @brief Loads elastic transport cross section data from CSV files.
+ * @see class CsCalculator for interface to cross section computation.
+ * @see class DataLoader for file handling.
+ * @see class TcsParser for CSV parsing.
+*/
 class ElasticLoader : public CsCalculator, public DataLoader, public TcsParser {
 
     public:
 
     /**
      * @brief Constructs an ElasticLoader with default path and interaction pointer.
-     * @param i Pointer to the interaction.  */
+     * @param i Pointer to the interaction.  
+    */
     ElasticLoader(InteractionInterface* i);
 
     /// @brief Constructs an ElasticLoader with a custom prefix and interaction.
@@ -192,21 +236,25 @@ class ElasticLoader : public CsCalculator, public DataLoader, public TcsParser {
      * @brief Parses the loaded CSV file.
      * @param file Stream of the file to be parsed.
      * @details Calls TcsParse from the base class.
-     * @throws std::runtime_error if parsing fails.  */
+     * @throws std::runtime_error if parsing fails.  
+    */
     void ParseFile(std::ifstream& file) override;
 };
 
-/// @brief Loads inelastic transport cross section data from CSV files.
-/// @see class CsCalculator for interface to cross section computation.
-/// @see class DataLoader for file handling.
-/// @see class TcsParser for CSV parsing.
+/** 
+ * @brief Loads inelastic transport cross section data from CSV files.
+ * @see class CsCalculator for interface to cross section computation.
+ * @see class DataLoader for file handling.
+ * @see class TcsParser for CSV parsing.
+*/
 class InelasticLoader : public CsCalculator, public DataLoader, public TcsParser {
 
     public:
     
     /**
      * @brief Constructs an InelasticLoader with default path and interaction pointer.
-     * @param i Pointer to the interaction.  */
+     * @param i Pointer to the interaction.  
+    */
     InelasticLoader(InteractionInterface* i);
 
     /// @brief Constructs an InelasticLoader with a custom prefix and interaction.
@@ -233,13 +281,21 @@ class InelasticLoader : public CsCalculator, public DataLoader, public TcsParser
      * @brief Parses the loaded CSV file.
      * @param file Stream of the file to be parsed.
      * @details Calls TcsParse from the base class.
-     * @throws std::runtime_error if parsing fails. */
+     * @throws std::runtime_error if parsing fails. 
+    */
     void ParseFile(std::ifstream& file) override;
 
 };
-/// @brief Loads phase shift data and computes transport cross sections from it.
-/// @see class CsCalculator for base interface.
-/// @see class DataLoader for file parsing and loading.
+
+/**
+ * @class PhaseShiftsLoader
+ * @brief Loads phase shift data from CSV files and 
+ * computes transport cross sections using quantum-mechanical formulae.
+ * @details Not common but useful for future implementations of quantum-mechanical 
+ * calculations of phase-shifts (light particles encounters).
+ * @see class CsCalculator for base interface.
+ * @see class DataLoader for file parsing and loading.
+*/
 class PhaseShiftsLoader : public CsCalculator, public DataLoader {
 
     /// @brief Matrix of phase shifts ηₗ(E) read from file.
@@ -251,7 +307,8 @@ class PhaseShiftsLoader : public CsCalculator, public DataLoader {
     public:
     /**
      * @brief Constructs the loader and initializes from file.
-     * @param i Pointer to the interaction.  */
+     * @param i Pointer to the interaction.  
+    */
     PhaseShiftsLoader(InteractionInterface* i);
 
     /// @brief Constructs the loader with custom prefix and interaction pointer.
@@ -266,7 +323,8 @@ class PhaseShiftsLoader : public CsCalculator, public DataLoader {
     /**
      * @brief Triggers the loading and computation of cross sections.
      * @details Loads the phase shifts and computes multipole TCS integrals
-     * Q^(l) for l = 1, 2, 3, 4 using quantum-mechanical formulae. */
+     * Q^(l) for l = 1, 2, 3, 4 using quantum-mechanical formulae. 
+    */
     void Compute() override;
 
     protected:
@@ -281,7 +339,8 @@ class PhaseShiftsLoader : public CsCalculator, public DataLoader {
      * Q^{(l)}(E) = \sum_{\ell} \mathcal{F}_\ell^{(l)} \sin^2(\eta_\ell - \eta_{\ell'})
      * \f]
      * where l = 1, 2, 3, 4. Contributions are summed and scaled to Å².
-     * Assumes `etaL` is padded to allow access to ηₗ₊₁...ηₗ₊₄. */
+     * Assumes `etaL` is padded to allow access to ηₗ₊₁...ηₗ₊₄. 
+    */
     void ComputeFromPhaseShifts();
 
     /// @brief Builds the filename using prefix and interaction name.
@@ -292,14 +351,20 @@ class PhaseShiftsLoader : public CsCalculator, public DataLoader {
      * @param file Input file stream.
      * @details First column is E [eV], the rest are ηₗ(E). If < 4 columns are present,
      * values are extended by repeating the last column. Missing rows are skipped.
-     * @throws std::runtime_error if file is malformed or inconsistent. */
+     * @throws std::runtime_error if file is malformed or inconsistent. 
+    */
     void ParseFile(std::ifstream& file) override;
 
 };
 
-/// @brief Analytic charge-exchange cross section model based on a log-velocity fit.
-/// @see class CsCalculator for interface to energy-dependent cross section computation.
+/** 
+ * @class ChargeTransferCs
+ * @brief Analytic charge-exchange cross section model based on a log-velocity fit.
+ * @see class CsCalculator for interface to energy-dependent cross section computation.
+*/
 class ChargeTransferCs : public CsCalculator {
+
+    protected:
 
     /// @brief Fit parameter A in the analytic cross section expression.
     double A;
@@ -317,7 +382,8 @@ class ChargeTransferCs : public CsCalculator {
      * @param A Coefficient A in σ = ½ (A - B log(g))².
      * @param B Coefficient B in σ = ½ (A - B log(g))².
      * @details Initializes the energy grid (log-spaced from 1.15 meV to 433 eV),
-     * computes reduced mass in atomic mass units. */
+     * computes reduced mass in atomic mass units. 
+    */
     ChargeTransferCs(InteractionInterface* i, double A, double B);
 
     /**
@@ -327,13 +393,50 @@ class ChargeTransferCs : public CsCalculator {
      * \sigma(E) = \frac{1}{2} \left( A - B \log g_{ij} \right)^2
      * \f]
      * where g₍ᵢⱼ₎ is the relative velocity at energy E.
-     * Units: σ in Å² if A, B are consistent with log10(cm/s). */
+     * Units: σ in Å² if A, B are consistent with log10(cm/s). 
+    */
     void Compute() override;
+    
 };
 
-/** @brief Interface functions for Ab Initio classes to perform integration of deflection angles and transport 
- * cross sections from the model interaction potential for the interacting particles */
+
+/** 
+ * @class ChargeTransferCsWithEnergy
+ * @brief Analytic charge-exchange cross section model for when A and B are 
+ * furnished for energy dependant formula. 
+*/
+class ChargeTransferCsWithEnergy : public ChargeTransferCs {
+
+    public:
+    /**
+     * @brief Constructs the charge-exchange cross section object.
+     * @param i Pointer to the interaction.
+     * @param A Coefficient A in σ = 2 (A - B log(E))².
+     * @param B Coefficient B in σ = 2 (A - B log(E))².
+     * @details Initializes the energy grid (log-spaced from 1.15 meV to 433 eV) 
+    */
+    ChargeTransferCsWithEnergy(InteractionInterface* i, double A, double B);
+
+    /**
+     * @brief Computes the cross section on the energy grid.
+     * @details The cross section is computed as:
+     * \f[
+     * \sigma(E) = 2 * \left( A - B \log E \right)^2
+     * \f]
+     * Units: σ in Å². 
+    */
+    void Compute() override;
+
+};
+
+/** 
+ * @class AbInitioTcsIntegration
+ * @brief Interface functions for Ab Initio classes to perform integration of deflection angles and transport 
+ * cross sections from the model interaction potential for the interacting particles 
+*/
 class AbInitioTcsIntegration : public CsCalculator {
+
+    friend class DeflectionAngleCsv ;
 
     protected:
 
@@ -357,7 +460,9 @@ class AbInitioTcsIntegration : public CsCalculator {
 
 };
 
-/** @brief Computes the deflection angle integrating the interaction potential 
+/**
+ * @class AdaptDeflAngle
+ * @brief Computes the deflection angle integrating the interaction potential 
  * through the algorithm presented in
  * @see G. Colonna, A. Laricchiuta, 
  * "General numerical algorithm for classical collision integral calculation", 
@@ -368,7 +473,8 @@ class AdaptDeflAngle : public AbInitioTcsIntegration {
      * @param r interparticle distance [Ang] 
      * @param b Impact parameter [Ang]
      * @param E Energy of collision [eV]
-     * @return double Chi, DeflectionAngle */
+     * @return double Chi, DeflectionAngle 
+    */
     double IntegrandKi( double r, double b, double E ) ;
 
     /// @brief Adapt integration step. 
@@ -396,11 +502,14 @@ class AdaptDeflAngle : public AbInitioTcsIntegration {
 
 };
 
-/** @brief Computes the deflection angle integrating the interaction potential 
+/** 
+ * @class AvrgDeflAngle
+ * @brief Computes the deflection angle integrating the interaction potential 
  * through the algorithm presented in
  * @see J.A.Barker, W.Fock and F. Smith 
  * "Calculation of Gas Transport Properties and The Interaction of Argon Atoms", 
- * Phys. Fluids 7, 897–903 (1964) , DOI: 10.1063/1.1711301 */
+ * Phys. Fluids 7, 897–903 (1964) , DOI: 10.1063/1.1711301 
+*/
 class AvrgDeflAngle : public AbInitioTcsIntegration {
 
     protected:
@@ -415,21 +524,29 @@ class AvrgDeflAngle : public AbInitioTcsIntegration {
     int N {2000} ;
 
     /// @brief Initialize the energy range 
-    virtual void InitE() override { E = logspace ( log10(1.1501404511032503e-3), log10(433), 150 ); }
+    virtual void InitE() override { E = logspace ( log10(1.1501404511032503e-3), log10(433), 50 ); }
+
+    void Initws();
 
     /// @brief Construct a new AvrgDefAngle object 
     AvrgDeflAngle( InteractionInterface* i, Potential* pot ) ;
     
+    /// @brief Construct a new AvrgDefAngle object with custom r0
+    AvrgDeflAngle( InteractionInterface* i, Potential* pot , double r0, double e0 ) ;
+
     /// @brief Computes the deflection angle from model interaction potential 
     double deflectionAngle ( double Bsi, double Gsi ) override ;
 
 };
 
-/** @brief Compute Elastic Cross Section integrating the DeflectionAngle 
- ** through the algorithm presented in
- ** @see G. Colonna, A. Laricchiuta, 
- ** "General numerical algorithm for classical collision integral calculation", 
- ** Comput. Phys. Commun. 178 (2008) 809–816, DOI: 10.1016/j.cpc.2008.01.039. */
+/**
+ * @class AdaptChiIntegrator
+ * @brief Compute Elastic Cross Section integrating the DeflectionAngle 
+ * through the algorithm presented in
+ * @see G. Colonna, A. Laricchiuta, 
+ * "General numerical algorithm for classical collision integral calculation", 
+ * Comput. Phys. Commun. 178 (2008) 809–816, DOI: 10.1016/j.cpc.2008.01.039. 
+*/
 class AdaptChiIntegrator : public AdaptDeflAngle {
 
     /// @brief Integrand for formula 2 of the reference DOI: 10.1016/j.cpc.2008.01.039. 
@@ -445,16 +562,20 @@ class AdaptChiIntegrator : public AdaptDeflAngle {
 
     /** @brief Compute and populates Q, this method represent the start for the threefold 
      * integration to collision integral with the algorithm described in the reference to 
-     * this class hierarchy */
+     * this class hierarchy 
+    */
     void Compute() override ; 
 
 };
 
-/** @brief Compute Elastic Cross Section integrating the DeflectionAngle 
- ** through the algorithm presented in
-* @see J.A.Barker, W.Fock and F. Smith 
+/** 
+ * @class AvrgChiIntegrator
+ * @brief Compute Elastic Cross Section integrating the DeflectionAngle 
+ * through the algorithm presented in
+ * @see J.A.Barker, W.Fock and F. Smith 
  * "Calculation of Gas Transport Properties and The Interaction of Argon Atoms", 
- * Phys. Fluids 7, 897–903 (1964) , DOI: 10.1063/1.1711301 */
+ * Phys. Fluids 7, 897–903 (1964) , DOI: 10.1063/1.1711301 
+*/
 class AvrgChiIntegrator : public AvrgDeflAngle {
 
     /// @brief Numerical determination of asymptotic reduced impact parameter 
@@ -467,17 +588,24 @@ class AvrgChiIntegrator : public AvrgDeflAngle {
 
     /// @brief Construct a new AvrgChiIntegrator object 
     AvrgChiIntegrator( InteractionInterface* i, Potential* pot ) : AvrgDeflAngle(i,pot) {}
+    
+    /// @brief Construct a new AvrgChiIntegrator object 
+    AvrgChiIntegrator( InteractionInterface* i, Potential* pot , double r0 , double e0) : AvrgDeflAngle(i,pot,r0,e0) {}
 
     /** @brief Compute and populates Q, this method represent the start for the threefold 
      * integration to collision integral with the algorithm described in the reference to 
-     * this class hierarchy */
+     * this class hierarchy 
+    */
     void Compute() override ; 
 
 };
 
-/// @brief Loads and integrates differential cross section (DCS) data.
-/// @see class CsHolder for composite structure of Qe and Qin calculators.
-/// @see class DataLoader for file management and loading.
+/** 
+ * @class DcsLoader
+ * @brief Loads and integrates differential cross section (DCS) data.
+ * @see class CsHolder for composite structure of Qe and Qin calculators.
+ * @see class DataLoader for file management and loading.
+*/
 class DcsLoader : public CsHolder, public DataLoader {
 
     /// @brief Scattering angles for elastic DCS [deg].
@@ -493,22 +621,25 @@ class DcsLoader : public CsHolder, public DataLoader {
     std::vector<std::vector<double>> sigmaInelastic;
 
     /**
-     * @brief Initializes data loading from file or URL.
-     * @details Called before computation. Loads CSV if not already loaded. */
+     * @brief Initializes the object. Data Loader method realization.
+     * @details Called before computation. Loads CSV if not already loaded. 
+    */
     void Init() override;
 
     /**
-     * @brief Integrates DCS to compute multipolar transport cross sections Q^(l).
+     * @brief Integrates DCS to compute transport cross sections Q^(l).
      * @details Uses trapezoidal integration over θ for each Qᵉ and Qⁱ, where:
      * \f[
      * Q^{(l)}(E) = \int_0^\pi \sigma(\theta, E) (1 - \cos \theta)^{l} \sin \theta d\theta
-     * \f] */
+     * \f] 
+    */
     void IntegrateDifferentialCrossSections();
 
     /**
      * @brief Downloads DCS data from a URL and saves it locally.
      * @param hyperref Direct link to raw CSV data.
-     * @throws std::runtime_error if CURL fails or download is empty. */
+     * @throws std::runtime_error if CURL fails or download is empty. 
+    */
     void DownloadAndSaveData(const std::string& hyperref);
 
     /**
@@ -516,7 +647,8 @@ class DcsLoader : public CsHolder, public DataLoader {
      * @param energies Vector of energy values.
      * @param angles Vector of angles.
      * @param sigma 2D matrix of DCS values.
-     * @param invalidPositions List of invalid indices. */
+     * @param invalidPositions List of invalid indices. 
+    */
     void FixInvalidValues ( std::vector<double>& energies,
         std::vector<double>& angles,
             std::vector<std::vector<double>>& sigma,
@@ -535,7 +667,8 @@ class DcsLoader : public CsHolder, public DataLoader {
 
     /**
      * @brief Computes integrated transport cross sections.
-     * @details Loads and parses DCS data if needed, then computes Qᵉ and Qⁱ. */
+     * @details Loads and parses DCS data if needed, then computes Qᵉ and Qⁱ. 
+    */
     void Compute() override;
 
     protected:
@@ -547,7 +680,8 @@ class DcsLoader : public CsHolder, public DataLoader {
      * @brief Parses the DCS CSV format.
      * @param file Input stream of the CSV file.
      * @details Recognizes "Elastic" / "Inelastic" sections, extracts energy/angle/sigma,
-     * handles missing values with placeholder and post-processing. */
+     * handles missing values with placeholder and post-processing. 
+    */
     void ParseFile(std::ifstream& file) override;
     
 };

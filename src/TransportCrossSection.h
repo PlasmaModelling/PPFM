@@ -4,9 +4,10 @@
  // To view a copy of this license, visit:           // 
  // https://creativecommons.org/licenses/by/4.0/     // 
 
+
 /* 
 COMPUTATION OF TRANSPORT CROSS SECTION (Ang^2) FUNCTION OF E(eV) 
-reference: 
+references: 
     G. Colonna, A. Laricchiuta, 
     "General numerical algorithm for classical collision integral calculation", 
     Comput. Phys. Commun. 178 (2008) 809–816, DOI: 10.1016/j.cpc.2008.01.039.
@@ -15,9 +16,19 @@ reference:
 #ifndef TRANSPORT_CROSS_SECTION_H
 #define TRANSPORT_CROSS_SECTION_H
 
+/**
+ * @file TransportCrossSection.h
+ * @brief This file contains the TransportCrossSection class template, 
+ * which implements the TcsInterface for computing transport cross sections for specific species interactions.
+ * And, derives from the Interaction class template to gather information on the interacting species.
+ * The TransportCrossSection class provides methods to load elastic, inelastic, and differential cross section data, 
+ * and to download DCS from external sources. It also implements the GetIntInterface and GetTcsInterface methods for polymorphic access to the interaction and TCS interfaces.
+*/
+
 #include"Interaction.h"
 #include"TcsCalculator.h"
 #include"GasMixture.h"
+
 
 /// @brief Interface class for Transport Cross Section (TCS) objects.
 /// @see CsCalculator for cross section evaluation.
@@ -56,9 +67,10 @@ class TcsInterface {
     virtual InteractionInterface* GetIntInterface() = 0;
 
     /**
-     * @brief Clones the current object polymorphically.
+     * @brief Get the interface by cloning the current object polymorphically.
+     * @details Realization in concrete class.
      * @return Pointer to a deep copy of the derived `TcsInterface` instance. */
-    virtual TcsInterface* clone() = 0;
+    virtual TcsInterface* GetTcsInterface() = 0;
 
 };
 
@@ -99,79 +111,16 @@ class TransportCrossSection : public Interaction<T1, T2>, public virtual TcsInte
     /// @brief Downloads DCS from an external reference.
     void DownloadDCS(const std::string& hyperref) override;
 
+    
+    public:
+
     /// @brief Returns the current object as a base interaction interface.
     InteractionInterface* GetIntInterface() override { return this; }
-
-    /**
-     * @brief Returns a polymorphic clone of the current object.
-     * @return Deep copy of this TransportCrossSection. */
-    TcsInterface* clone() override;
-
-};
-
-
-/// @brief Prints collision integrals to CSV files.
-/// @see class DataPrinter for CSV output interface.
-class TransportCrossSectionCsv : public DataPrinter {
-
-    friend class CiBox;
-
-    /// @brief Pointer to transport cross section interface.
-    TcsInterface* tcs ;
-
-    /// @brief Builds the output filename with "TCS_" prefix.
-    std::string BuildFileName(const std::string& filename) const override;
-
-    /// @brief Prepares the CSV header for elastic transport cross sections.
-    void PrepareHeader() override;
-
-    /// @brief Prepares the CSV header for inelastic transport cross sections.
-    void PrepareInelasticHeader() ; 
-
-    void PrepareMultiHeader( MultiCs* cscalc , int i ) ; 
-
-    /**
-     * @brief Computes and stores elastic transport cross sections.
-     * @param x Not-used.
-     * @param gasmix Not used.
-     * @details Transport Cross Section computation is static within 
-     * energy ranges in eV, no data should be passed as they're incapsulated
-     * in the tcs->TCScalculator object.
-     * @see classes in file TcsCalculator.h. */
-    void PrepareData(const std::vector<double>& x, GasMixture* gasmix) override ;
-
-    /// @brief Overload function to use in case of a MultiCs.
-    /// @param cscalc 
-    void PrepareData( MultiCs* cscalc , int i ) ;
-
-    /**
-     * @brief Computes and stores inelastic transport cross sections.
-     * @param tcsElIn Holder to extract Qin.
-     * @details Transport Cross Section computation is static within 
-     * energy ranges in eV, no external data should be passed as they're incapsulated
-     * in the tcs->TCScalculator object.
-     * @see classes in file TcsCalculator.h. */
-    void PrepareInelasticData ( CsHolder* tcsElIn ) ;
-
-    /**
-     * @brief Prints a message confirming successful output.
-     * @param filename Name of the written file. */
-    void PrintMessage ( const std::string& filename ) override;
-
-    /**
-     * @brief Overrides default print to prepend CollisionIntegrals_ subfolder.
-     * @param filename Base filename.
-     * @param x Vector of reduced temperatures.
-     * @param gasmix Pointer to the gas mixture.
-     * @details Temporarily modifies the output folder to include a dedicated
-     * subfolder for collision integrals, then calls the base print method.
-     * @see class DataPrinter for Print method. */
-    void Print ( const std::string& filename, const std::vector<double>& x, GasMixture* gasmix ) override;
-
-    public:
     
-    /// @brief Constructor from a HybridInterface pointer.
-    TransportCrossSectionCsv ( TcsInterface* _ci );
+    /** @brief Returns a polymorphic clone of the current object.
+     ** @return Deep copy of this TransportCrossSection. */
+    TcsInterface* GetTcsInterface() override;
+    
 
 };
 
@@ -233,6 +182,6 @@ TransportCrossSection<T1, T2>::TransportCrossSection(T1* t1, T2* t2) : Interacti
 }
 
 template <typename T1, typename T2>
-TcsInterface* TransportCrossSection<T1, T2>::clone() { return new TransportCrossSection<T1, T2>(*this); }
+TcsInterface* TransportCrossSection<T1, T2>::GetTcsInterface() { return new TransportCrossSection<T1, T2>(*this); }
 
 #endif

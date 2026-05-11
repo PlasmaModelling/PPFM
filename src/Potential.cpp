@@ -54,10 +54,10 @@ double LennardJones::Pot(double r) {
 
 // Capitelli::Pot
 double Capitelli::Pot(double r) {
-    double m = (t1->getCharge() == 0 && t2->getCharge() == 0) ? 4 : 6;
+    double m = (t1->getCharge() == 0 && t2->getCharge() == 0) ? 6 : 4;
     double x = r / Re;
     double n = beta + 4 * std::pow(x, 2);
-    return De * ((m / (n - m)) * std::pow(1 / x, n) - (n / (n - m)) * std::pow(1 / x, m));
+    return De * (((m / (n - m)) * std::pow(1 / x, n)) - ((n / (n - m)) * std::pow(1 / x, m)));
 }
 
 // HulburtHirschfelder::Pot
@@ -135,13 +135,13 @@ double Polarization::Pot ( double r ) {
 double HFD_B::Pot(double r) {
     
     const double x  = r / Rm;
-    const double Fx = (x < D) ? std::exp(-std::pow(D / x - 1.0, 2.0)) : 1.0;
+    const double Fx = (x < D) ? std::exp(-std::pow((D / x) - 1.0, 2.0)) : 1.0;
 
-    const double rep  = A * std::exp(-alpha * r + beta * r * r);
-    const double disp = (C6 / std::pow(r, 6))
-                      + (C8 / std::pow(r, 8))
-                      + (C10/ std::pow(r,10));
-    return rep - Fx * disp;
+    const double rep  = A * std::exp(-alpha * x + beta * x * x);
+    double sum = C6 / std::pow(x, 6.0) + C8 / std::pow(x, 8.0) + C10 / std::pow(x, 10.0);
+    const double disp = Fx * sum;
+    
+    return epsonK*(KB/eVtoJ)*(rep - disp);
 }
 
 double HFDTCS2_ArAr::Pot(double r) {
@@ -205,6 +205,7 @@ LennardJones::LennardJones(Helium* t1, Helium* t2) { eps = 9.39289e-04 ; sig = 2
 // Argon-Helium
 LennardJones::LennardJones(Argon* t1, Helium* t2) { eps = std::sqrt(9.39289e-04 * 0.010333); sig = (2.64 + 3.405) / 2; }
 
+/* 
 // Argon-Argon
 Capitelli::Capitelli(Argon* t1, Argon* t2) { beta = 8.12; De = 0.011603; Re = 3.794; }
 // Argon-ArgonI
@@ -225,55 +226,17 @@ Capitelli::Capitelli(ArgonI* t1, MolecularNitrogen* t2) { beta = 7.59; De = 0.11
 Capitelli::Capitelli(ArgonII* t1, Nitrogen* t2) { beta = 6.79; De = 0.581253; Re = 2.537; }
 // ArgonII-MolecularNitrogen
 Capitelli::Capitelli(ArgonII* t1, MolecularNitrogen* t2) { beta = 7.47; De = 0.784957; Re = 2.639; }
+ */
 
 HFDTCS2_ArAr::HFDTCS2_ArAr() : Potential() {}
 
 // Hartree fock constructor with dimensional parameters must be passed in eV and Ang
 HFD_B::HFD_B(double A_, double alpha_, double beta_,
     double C6_, double C8_, double C10_,
-        double Rm_, double D_): A(A_), alpha(alpha_), beta(beta_),
+        double Rm_, double D_, double epson): A(A_), alpha(alpha_), beta(beta_),
             C6(C6_), C8(C8_), C10(C10_),
-                Rm(Rm_), D(D_) {
-
-    check_dimensional_();
-
+                Rm(Rm_), D(D_), epsonK(epson) {
 }
 
-// Atomic units parameters constructor
-HFD_B::HFD_B(double A_, double alpha_, double beta_,
-    double C6_, double C8_, double C10_,
-        double Rm_, double D_, bool atomic_units) {
-
-    if (atomic_units) {
-        
-        // CODATA conversion factors defined locally
-        const double Ha_to_eV        = 27.211386245988; // 1 Ha = eV
-        const double a0_to_A         = 0.529177210903;  // 1 a0 = Å
-        const double Ainv_from_a0inv = 1.0 / a0_to_A;   // 1 a0^-1 = Å^-1
-
-        A     = A_     * Ha_to_eV;
-        alpha = alpha_ * Ainv_from_a0inv;
-        beta  = beta_  * (Ainv_from_a0inv * Ainv_from_a0inv);
-        C6    = C6_ * (Ha_to_eV * std::pow(a0_to_A, 6));
-        C8    = C8_ * (Ha_to_eV * std::pow(a0_to_A, 8));
-        C10   = C10_ * (Ha_to_eV * std::pow(a0_to_A,10));
-        Rm    = Rm_    * a0_to_A;
-        D     = D_;
-        
-        check_dimensional_();
-    
-    } else {
-
-        // Initialize dimensional
-        *this = HFD_B(A_, alpha_, beta_, C6_, C8_, C10_, Rm_, D_);
-
-    }
-}
-
-void HFD_B::check_dimensional_() const {
-    
-    if (Rm <= 0.0) throw std::invalid_argument("HFD_B: Rm must be > 0");
-    if (D  <= 0.0) throw std::invalid_argument("HFD_B: D must be > 0");
-}
 
 #endif

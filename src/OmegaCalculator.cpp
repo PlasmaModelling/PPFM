@@ -265,14 +265,28 @@ double NonCoulombOmega::MultiCompute(int l, int s, double T, double Lam, MultiCs
     }
 
     double num = 0.0, den = 0.0;
-    for (int i = 0; i < p->Size(); ++i) {
-        num += OmegaK[i] * p->statesG[i];
-        den += p->statesG[i];
-    }
+    
+    if (p->energyWeighted==true)
+    {
+        num = 0.;
+        for (int i = 0; i < p->Size(); ++i) 
+            num += OmegaK[i] * p->statesG[i] * exp(-(p->energyWeights[i]*eVtoJ)/(KB*T));
+        
+        den = 1.;
+    
+    } else {
 
+        for (int i = 0; i < p->Size(); ++i) {
+            num += OmegaK[i] * p->statesG[i];
+            den += p->statesG[i];
+        }
+
+    }
+    
     if (den == 0.0) throw std::runtime_error("MultiCompute: degeneracy sum is zero.");
 
     return num / den;
+
 }
 
 double NonCoulombOmega::ModuleCompute(int l, int s, double T, double Lam, CsHolder* TcS) {
@@ -287,20 +301,27 @@ double NonCoulombOmega::Compute(int l, int s, double T, double Lam, CsCalculator
     if (!TcS->computed) 
         TcS->Compute();
 
+    double oomega = 0.0 ;
+
     if (auto ct = dynamic_cast<ChargeTransferCs*>(TcS)) 
         if (l % 2 == 0) 
             return 0.0;    
 
-    if (auto th    = dynamic_cast<ThresholdCs*>(TcS)) 
-        return IntegrateOmega(l,s,T,Lam, th);
-    
-    if (auto multi = dynamic_cast<MultiCs*>(TcS))     
-        return MultiCompute(l,s,T,Lam, multi);
-    
-    if (auto hold  = dynamic_cast<CsHolder*>(TcS))    
-        return ModuleCompute(l,s,T,Lam, hold);
+    if (auto th    = dynamic_cast<ThresholdCs*>(TcS)) {
+        oomega = IntegrateOmega(l,s,T,Lam, th);
+    } else if (auto multi = dynamic_cast<MultiCs*>(TcS))     {
+        oomega = MultiCompute(l,s,T,Lam, multi);
+    } else if (auto hold  = dynamic_cast<CsHolder*>(TcS))    {
+        oomega = ModuleCompute(l,s,T,Lam, hold);
+    } else {
+        oomega = IntegrateOmega(l,s,T,Lam,TcS);
+    }
 
-    return IntegrateOmega(l,s,T,Lam,TcS);
+    if(oomega < 0.0)
+        oomega = 1.e-6 ;
+
+    return oomega;
+
 }
 
 
@@ -311,7 +332,7 @@ double ChargeExchangeOmega::Compute ( int l, int s, double temperatura, double l
 
     double Qel = omegaEl->Compute(l,s,temperatura,lambda,TcS) ; 
 
-    if ( l%2 == 0 )
+    if ( l % 2 == 0 )
         
         return Qel ; 
 

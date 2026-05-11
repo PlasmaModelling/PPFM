@@ -9,6 +9,7 @@
 #include"alglib/source/interpolation.h"
 #include <stdexcept>
 #include <sstream>
+
 /* 
     #include <cmath>
     #include <algorithm> 
@@ -557,6 +558,12 @@ double trapz(const std::vector<double>& x , const std::vector<double>& y){
     return integral ;
 }
 
+double Norm(const std::vector<double>& v) {
+
+    const double sumSquares = std::inner_product(v.begin(), v.end(),
+                                                 v.begin(), 0.0);
+    return std::sqrt(sumSquares);
+}
 
 // Calcola i coefficienti della retta di interpolazione
 std::vector<double> interpCoeff(const std::vector<double>& x, const std::vector<double>& y) {

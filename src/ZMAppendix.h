@@ -7,6 +7,12 @@
 #ifndef ZMAPPENDIX_H
 #define ZMAPPENDIX_H
 
+/**
+ * @file ZMAppendix.h
+ * @brief This file contains the ZMAppendix class, which implements the specific bracket integral expressions needed for the transport properties calculation based on the theory of Zhang et. al.
+ * The ZMAppendix class derives from the Appendix base class and provides implementations for the q
+*/
+
 #include"Transport.h"
 
 /**
@@ -20,7 +26,10 @@ class ZMAppendix : public Appendix {
 
     protected : 
 
+    /// @brief Constructor for ZMAppendix class with assigned CiBox object.
     ZMAppendix ( CiBox* cbx  ) : Appendix ( cbx ) {}
+
+    /// @brief Constructor for ZMAppendix class with assigned GasMixture object.
     ZMAppendix ( GasMixture* mix ) : Appendix ( mix ) {}
     
     /**
@@ -113,7 +122,5 @@ class ZMAppendix : public Appendix {
     double qmpi1Bar     ( GasMixture* gasmix, int m , int p , int i ) ; 
 
 };
-
-// ______________________________ Implementation ______________________________
 
 #endif

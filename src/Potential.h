@@ -7,6 +7,13 @@
 #ifndef POTENTIAL_H
 #define POTENTIAL_H 
 
+/**
+ * @file Potential.h
+ * @brief This file contains the Potential class hierarchy 
+ * for modeling inter-particle potentials. 
+ * To be integrated into deflection angles and transport cross sections.
+*/
+
 #include "Species.h"
 
 /// @brief Abstract base class for pair interaction potentials.
@@ -99,8 +106,8 @@ class Capitelli : public Potential {
     /// @param beta shape parameter [-]
     /// @param De well depth [eV]
     /// @param Re equilibrium distance [Å]
-    Capitelli(Species* sp1, Species* sp2, double beta, double De, double Re)
-        : beta(beta), De(De), Re(Re) {}
+    Capitelli(Species* t1, Species* t2, double beta, double De, double Re)
+        : t1(t1), t2(t2), beta(beta), De(De), Re(Re) {}
 
     /// @copydoc Potential::Pot
     double Pot(double r) override;
@@ -316,28 +323,19 @@ class HFD_B : public Potential {
     
     public:
     
-    /// @brief Main constructor: all parameters must be given in dimensional units (eV, Å).
-    /// @param A [eV]
-    /// @param alpha [Å^-1]
-    /// @param beta [Å^-2]
-    /// @param C6 [eV Å^6]
-    /// @param C8 [eV Å^8]
-    /// @param C10 [eV Å^10]
+    /// @brief Reduced parameters constructor.
+    /// @param A* []
+    /// @param alpha* []
+    /// @param beta* []
+    /// @param C6 []
+    /// @param C8 []
+    /// @param C10 []
     /// @param Rm [Å]
     /// @param D [-]
+    /// @param epson [K]
     HFD_B(double A, double alpha, double beta,
           double C6, double C8, double C10,
-          double Rm, double D);
-
-    /// @brief Overloaded constructor with final flag:
-    /// If atomic_units == true, all parameters must be provided in atomic units:
-    ///   A [Ha], alpha [a0^-1], beta [a0^-2],
-    ///   Cn [Ha a0^n], Rm [a0], D dimensionless.
-    /// Parameters will be converted internally into eV/Å.
-    /// If atomic_units == false, forwards to the main constructor.
-    HFD_B(double A, double alpha, double beta,
-          double C6, double C8, double C10,
-          double Rm, double D, bool atomic_units);
+          double Rm, double D, double epson);
 
     /// @brief Evaluate potential at distance r.
     /// @param r distance [Å]
@@ -346,17 +344,17 @@ class HFD_B : public Potential {
 
     private:
     
-    void check_dimensional_() const;
-
     // Stored always in dimensional units (eV / Å)
-    double A;     // [eV]
-    double alpha; // [Å^-1]
-    double beta;  // [Å^-2]
-    double C6;    // [eV Å^6]
-    double C8;    // [eV Å^8]
-    double C10;   // [eV Å^10]
+    double A;     // []
+    double alpha; // []
+    double beta;  // []
+    double C6;    
+    double C8;    
+    double C10;   
     double Rm;    // [Å]
     double D;     // [-]
+    double epsonK; // [K]
+
 };
 
 
