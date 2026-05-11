@@ -14,3 +14,7 @@ add_test(
     NAME arh2_light
     COMMAND test_arh2_light
 )
+
+set_tests_properties(arh2_light PROPERTIES
+    ENVIRONMENT "OMP_NUM_THREADS=1"
+)
