@@ -14,6 +14,8 @@
  * when facing transport properties determinations. 
  * Since they're different mathematical object than collision integrals, 
  * and, in fact, can be treated in different ways to obtain the latter, they're kept separated.
+ * @cite colonna2008
+ * @cite barker1964
 */
 
 #include"DataLoader.h"

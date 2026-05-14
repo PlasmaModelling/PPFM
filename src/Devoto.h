@@ -14,7 +14,11 @@
  * Transport classes holds on Appendix and properties parent classes in order
  * to incapsulate the complex formulas within the method.
  * @see class Appendix.
+ * @cite devoto_teoria_base
+ * @cite devoto_teoria_simplificata
 */
+
+// cite Brokaw and Butler for reactive LTE lambda
 
 #include "Transport.h"
 

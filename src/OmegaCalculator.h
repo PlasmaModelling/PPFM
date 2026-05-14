@@ -14,6 +14,7 @@
  * and they can be computed using different methods depending on the interaction type.
  * The OmegaCalculator class defines a common interface for these computations, 
  * and derived classes implement specific algorithms for different interactions.
+ * @cite devoto1976c
 */
 
 /* #include"TransportCrossSection.h" */
@@ -160,7 +161,7 @@ class CoulombOmega : public OmegaCalculator {
  * @details Non-Coulomb collision integrals depend on the 
  * potential between the interacting species.
  * Also, this class's a reference for others, 
- * with the compute being called whenever integration of TCS is required.
+ * with the compute being called whenever integration of TCS is required.   
 */
 class NonCoulombOmega : public OmegaCalculator {
 
@@ -202,6 +203,7 @@ class NonCoulombOmega : public OmegaCalculator {
  * @brief Charge Exchange collision integrals class called for simplified setting
  * of the charge-exchange cross section. It copies the elastic interaction already set
  * and initialize the charge exchange cross section.
+ * @cite GhediniColomboSanibondi
 */
 class ChargeExchangeOmega : public OmegaCalculator {
 
