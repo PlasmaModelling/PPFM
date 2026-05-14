@@ -24,6 +24,8 @@
  * @see 3) Xiao-Ning Zhang, He-Ping Li, Anthony B. Murphy, Wei-Dong Xia, \n 
  * "A Numerical Model of Non-Equilibrium Thermal Plasmas. \n 
  * I. Transport Properties," Phys. Plasmas, vol. 20, p. 033508, 2013.
+ * @cite zhang_et_al
+ * @cite comparison_zhang_2015 
 */
 class ZMCoefficients : public ZMAppendix {
 

@@ -3,6 +3,9 @@ PROJECT_BRIEF          = "Plasma Properties and Flow Modeling"
 
 OUTPUT_DIRECTORY       = doxygen/
 
+# Bibliography
+CITE_BIB_FILES         = references.bib
+
 INPUT                  = ../src
 RECURSIVE              = NO
 FILE_PATTERNS          = *.h *.hpp 

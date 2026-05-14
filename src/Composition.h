@@ -8,6 +8,8 @@
  * @file Composition.h
  * @brief This file contains the Composition class hierarchy for
  * computing equilibrium composition of gas mixtures.
+ * @cite vandesanden1989
+ * @cite GodinTrep
 */
 
 #ifndef COMPOSITION_H

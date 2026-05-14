@@ -133,6 +133,12 @@ will build all the demos in the demo folder and generate the related executables
 
 will run all the executables in the executables folder.
 
+```bash
+./docs/GenerateDocumentation.sh
+```
+
+will generate the doxygen documentation of PPFM in html and latex formats.
+
 You should be able to run the .sh scripts also by right clicking on them and clicking on "Run as a program". 
 
 ### ⌨️ Ubuntu / Linux - IDE !

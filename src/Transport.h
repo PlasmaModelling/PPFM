@@ -20,6 +20,8 @@
  * Due to the inner complexity of the formulations involved in the Chapman-Enskog expansion, 
  * some "hiding behind encapsulation" has been needed, 
  * and, also, one of the design choices that demanded the need for PPFM implementation.
+ * @cite mathematichal_theory
+ * @cite ferdziger
 */
 
 #include <vector>
