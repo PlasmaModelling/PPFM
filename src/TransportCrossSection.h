@@ -72,6 +72,8 @@ class TcsInterface {
      * @return Pointer to a deep copy of the derived `TcsInterface` instance. */
     virtual TcsInterface* GetTcsInterface() = 0;
 
+    virtual ~TcsInterface() = default;
+
 };
 
 /**

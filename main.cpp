@@ -85,7 +85,7 @@ int main() {
 
     
     // Ar - Ar 
-    cibox[0]->TCScalculator = new AdaptChiIntegrator (
+    cibox[0]->TCScalculator = new AvrgChiIntegrator (
 
         cibox[0]->GetIntInterface(), 
         new HFDTCS2_ArAr() 
@@ -100,7 +100,7 @@ int main() {
     cibox[1]->TCScalculator = new CsHolder(
 
         // Elastic integration of the potential 
-        new AdaptChiIntegrator ( arari, 
+        new AvrgChiIntegrator ( arari, 
             
             new HulburtHirschfelderUnreduced ( 
 
@@ -211,14 +211,14 @@ int main() {
         // two states for the elastic collision
         {
 
-            new AdaptChiIntegrator ( i, new Morse2Param ( 51.75 , 1.677 ) ) ,
+            new AvrgChiIntegrator ( i, new Morse2Param ( 51.75 , 1.677 ) ) ,
             new ThresholdCs ( i, 
             { 
                 // Potential BEFORE 10. eV 
-                new AdaptChiIntegrator ( i, new PowerPot ( -282. , 5.8 )) ,
+                new AvrgChiIntegrator ( i, new PowerPot ( -282. , 5.8 )) ,
 
                 // Potential AFTER 10. eV
-                new AdaptChiIntegrator ( i, new PowerPot ( -18.76 , 3.47 )) 
+                new AvrgChiIntegrator ( i, new PowerPot ( -18.76 , 3.47 )) 
             },
             {
                 // Threshold energy
@@ -266,8 +266,8 @@ int main() {
     cibox.info();
 
     // cibox.PrintDeflectionAngles ( T, mix, folder+ "/Deflection Angles" );
-    cibox.PrintTransportCrossSections ( T, mix, folder+ "/Transport Cross Sections" );
-    cibox.PrintCollisionIntegrals ( T, mix, folder+ "/Collision Integrals" );
+    // cibox.PrintTransportCrossSections ( T, mix, folder+ "/Transport Cross Sections" );
+    // cibox.PrintCollisionIntegrals ( T, mix, folder+ "/Collision Integrals" );
 
     // Loop on NEparam
     for (size_t i = 0; i < NEparam.size(); i++) {

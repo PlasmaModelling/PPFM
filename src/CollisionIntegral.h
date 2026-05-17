@@ -99,11 +99,16 @@ class CInterface {
     /// @brief Interface function to call to load the collision integral from its raw file
     virtual void Load( bool b ) = 0 ;
 
+    virtual ~CInterface() = default;
+
 } ;
 
 
 /// @brief An hybrid class to represent a mixed interface for Collision Integrals and Transport Cross Sections.
-class HybridInterface : public virtual CInterface, public virtual TcsInterface {};
+class HybridInterface : public virtual CInterface, public virtual TcsInterface {
+    public : 
+    ~HybridInterface() = default;
+};
 
 /**
  * @class CollisionIntegral
@@ -135,6 +140,8 @@ class CollisionIntegral : public TransportCrossSection<T1,T2>, public HybridInte
     /// @param t1 Pointer to the first chemical specie
     /// @param t2 Pointer to the second chemical specie
     CollisionIntegral(T1* t1,T2* t2) : TransportCrossSection<T1,T2>(t1,t2) {InitOmega4th(); InitCalculator();}
+
+    ~CollisionIntegral();
 
     /** @brief Compute collision integral and store it in the omega4th member of this class.
      * this will be the preferred method if the file is available. \n
@@ -349,6 +356,12 @@ void CollisionIntegral<T1,T2>::info() {
     std::cout << std::left;
     std::cout << std::setw(6) << stringa1  << "-" <<  std::right << std::setw(6) 
         << stringa2 << std::setw(2+((3./2.)*w)) ; Omega->info() ; 
+}
+
+template<typename T1, typename T2>
+CollisionIntegral<T1,T2>::~CollisionIntegral() {
+    delete Omega;
+    delete TCScalculator;
 }
 
 #endif

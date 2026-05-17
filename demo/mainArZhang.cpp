@@ -129,9 +129,9 @@ int main() {
     // Check the editing of the CiBox
     cibox.info() ; 
 
-    cibox.PrintDeflectionAngles ( T, mix, folder + "/DeflectionAngles" ) ;
-    cibox.PrintTransportCrossSections ( T, mix, folder + "/TransportCrossSections" ) ;
-    cibox.PrintCollisionIntegrals ( T, mix, folder + "/CollisionIntegrals" ) ;
+    // cibox.PrintDeflectionAngles ( T, mix, folder + "/DeflectionAngles" ) ;
+    // cibox.PrintTransportCrossSections ( T, mix, folder + "/TransportCrossSections" ) ;
+    // cibox.PrintCollisionIntegrals ( T, mix, folder + "/CollisionIntegrals" ) ;
 
     // Initialization of the Zhang-Murphy transport properties calculator, with the edited CiBox and custom output folder.
     ZhangTpCsv zhangmurphy ( new ZhangMurphyTP(&cibox) , folder+ "/Transport" ) ; 

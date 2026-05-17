@@ -36,6 +36,8 @@ class Species {
 
     public:
     
+    virtual ~Species() = default;
+
     /// virtual method to get the chemical formula of the species
     virtual std::string getFormula()        = 0 ;
     
@@ -86,6 +88,13 @@ class PolyAtomicMolecule : public virtual Species {
     std::vector<int>        abundancy ;
 
     public : 
+
+    virtual ~PolyAtomicMolecule() {
+        for ( auto& c : costituents )
+            delete c ;
+        costituents.clear() ;
+        abundancy.clear() ;
+    };
 
     /// @brief virtual method to get the number of constituent elements in the molecule
     virtual int             numberOfCostituents()   = 0 ;

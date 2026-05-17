@@ -88,7 +88,10 @@ template<typename T1, typename T2>
 Interaction<T1,T2>::Interaction(T1* t1, T2* t2): sp1(t1), sp2(t2) {}
 
 template<typename T1, typename T2>
-Interaction<T1,T2>::~Interaction() {}
+Interaction<T1,T2>::~Interaction() {
+    delete sp1 ;
+    delete sp2 ;
+}
 
 template<typename T1, typename T2>
 T1* Interaction<T1,T2>::getSp1(){return sp1;}
