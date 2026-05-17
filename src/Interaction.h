@@ -7,6 +7,13 @@
 #ifndef INTERACTION_H
 #define INTERACTION_H
 
+/**
+ * @file Interaction.h
+ * @brief This file contains the Interaction class template, which represents a binary interaction between two species.
+ * The Interaction class serves as a base for defining specific interactions (e.g., elastic, inelastic) and provides an interface for accessing the involved species and their properties.
+ * It also implements the InteractionInterface for polymorphic access to the species and interaction name.
+*/
+
 #include"Potential.h"
 
 /** @brief Interface class for the interaction, passed as pointer to TcsCalcolators classes
@@ -36,7 +43,12 @@ class Interaction : public InteractionInterface {
 
 protected:
 
+    /// @brief Pointers to the chemical species involved in the interaction, 
+    /// with their native types.
     T2* sp2 ;  
+
+    /// @brief Pointer to the chemical specie involved in the interaction,
+    /// with its native type. 
     T1* sp1 ; 
     
 public:
@@ -49,7 +61,6 @@ public:
 
     ~Interaction() ;
 
-    
     /// @return the specie with its base type.
     Species* GetSp1() { return sp1 ; } ;
     /// @return the specie with its base type.
@@ -77,7 +88,10 @@ template<typename T1, typename T2>
 Interaction<T1,T2>::Interaction(T1* t1, T2* t2): sp1(t1), sp2(t2) {}
 
 template<typename T1, typename T2>
-Interaction<T1,T2>::~Interaction() {}
+Interaction<T1,T2>::~Interaction() {
+    delete sp1 ;
+    delete sp2 ;
+}
 
 template<typename T1, typename T2>
 T1* Interaction<T1,T2>::getSp1(){return sp1;}

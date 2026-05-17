@@ -26,6 +26,7 @@ void GasMixture::setT(double temperature) {
 // Setter T/P with composition recomputation
 void GasMixture::setP(double pressure) {
     P = pressure;
+    Comp->Peff = pressure; // Update effective pressure for ideal solver, override in non-ideal ones
     Comp->CompositionSolve();
 }
 

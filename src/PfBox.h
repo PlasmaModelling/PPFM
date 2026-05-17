@@ -7,6 +7,12 @@
 #ifndef PFBOX_H 
 #define PFBOX_H
 
+/**
+ * @file PfBox.h
+ * @brief This file contains the PfBox class, 
+ * which manages and computes partition functions for all species in a mixture.
+*/
+
 class PFinterface ;
 class GasMixture ;
 class Mixture ;
@@ -22,6 +28,7 @@ class PfBox {
     /// @brief Vector of pointers to partition function interfaces.
     std::vector<PFinterface*> partitionfunctions;
 
+    /// @brief Cached Q values for all species, updated after computation.
     std::vector<double> qvalues; 
 
     public:
@@ -71,6 +78,7 @@ class PfBox {
     /// @brief Displays a summary of partition functions and associated methods.
     void info();
 
+    /// @brief Sets all partition functions to use Ab-Initio methods (for now, electronic pf for atoms).
     void AllAbInitio() ; 
 
 };

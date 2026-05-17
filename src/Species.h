@@ -11,34 +11,172 @@
 #include <variant>
 #include <stdexcept>
 
+/**
+ * @file Species.h
+ * @brief This file contains the Species class hierarchy, 
+ * which represents different chemical species and their properties.
+ * The Species class is an abstract base class that defines the interface for all species,
+ * then, species separates in Elements, which are neutral and basis for plasma composition, 
+ * Charged Species, which are charged and have a reference to their neutral constituent,
+ * and molecules, divided into polyatomic, diatomic etc... 
+*/
 
 #define amuKg 1.66054e-27 
 #define eVtoJ 1.60217663e-19 
 #define eamu  5.4858e-4 
 
+/**
+ * @brief Abstract base class for representing chemical species.
+ * @details Defines the interface for all chemical species, 
+ * including their properties and behavior. 
+ * Each chemical specie is implemented as a class and realize interface 
+ * methods when defining mass, charge, energy, ionization limit etc...
+*/
 class Species {
 
     public:
     
-    ///@todo implement electronic configuration placeholder
+    virtual ~Species() = default;
 
+    /// virtual method to get the chemical formula of the species
     virtual std::string getFormula()        = 0 ;
+    
+    /// @brief virtual method to get the mass of the species in kg 
     virtual double      getMass()           = 0 ;           ///< unit: kg 
+
+    /// @brief virtual method to get the charge of the species in elementary charge units   
     virtual int         getCharge()         { return 0 ; }  ///< unit: # 
+    
+    /// @brief virtual method to get the formation energy of the species in joules
     virtual double      formationEnergy()   = 0 ;           ///< unit: J 
+
+    /// @brief virtual method to get the ionization limit of the species in joules
     virtual double      IonLim()            = 0 ;           ///< unit: J
+
 } ;
 
+/** @brief Class representing a chemical element.
+ * @details Elements are neutral species and serve as the basis for plasma composition.
+*/
 class Element : public Species {};
 
+/** @brief Class representing a charged chemical species.
+ * @details Charged species are particles that have a net electric charge
+ *  and are derived from neutral elements.
+*/
 class ChargedSpecies : public virtual Species {
 
     public : 
 
+    /** @brief virtual method to get the neutral constituent of the charged species
+     * @return pointer to the neutral constituent element, fundamental for chemical 
+     * composition algorithms.
+    */
     virtual Element* Constituent() = 0 ;
     
 } ;
 
+/// @brief Class representing a generic polyatomic chemical molecule.
+class PolyAtomicMolecule : public virtual Species {
+
+    protected : 
+
+    /// @brief vector of pointers to the constituent elements of the molecule.
+    std::vector<Element*>   costituents ; 
+
+    /// @brief vector of integers representing the abundancy of each constituent element in the molecule.
+    std::vector<int>        abundancy ;
+
+    public : 
+
+    virtual ~PolyAtomicMolecule() {
+        for ( auto& c : costituents )
+            delete c ;
+        costituents.clear() ;
+        abundancy.clear() ;
+    };
+
+    /// @brief virtual method to get the number of constituent elements in the molecule
+    virtual int             numberOfCostituents()   = 0 ;
+
+    /// @brief virtual method to get the abundancy of the i-th constituent element in the molecule
+    virtual int             operator()(int i )      {return abundancy[i] ; } ;
+
+    /// @brief virtual method to get a pointer to the i-th constituent element in the molecule
+    virtual Element*        operator[](int i )      {return costituents[i] ;}
+
+} ;
+
+/** @brief Class representing a generic biatomic chemical molecule, derived from PolyAtomicMolecule.
+ * @details class meant to lock the number of costituents to 2, 
+ * and to implement the operator() and operator[] methods so that derived classes do not have to. 
+*/
+class BiatomicMolecule : public PolyAtomicMolecule { 
+
+    public : 
+    
+    int     operator()(int i)   override { 
+        if ( i < 0 || i > 1 )
+            throw std::invalid_argument("Error in Species costituents") ; 
+        else
+            return abundancy[i] ; 
+    } 
+
+    Element* operator[](int i)  override {
+        if ( i < 0 || i > 1 )
+            throw std::invalid_argument("Error in Species costituents") ; 
+        else
+            return costituents[i] ; 
+    }
+
+} ;
+
+/**
+ * @brief Class representing a homonuclear biatomic molecule, derived from BiatomicMolecule.
+ * @details This class represents a molecule composed of two identical atoms.
+ * It is intended to lock the number of constituents to 1 and to set the abundancy to 2.
+*/
+class HomoNuclearBiatomicMolecule : public BiatomicMolecule {
+    
+    // behavior of energy levels ond so on 
+    public : 
+    
+    HomoNuclearBiatomicMolecule() {
+        costituents.resize(1) ;
+        abundancy.resize(1) ; 
+        abundancy[0] = 2 ;
+    }
+
+    int numberOfCostituents()   override { 
+        return  1 ; 
+    } 
+
+} ;
+
+/**
+ * @brief Class representing a heteronuclear biatomic molecule, derived from BiatomicMolecule.
+ * @details This class represents a molecule composed of two different atoms.
+ * It is intended to lock the number of constituents to 2 and to set the abundancy to 1 for each constituent.
+*/
+class HeteroNuclearBiatomicMolecule : public BiatomicMolecule {
+
+    public : 
+    
+    HeteroNuclearBiatomicMolecule() {
+        costituents.resize(2) ;
+        abundancy.resize(2) ; 
+        abundancy[0] = 1 ;
+        abundancy[1] = 1 ;
+    }
+
+    int numberOfCostituents()   override { 
+        return  2 ; 
+    } 
+
+} ;
+
+
+/// @brief e-
 class Electron : public ChargedSpecies {
     
     public:
@@ -2284,77 +2422,6 @@ public:
     double IonLim() override ;
     Element* Constituent() override ;
 } ;
-
-
-class PolyAtomicMolecule : public virtual Species {
-
-    protected : 
-
-    std::vector<Element*>   costituents ; 
-    std::vector<int>        abundancy ;
-
-    public : 
-
-    virtual int             numberOfCostituents()   = 0 ;
-    virtual int             operator()(int i )      {return abundancy[i] ; } ;
-    virtual Element*        operator[](int i )      {return costituents[i] ;}
-
-} ;
-
-class BiatomicMolecule : public PolyAtomicMolecule { 
-
-    public : 
-    
-    int     operator()(int i)   override { 
-        if ( i < 0 || i > 1 )
-            throw std::invalid_argument("Error in Species costituents") ; 
-        else
-            return abundancy[i] ; 
-    } 
-
-    Element* operator[](int i)  override {
-        if ( i < 0 || i > 1 )
-            throw std::invalid_argument("Error in Species costituents") ; 
-        else
-            return costituents[i] ; 
-    }
-
-} ;
-
-class HomoNuclearBiatomicMolecule : public BiatomicMolecule {
-    
-    // behavior of energy levels ond so on 
-    public : 
-    
-    HomoNuclearBiatomicMolecule() {
-        costituents.resize(1) ;
-        abundancy.resize(1) ; 
-        abundancy[0] = 2 ;
-    }
-
-    int numberOfCostituents()   override { 
-        return  1 ; 
-    } 
-
-} ;
-
-class HeteroNuclearBiatomicMolecule : public BiatomicMolecule {
-
-    public : 
-    
-    HeteroNuclearBiatomicMolecule() {
-        costituents.resize(2) ;
-        abundancy.resize(2) ; 
-        abundancy[0] = 1 ;
-        abundancy[1] = 1 ;
-    }
-
-    int numberOfCostituents()   override { 
-        return  2 ; 
-    } 
-
-} ;
-
 
 class CarbonMonoxide : public HeteroNuclearBiatomicMolecule {
     

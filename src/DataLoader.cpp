@@ -33,7 +33,7 @@ void DataLoader::LoadData(const std::string& folderName, const std::string& name
 
 std::filesystem::path DataLoader::BuildFilePath(const std::string& folderName) {
     
-    std::filesystem::path datadir = std::filesystem::current_path();
+    std::filesystem::path datadir = std::filesystem::path(PPFM_PROJECT_ROOT);    
     
     datadir = datadir / "data" / folderName;
     

@@ -7,6 +7,19 @@
 #ifndef TOOLS_H
 #define TOOLS_H
 
+/**
+ * @file Tools.h
+ * @brief This file contains various utility functions and constants used 
+ * throughout the PPFM codebase.
+ * It includes mathematical functions, interpolation methods, 
+ * and other tools that support the main calculations.
+ * The roots of this file is the original PPFM code base from 
+ * Prof. V.Colombo, Prof.E.Ghedini and collaborators, who contributed
+ * to the thermal and non-thermal plasma modelling field in the early 2000s.
+ * @author Alberto Vagnoni sincerely thanks them all for their work and dedication to the field,
+ * without which this project (PPFM) would not have been possible.
+*/
+
 #define KB 1.380650524e-23     // [J/K] Bolztmann constant 
 #define hPlanck 6.62606896e-34 // [J s] Planck constant 
 #define eps0 8.8541878176e-12  // [F/m] void dielectric constant 
@@ -19,6 +32,8 @@
 #include <typeindex>
 #include "alglib/source/linalg.h"
 #include <stdexcept>
+#include <cmath>
+#include <numeric>
 
 /* using std::log10; */
 
@@ -28,6 +43,7 @@ int delta(int i, int j) ;
 // fattoriale 
 double factorial(int n) ; 
 
+double Norm(const std::vector<double>& v) ;
 
 template<typename T>
 std::vector<T> arange(T start, T end, T step) {
