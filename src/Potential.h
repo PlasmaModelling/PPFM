@@ -116,7 +116,7 @@ class Capitelli : public Potential {
     double Pot(double r) override;
 
     // Hard-coded predefined pairs (implemented in HCPotentialDB.cpp)
-    Capitelli(Argon* t1, Argon* t2);
+    /* Capitelli(Argon* t1, Argon* t2);
     Capitelli(Argon* t1, ArgonI* t2);
     Capitelli(Argon* t1, ArgonII* t2);
     Capitelli(Argon* t1, Nitrogen* t2);
@@ -125,7 +125,7 @@ class Capitelli : public Potential {
     Capitelli(ArgonI* t1, Nitrogen* t2);
     Capitelli(ArgonI* t1, MolecularNitrogen* t2);
     Capitelli(ArgonII* t1, Nitrogen* t2);
-    Capitelli(ArgonII* t1, MolecularNitrogen* t2);
+    Capitelli(ArgonII* t1, MolecularNitrogen* t2); */
 };
 
 /// @brief Reduced Hulburt–Hirschfelder potential.
