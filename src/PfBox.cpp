@@ -40,9 +40,7 @@ void PfBox::PrintPartitionFunctions(const std::vector<double>& Ti, GasMixture* g
  
     for (auto& pf : partitionfunctions) {
 
-        PartitionFunctionCsv writer(pf);
-
-        writer.customFolder = folder;
+        PartitionFunctionCsv writer(pf, folder);
 
         writer.Print(pf->getSp()->getFormula(), Ti, gasmix);
 

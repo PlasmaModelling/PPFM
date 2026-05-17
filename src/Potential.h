@@ -7,6 +7,16 @@
 #ifndef POTENTIAL_H
 #define POTENTIAL_H 
 
+/**
+ * @file Potential.h
+ * @brief This file contains the Potential class hierarchy 
+ * for modeling inter-particle potentials. 
+ * To be integrated into deflection angles and transport cross sections.
+ * @cite ferdziger
+ * @cite Pirani1
+ * @cite Pirani2
+*/
+
 #include "Species.h"
 
 /// @brief Abstract base class for pair interaction potentials.

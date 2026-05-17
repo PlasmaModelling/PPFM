@@ -7,6 +7,17 @@
 #ifndef MIXTURE_H
 #define MIXTURE_H
 
+/**
+ * @file Mixture.h
+ * @brief This file contains the Mixture class, 
+ * which represents a gas mixture and its composition.
+ * The Mixture class is an abstract base class that defines the interface for gas mixtures,
+ * including methods for accessing species, masses, and mole fractions. 
+ * It also defines a Gas class for representing the thermodynamic state of the mixture.
+ * The Mixture class is designed to be inherited by specific gas mixture implementations, 
+ * such as GasMixture.
+*/
+
 #include "AcceptedSpecies.h"
 #include "Theta.h"
 
@@ -14,7 +25,6 @@
 class Species;
 class Element;
 class Electron;
-
 
 /// @brief Abstract base class for gas mixtures with chemical species.
 class Mixture {

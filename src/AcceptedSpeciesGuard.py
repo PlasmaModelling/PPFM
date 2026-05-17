@@ -1,20 +1,26 @@
-# !/usr/bin/env python3
 # PPFM © 2025 by Emanuele Ghedini, Alberto Vagnoni (University of Bologna, Italy)
-# Licensed under CC BY 4.0. https://creativecommons.org/licenses/by/4.0/
-#
-# Python file to dynamically generate the AcceptedSpecies.h variant file.
-# It always rewrites the header from scratch, deleting any previous version.
+# Licensed under CC BY 4.0.
+# To view a copy of this license, visit:
+# https://creativecommons.org/licenses/by/4.0/
+
+#!/usr/bin/env python3
 
 import re
 import os
+import sys
 from pathlib import Path
 
-# === PATHS (use the script directory, not CWD) ===
-src_dir = Path(__file__).resolve().parent
-main_dir = src_dir.parent
-main_file = main_dir / "main.cpp"
+# === PATHS ===
+src_dir = Path(os.getcwd())
 output_file = src_dir / "AcceptedSpecies.h"
-tmp_file = src_dir / "AcceptedSpecies.h.tmp"
+
+if len(sys.argv) > 1:
+    main_file = Path(sys.argv[1]).resolve()
+else:
+    main_file = (src_dir.parent / "main.cpp").resolve()
+
+if not main_file.exists():
+    raise FileNotFoundError(f"Main source file not found: {main_file}")
 
 # === COMPLETE SPACE-SEPARATED LIST OF CHEMICAL SPECIES IMPLEMENTED IN SPECIES.H ===
 species_block = """
@@ -90,48 +96,42 @@ HydrogenCyanide CyanoRadical IsoCyanatoRadical Imidogen
 NitrusOxide Ammonia NitricOxide NitricOxideI
 """
 
-# === PARSING ===
 all_species = species_block.split()
 
-# === READ USED SPECIES IN main.cpp ===
 with open(main_file, "r") as f:
     main_code = f.read()
 
-# === CHECKS FOR NO MIXTURE FLAG ===
 no_mixture_mode = "NO_MIXTURE" in main_code
 
-# === MINIMAL VARIANT ===
 if no_mixture_mode:
     variant_species = ["Argon", "ArgonI"]
-    comment = "/* !! NO_MIXTURE_MODE activated:\n   AcceptedSpecies generated but not used. */\n"
-    print(" !! NO_MIXTURE_MODE: Dummy variant AcceptedSpecies generated.")
+    comment = "/* !! NO_MIXTURE_MODE activated:\n AcceptedSpecies generated but not used. */\n"
+    print(f"!! NO_MIXTURE_MODE detected in {main_file.name}: dummy AcceptedSpecies generated.")
 else:
     used_species = set(re.findall(r'new\s+(\w+)', main_code))
     variant_species = [s for s in all_species if s in used_species]
-    print(f" [OK] AcceptedSpecies variant generated with {len(variant_species)} species used.")
+    print(f"[OK] AcceptedSpecies generated from {main_file.name} with {len(variant_species)} species.")
     comment = ""
 
-# === WRITE TO TEMP AND ATOMICALLY REPLACE PREVIOUS HEADER ===
-# (This effectively "deletes" the previous file and rewrites it new each time.)
-with open(tmp_file, "w") as f:
+with open(output_file, "w") as f:
     f.write(
         "#ifndef ACCEPTED_SPECIES_H\n"
         "#define ACCEPTED_SPECIES_H\n\n"
-        "/* FILE DYNAMICALLY GENERATED AT COMPILE-TIME,\n"
-        "   CHECK AcceptedSpeciesGuard.py FOR DETAILS */\n\n"
-        "// PPFM © 2025 by Emanuele Ghedini, Alberto Vagnoni\n"
-        "// (University of Bologna, Italy)\n"
-        "// Licensed under CC BY 4.0.\n"
-        "// https://creativecommons.org/licenses/by/4.0/\n\n"
+        "/* FILE DINAMICALLY GENERATED AT COMPILE-TIME,\n"
+        " CHECK AcceptedSpeciesGuard.py FOR DETAILS */\n\n"
+        "// PPFM © 2025 by Emanuele Ghedini, Alberto Vagnoni // \n"
+        "// (University of Bologna, Italy) // \n"
+        "// Licensed under CC BY 4.0. // \n"
+        "// To view a copy of this license, visit: // \n"
+        "// https://creativecommons.org/licenses/by/4.0/ // \n\n"
     )
+
     f.write('#include "Species.h"\n\n')
     f.write(comment)
     f.write("using AcceptedSpecies = std::variant<\n")
-    for i, specie in enumerate(variant_species):
-        comma = "*," if i < len(variant_species) - 1 else "*"
-        f.write(f"    {specie}{comma}\n")
-    f.write(">;\n\n#endif // ACCEPTED_SPECIES_H\n")
 
-# Replace old file (if exists) with the new one
-os.replace(tmp_file, output_file)
-print(f" [OK] Wrote {output_file.name} (replaced previous if existed).")
+    for i, specie in enumerate(variant_species):
+        comma = "," if i < len(variant_species) - 1 else ""
+        f.write(f"    {specie}*{comma}\n")
+
+    f.write(">;\n\n#endif // ACCEPTED_SPECIES_H\n")

@@ -4,9 +4,10 @@
  // To view a copy of this license, visit:           // 
  // https://creativecommons.org/licenses/by/4.0/     // 
 
+
 /* 
 COMPUTATION OF TRANSPORT CROSS SECTION (Ang^2) FUNCTION OF E(eV) 
-reference: 
+references: 
     G. Colonna, A. Laricchiuta, 
     "General numerical algorithm for classical collision integral calculation", 
     Comput. Phys. Commun. 178 (2008) 809–816, DOI: 10.1016/j.cpc.2008.01.039.
@@ -14,6 +15,15 @@ reference:
 
 #ifndef TRANSPORT_CROSS_SECTION_H
 #define TRANSPORT_CROSS_SECTION_H
+
+/**
+ * @file TransportCrossSection.h
+ * @brief This file contains the TransportCrossSection class template, 
+ * which implements the TcsInterface for computing transport cross sections for specific species interactions.
+ * And, derives from the Interaction class template to gather information on the interacting species.
+ * The TransportCrossSection class provides methods to load elastic, inelastic, and differential cross section data, 
+ * and to download DCS from external sources. It also implements the GetIntInterface and GetTcsInterface methods for polymorphic access to the interaction and TCS interfaces.
+*/
 
 #include"Interaction.h"
 #include"TcsCalculator.h"
@@ -61,6 +71,8 @@ class TcsInterface {
      * @details Realization in concrete class.
      * @return Pointer to a deep copy of the derived `TcsInterface` instance. */
     virtual TcsInterface* GetTcsInterface() = 0;
+
+    virtual ~TcsInterface() = default;
 
 };
 

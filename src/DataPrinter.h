@@ -7,6 +7,13 @@
 #ifndef DATAPRINTER_H
 #define DATAPRINTER_H
 
+/**
+ * @file DataPrinter.h
+ * @brief This file contains the DataPrinter 
+ * class hierarchy for outputting computed data to CSV files.
+ * Each printing class has a composition relation with the related solver.
+*/
+
 #include <filesystem>
 #include <fstream>
 #include <stdexcept>
@@ -24,7 +31,15 @@ class CInterface;
 class PFinterface;
 class MultiCs;
 class CsHolder;
+class CsCalculator;
+class ThresholdCs;
+class AbInitioTcsIntegration;
 
+/**
+ * @brief Abstract base class for printing data to CSV files.
+ * @details Provides a generic interface for constructing file paths, preparing headers,
+ * and formatting data for CSV output. Derived classes must implement specific printing logic.
+*/
 class DataPrinter {
 
     protected:
@@ -33,7 +48,8 @@ class DataPrinter {
     std::vector<std::vector<double>> data ;
 
     /** @brief Header file to construct in the printable object, 
-     remember to use "," as separator for the printables.  */
+     * remember to use "," as separator for the printables. 
+    */
     std::string header ;
 
     /** @brief Implement to return a Default filename with coherent prefixes and extensions.  
@@ -69,6 +85,7 @@ class DataPrinter {
     /// @brief Centralized printing method, override to customize Printing
     virtual void Print ( const std::string& filename, const std::vector<double>& x, GasMixture* gasmix ) ;
 
+    /// @brief Print a message of finishing the print, override to customize message. 
     virtual void PrintMessage(const std::string& filename) = 0 ; 
 
 };
@@ -193,41 +210,147 @@ class ZhangTpCsv : public DataPrinter {
     /// @brief Constructor with solver and custom folder.
     ZhangTpCsv(ZhangMurphyTP* solver, const std::string& folder);
 };
+class DeflectionAngleCsv : public DataPrinter {
 
-/// @brief CSV printer for Transport Cross Sections.
-/// @details Transport Cross Sections are independent from GasMixture, place yours 
-/// as the third argument of Print or use nullptr.
-/// @see class DataPrinter for CSV handling.
+    /// @brief Small non-owning handle to a printable deflection-angle solver.
+    struct PrintableSolver {
+
+        /// @brief Solver able to compute chi(b,E).
+        AbInitioTcsIntegration* solver {nullptr};
+
+        /// @brief Threshold solver composed of different chi solvers over energy ranges.
+        ThresholdCs* thresholdSolver {nullptr};
+
+        /// @brief Filename suffix used for states, thresholds, elastic branches, etc.
+        std::string suffix;
+
+    };
+
+    std::vector<double> impact_parameter;
+    std::vector<double> energy;
+
+    /// @brief Current solver used by PrepareData.
+    AbInitioTcsIntegration* solver {nullptr};
+
+    /// @brief Current threshold solver used by PrepareData.
+    ThresholdCs* thresholdSolver {nullptr};
+
+    /// @brief List of all printable solvers found inside the cross-section structure.
+    std::vector<PrintableSolver> printableSolvers;
+
+    /// @brief Recursively collects all printable deflection-angle solvers.
+    void CollectPrintableSolvers(
+        CsCalculator* calculator,
+        const std::string& suffix = ""
+    );
+
+    /// @brief Selects the proper AbInitioTcsIntegration branch of a ThresholdCs at energy E.
+    AbInitioTcsIntegration* SelectThresholdSolver(
+        ThresholdCs* threshold,
+        double E
+    ) const;
+
+    /// @brief Checks if all branches of a ThresholdCs are printable as deflection angles.
+    bool IsPrintableThreshold(ThresholdCs* threshold) const;
+
+    /// @brief Builds the output filename with "CHI_" prefix.
+    std::string BuildFileName(const std::string& filename) const override;
+
+    /// @brief Prepares the CSV header row.
+    void PrepareHeader() override;
+
+    /** 
+     * @brief Computes and stores deflection angle data over energy and impact parameter ranges.
+     *
+     * The temperature vector and gas mixture pointer are not used here.
+     */
+    void PrepareData(
+        const std::vector<double>& null,
+        GasMixture* nullPtr
+    ) override;
+
+    /// @brief Prints confirmation message after file generation.
+    void PrintMessage(const std::string& filename) override;
+
+public:
+
+    /// @brief Constructor with explicit TcsInterface.
+    DeflectionAngleCsv(TcsInterface* tcs);
+
+    /// @brief Constructor with TcsInterface and custom folder.
+    DeflectionAngleCsv(TcsInterface* tcs, const std::string& folder);
+
+    /// @brief Set custom energy and impact parameter ranges for deflection angle computation.
+    void setParameters(std::vector<double> b, std::vector<double> E) {
+        impact_parameter = b;
+        energy = E;
+    }
+
+    /// @brief Prints all available deflection-angle solvers found recursively.
+    void Print(
+        const std::string& filename,
+        const std::vector<double>& x,
+        GasMixture* gasmix
+    ) override;
+
+    /// @brief Returns true if no printable deflection-angle solver was found.
+    bool ToSkip() const;
+
+};
 class TransportCrossSectionCsv : public DataPrinter {
-    
+
+    struct PrintableTcs {
+
+        CsCalculator* calculator {nullptr};
+
+        ThresholdCs* threshold {nullptr};
+
+        /// @brief Calculator to be computed before reading calculator.
+        CsCalculator* parentCalculator {nullptr};
+
+        std::string suffix;
+
+        bool inelastic {false};
+
+    };
+
+    /// @brief Pointer to transport cross section interface.
+    TcsInterface* solver {nullptr};
+
+    CsCalculator* currentParentCalculator {nullptr};
+
+    /// @brief Current calculator used by PrepareData.
+    CsCalculator* currentCalculator {nullptr};
+
+    /// @brief Current threshold calculator, used only to enrich the header.
+    ThresholdCs* currentThreshold {nullptr};
+
+    /// @brief True when preparing inelastic data.
+    bool currentInelastic {false};
+
+    /// @brief All printable TCS blocks found recursively.
+    std::vector<PrintableTcs> printableTcs;
+
     /// @brief Builds the output filename with "TCS_" prefix.
     std::string BuildFileName(const std::string& filename) const override;
 
     /// @brief Prepares the CSV header.
     void PrepareHeader() override;
 
-    /// @brief Prepares the CSV header for inelastic transport cross sections.
-    void PrepareInelasticHeader();
-
-    /// @brief Prepares data for elastic cross sections.
+    /// @brief Prepares data for the current calculator.
     void PrepareData(const std::vector<double>& x, GasMixture* gasmix) override;
-    
-    /// @brief Prepares elastic data from a CsHolder.
-    void PrepareElasticData(CsHolder* tcsElIn);
-    
-    /// @brief Prepares inelastic data from a CsHolder.
-    void PrepareInelasticData(CsHolder* tcsElIn);
-    
-    /// @brief Prepares data for MultiCs objects.
-    void PrepareMultiCsData(MultiCs* multiCs, size_t i);
 
     /// @brief Prints a confirmation message after writing the file.
     void PrintMessage(const std::string& filename) override;
-    
-    public:
 
-    /// @brief Pointer to transport cross section solver.
-    TcsInterface* solver;
+    /// @brief Recursively collects printable TCS calculators.
+    void CollectPrintableTcs(
+        CsCalculator* calculator,
+        const std::string& suffix = "",
+        bool inelastic = false
+    );
+
+public:
 
     /// @brief Constructor with solver.
     TransportCrossSectionCsv(TcsInterface* solver);
@@ -235,8 +358,13 @@ class TransportCrossSectionCsv : public DataPrinter {
     /// @brief Constructor with solver and custom folder.
     TransportCrossSectionCsv(TcsInterface* solver, const std::string& folder);
 
-    /// @brief Overrides default print to handle MultiCs and CsHolder cases.
-    void Print(const std::string& filename, const std::vector<double>& x, GasMixture* gasmix) override;
+    /// @brief Overrides default print to handle MultiCs, ThresholdCs and CsHolder recursively.
+    void Print(
+        const std::string& filename,
+        const std::vector<double>& x,
+        GasMixture* gasmix
+    ) override;
+
 };
 
 /// @brief CSV printer for Collision Integrals.
