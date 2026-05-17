@@ -17,7 +17,7 @@
 // Costruisce il path completo (di default: nella directory "out/")
 std::string DataPrinter::BuildFilePath( const std::string& filename ) const {
 
-    std::filesystem::path base = std::filesystem::current_path() / "out";
+    std::filesystem::path base = std::filesystem::path(PPFM_PROJECT_ROOT) / "out";
 
     if (!customFolder.empty())
         base /= customFolder;
@@ -306,224 +306,512 @@ void ZhangTpCsv::PrepareData(const std::vector<double>& temperatureRange, GasMix
     gasmix->restartComposition();
     solver->computeTransport(gasmix);
 }
+// ___________________________ DeflectionAngleCsv __________________________ //
 
+std::string DeflectionAngleCsv::BuildFileName(const std::string& filename) const {
+
+    return "CHI_" + filename + ".csv";
+
+}
+
+
+void DeflectionAngleCsv::PrepareHeader() {
+
+    header = "1st column: b [A] 1st row: E [eV] matrix: chi(b,E) [rad]";
+
+    if (thresholdSolver != nullptr) {
+
+        header += " | Threshold energies [eV]:";
+
+        for (size_t i = 0; i < thresholdSolver->E.size(); ++i)
+            header += " " + std::to_string(thresholdSolver->E[i]);
+
+    }
+
+}
+
+
+void DeflectionAngleCsv::PrintMessage(const std::string& filename) {
+
+    std::cout << "Deflection angle " << filename << " printed." << std::endl;
+
+}
+
+
+bool DeflectionAngleCsv::IsPrintableThreshold(ThresholdCs* threshold) const {
+
+    if (threshold == nullptr)
+        return false;
+
+    if (threshold->Qs.empty())
+        return false;
+
+    for (size_t i = 0; i < threshold->Qs.size(); ++i) {
+
+        if (dynamic_cast<AbInitioTcsIntegration*>(threshold->Qs[i]) == nullptr)
+            return false;
+
+    }
+
+    return true;
+
+}
+
+
+AbInitioTcsIntegration* DeflectionAngleCsv::SelectThresholdSolver(
+    ThresholdCs* threshold,
+    double E
+) const {
+
+    if (threshold == nullptr)
+        return nullptr;
+
+    if (threshold->Qs.empty())
+        return nullptr;
+
+    size_t index = 0;
+
+    while (
+        index < threshold->E.size() &&
+        E > threshold->E[index]
+    ) {
+        ++index;
+    }
+
+    if (index >= threshold->Qs.size())
+        return nullptr;
+
+    return dynamic_cast<AbInitioTcsIntegration*>(threshold->Qs[index]);
+
+}
+
+
+void DeflectionAngleCsv::CollectPrintableSolvers(
+    CsCalculator* calculator,
+    const std::string& suffix
+) {
+
+    if (calculator == nullptr)
+        return;
+
+
+    if (auto chiSolver = dynamic_cast<AbInitioTcsIntegration*>(calculator)) {
+
+        printableSolvers.push_back({chiSolver, nullptr, suffix});
+        return;
+
+    }
+
+
+    // IMPORTANT: ThresholdCs must be checked before MultiCs,
+    // because ThresholdCs derives from MultiCs.
+    //
+    // ThresholdCs is not printed branch-by-branch.
+    // It is printed as a single composite solver using the proper branch
+    // depending on the current energy.
+    if (auto threshold = dynamic_cast<ThresholdCs*>(calculator)) {
+
+        if (IsPrintableThreshold(threshold)) {
+
+            printableSolvers.push_back({
+                nullptr,
+                threshold,
+                suffix + "_threshold"
+            });
+
+        }
+
+        return;
+
+    }
+
+
+    if (auto multi = dynamic_cast<MultiCs*>(calculator)) {
+
+        for (size_t i = 0; i < multi->Qs.size(); ++i) {
+
+            CollectPrintableSolvers(
+                multi->Qs[i],
+                suffix + "_state" + std::to_string(i + 1)
+            );
+
+        }
+
+        return;
+
+    }
+
+
+    if (auto holder = dynamic_cast<CsHolder*>(calculator)) {
+
+        CollectPrintableSolvers(
+            holder->Qe,
+            suffix + "_elastic"
+        );
+
+        return;
+
+    }
+
+}
+
+
+DeflectionAngleCsv::DeflectionAngleCsv(TcsInterface* tcs) {
+
+    impact_parameter = arange(0.1, 10.0, 0.2);
+    energy = logspace(log10(1.15e-3), log10(433), 50);
+
+    CollectPrintableSolvers(tcs->TCScalculator);
+
+}
+
+
+DeflectionAngleCsv::DeflectionAngleCsv(
+    TcsInterface* tcs,
+    const std::string& folder
+) {
+
+    impact_parameter = arange(0.1, 10.0, 0.2);
+    energy = logspace(log10(1.15e-3), log10(433), 50);
+
+    customFolder = folder;
+
+    CollectPrintableSolvers(tcs->TCScalculator);
+
+}
+
+
+void DeflectionAngleCsv::PrepareData(const std::vector<double>&, GasMixture*) {
+
+    data.clear();
+
+    data.resize(
+        impact_parameter.size() + 1,
+        std::vector<double>(energy.size() + 1)
+    );
+
+
+    for (size_t i = 0; i < energy.size(); ++i)
+        data[0][i + 1] = energy[i];
+
+
+    for (size_t j = 0; j < impact_parameter.size(); ++j)
+        data[j + 1][0] = impact_parameter[j];
+
+
+    for (size_t i = 0; i < energy.size(); ++i) {
+
+        AbInitioTcsIntegration* activeSolver = solver;
+
+        if (thresholdSolver != nullptr)
+            activeSolver = SelectThresholdSolver(thresholdSolver, energy[i]);
+
+        if (activeSolver == nullptr)
+            continue;
+
+
+        for (size_t j = 0; j < impact_parameter.size(); ++j) {
+
+            data[j + 1][i + 1] =
+                activeSolver->deflectionAngle(
+                    impact_parameter[j],
+                    energy[i]
+                );
+
+        }
+
+    }
+
+}
+
+
+bool DeflectionAngleCsv::ToSkip() const {
+
+    return printableSolvers.empty();
+
+}
+
+
+void DeflectionAngleCsv::Print(
+    const std::string& filename,
+    const std::vector<double>& x,
+    GasMixture* gasmix
+) {
+
+    if (printableSolvers.empty()) {
+
+        std::cout << "Skipping " << filename
+                  << ": no valid deflection-angle solver found."
+                  << std::endl;
+
+        return;
+
+    }
+
+
+    for (const auto& printable : printableSolvers) {
+
+        solver = printable.solver;
+        thresholdSolver = printable.thresholdSolver;
+
+        if (solver == nullptr && thresholdSolver == nullptr)
+            continue;
+
+        std::string outputName = filename + printable.suffix;
+
+        DataPrinter::Print(outputName, x, gasmix);
+
+        solver = nullptr;
+        thresholdSolver = nullptr;
+
+    }
+
+}
 // ___________________________ TransportCrossSectionCsv __________________________ //
 
 std::string TransportCrossSectionCsv::BuildFileName(const std::string& filename) const {
+
     return "TCS_" + filename + ".csv";
+
 }
+
 
 void TransportCrossSectionCsv::PrepareHeader() {
-    header = "E [eV], Qe(1) [Å²], Qe(2) [Å²], Qe(3) [Å²], Qe(4) [Å²]";
-}
 
-void TransportCrossSectionCsv::PrepareInelasticHeader() {
-    header = "E [eV], Qin(1) [Å²], Qin(2) [Å²], Qin(3) [Å²], Qin(4) [Å²]";
-}
+    if (currentInelastic)
+        header = "E [eV], Qin(1) [A^2], Qin(2) [A^2], Qin(3) [A^2], Qin(4) [A^2]";
+    else
+        header = "E [eV], Qe(1) [A^2], Qe(2) [A^2], Qe(3) [A^2], Qe(4) [A^2]";
 
-void TransportCrossSectionCsv::PrepareData(const std::vector<double>&, GasMixture*) {
-    
-    auto& e = solver->TCScalculator->E;
-    auto& q = solver->TCScalculator->Q;
 
-    data.resize(e.size(), std::vector<double>(5));
-    for (size_t i = 0; i < e.size(); ++i) {
-        data[i][0] = e[i];
-        for (size_t j = 0; j < 4; ++j)
-            data[i][j + 1] = q[i][j];
-    
-    }
-}
+    if (currentThreshold != nullptr) {
 
-void TransportCrossSectionCsv::PrepareElasticData(CsHolder* tcsElIn) {
-    
-    if (tcsElIn->computed == false)
-        tcsElIn->Qe->Compute();
+        header += ", Threshold energies [eV]:";
 
-    auto& e = tcsElIn->Qe->E;
-    auto& q = tcsElIn->Qe->Q;
+        for (size_t i = 0; i < currentThreshold->E.size(); ++i)
+            header += " " + std::to_string(currentThreshold->E[i]);
 
-    data.resize(e.size(), std::vector<double>(5));
-    for (size_t i = 0; i < e.size(); ++i) {
-        data[i][0] = e[i];
-        for (size_t j = 0; j < 4; ++j)
-            data[i][j + 1] = q[i][j];
-    }
-}
-
-void TransportCrossSectionCsv::PrepareInelasticData(CsHolder* tcsElIn) {
-    
-    if (tcsElIn->computed == false)
-        tcsElIn->Qin->Compute();
-
-    auto& e = tcsElIn->Qin->E;
-    auto& q = tcsElIn->Qin->Q;
-
-    data.resize(e.size(), std::vector<double>(5));
-    for (size_t i = 0; i < e.size(); ++i) {
-        data[i][0] = e[i];
-        for (size_t j = 0; j < 4; ++j)
-            data[i][j + 1] = q[i][j];
-    }
-}
-
-void TransportCrossSectionCsv::PrepareMultiCsData(MultiCs* multiCs, size_t i) {
-    
-    if (!multiCs->computed)
-        multiCs->Compute();
-
-    const size_t nStates = multiCs->Size();
-    if (i >= nStates) {
-        std::cerr << "Error: state index " << i << " out of range (size=" << nStates << ")." << std::endl;
-        data.clear();
-        return;
     }
 
-    auto& E = multiCs->Qs[i]->E;
-    auto& Q = multiCs->Qs[i]->Q;
-
-    data.assign(E.size(), std::vector<double>(5));
-    for (size_t j = 0; j < E.size(); ++j) {
-        data[j][0] = E[j];
-        for (size_t k = 0; k < 4; ++k)
-            data[j][k + 1] = Q[j][k];
-    }
-}
-
-void TransportCrossSectionCsv::Print(const std::string& filename,
-    const std::vector<double>& x,
-        GasMixture* gasmix) {
-
-    // --- 1) Case CsHolder: elastic + inelastic
-    if (CsHolder* tcsElIn = dynamic_cast<CsHolder*>(solver->TCScalculator)) {
-        
-        if (auto* elMulti = dynamic_cast<MultiCs*>(tcsElIn->Qe)) {
-        
-            const size_t n = elMulti->Size();
-            for (size_t i = 0; i < n; ++i) {
-        
-                // MultiCs per state
-                data.clear();
-                PrepareMultiCsData(elMulti, i);
-
-                PrepareHeader();    
-                //state label inline                         
-                header += ", (state: " + std::to_string(i+1) + ")";    
-
-                if (data.empty() || header.empty()) {
-                    std::cerr << "Error: elastic state " << i
-                              << " data or header not prepared." << std::endl;
-                    return;
-                }
-                
-                // First state -> write, others -> append
-                if (i == 0) WriteData(filename);
-                else        AppendData(filename);
-            }
-        } else {
-        
-            // simple elastic
-            data.clear();
-            PrepareHeader();
-            PrepareElasticData(tcsElIn);
-
-            if (data.empty() || header.empty()) {
-                std::cerr << "Error: elastic data or header not prepared." << std::endl;
-                return;
-            }
-
-            WriteData(filename);
-        
-        }
-
-        // Inelastic part if multi-state
-        if (auto* inMulti = dynamic_cast<MultiCs*>(tcsElIn->Qin)) {
-            
-            const size_t n = inMulti->Size();
-            for (size_t i = 0; i < n; ++i) {
-                
-                data.clear();
-                PrepareMultiCsData(inMulti, i);
-
-                PrepareInelasticHeader();                     
-                header += ", (state: " + std::to_string(i+1) + ")";     
-
-                if (data.empty() || header.empty()) {
-                    std::cerr << "Error: inelastic state " << i
-                              << " data or header not prepared." << std::endl;
-                    return;
-                }
-
-                AppendData(filename);
-            
-            }
-        
-        } else {
-        
-            // simple inelastic
-            data.clear();
-            PrepareInelasticHeader();
-            PrepareInelasticData(tcsElIn);
-
-            if (data.empty() || header.empty()) {
-                std::cerr << "Error: inelastic data or header not prepared." << std::endl;
-                return;
-            }
-            
-            AppendData(filename);
-        
-        }
-
-        PrintMessage(filename);
-        return;
-    }
-
-    // --- 2) case MultiCs ---
-    if (MultiCs* multiCs = dynamic_cast<MultiCs*>(solver->TCScalculator)) {
-        
-        const size_t n = multiCs->Size();
-        
-        for (size_t i = 0; i < n; ++i) {
-        
-            data.clear();
-            PrepareMultiCsData(multiCs, i);
-
-            PrepareHeader();                             
-            header += ", (state: " + std::to_string(i+1) + ")";    
-
-            if (data.empty() || header.empty()) {
-                std::cerr << "Error: MultiCs state " << i
-                          << " data or header not prepared." << std::endl;
-                return;
-            }
-
-            if (i == 0) WriteData(filename);
-            else        AppendData(filename);
-        }
-
-        PrintMessage(filename);
-        return;
-    }
-
-    // --- 3) Fallback: other CsCalculator ---
-    DataPrinter::Print(filename, x, gasmix);
-    return;
-    
 }
 
 
 void TransportCrossSectionCsv::PrintMessage(const std::string& filename) {
-    std::cout << "Transport Cross Sections "
-              << solver->GetIntInterface()->InteractionName()
-              << " printed (" << filename << ")." << std::endl;
+
+    std::cout << "Transport cross section " << filename << " printed." << std::endl;
+
 }
 
-TransportCrossSectionCsv::TransportCrossSectionCsv(TcsInterface* solver)
-    : solver(solver) {}
+void TransportCrossSectionCsv::PrepareData(const std::vector<double>&, GasMixture*) {
 
-TransportCrossSectionCsv::TransportCrossSectionCsv(TcsInterface* solver, const std::string& folder)
-    : solver(solver) {
+    data.clear();
+
+    if (currentCalculator == nullptr)
+        return;
+
+    if (currentParentCalculator != nullptr)
+        currentParentCalculator->Compute();
+    else
+        currentCalculator->Compute();
+
+    auto& e = currentCalculator->E;
+    auto& q = currentCalculator->Q;
+
+    data.resize(e.size(), std::vector<double>(5));
+
+    for (size_t i = 0; i < e.size(); ++i) {
+
+        data[i][0] = e[i];
+
+        for (size_t j = 0; j < 4; ++j)
+            data[i][j + 1] = q[i][j];
+
+    }
+
+}
+
+void TransportCrossSectionCsv::CollectPrintableTcs(
+    CsCalculator* calculator,
+    const std::string& suffix,
+    bool inelastic
+) {
+
+    if (calculator == nullptr)
+        return;
+
+
+    if (auto threshold = dynamic_cast<ThresholdCs*>(calculator)) {
+
+        printableTcs.push_back({
+            threshold,
+            threshold,
+            nullptr,
+            suffix + "_threshold",
+            inelastic
+        });
+
+        return;
+
+    }
+
+
+    // IMPORTANT: DcsLoader must be checked before CsHolder,
+    // because DcsLoader derives from CsHolder.
+    //
+    // The DcsLoader itself must be computed, because its Compute()
+    // integrates the differential cross sections and fills Qe and Qin.
+    if (auto dcs = dynamic_cast<DcsLoader*>(calculator)) {
+
+        printableTcs.push_back({
+            dcs->Qe,
+            nullptr,
+            dcs,
+            suffix + "_elastic_DCS",
+            false
+        });
+
+        printableTcs.push_back({
+            dcs->Qin,
+            nullptr,
+            dcs,
+            suffix + "_inelastic_DCS",
+            true
+        });
+
+        return;
+
+    }
+
+
+    if (auto holder = dynamic_cast<CsHolder*>(calculator)) {
+
+        CollectPrintableTcs(
+            holder->Qe,
+            suffix + "_elastic",
+            false
+        );
+
+        CollectPrintableTcs(
+            holder->Qin,
+            suffix + "_inelastic",
+            true
+        );
+
+        return;
+
+    }
+
+
+    if (auto multi = dynamic_cast<MultiCs*>(calculator)) {
+
+        for (size_t i = 0; i < multi->Qs.size(); ++i) {
+
+            CollectPrintableTcs(
+                multi->Qs[i],
+                suffix + "_state" + std::to_string(i + 1),
+                inelastic
+            );
+
+        }
+
+        return;
+
+    }
+
+
+    printableTcs.push_back({
+        calculator,
+        nullptr,
+        nullptr,
+        suffix,
+        inelastic
+    });
+
+}
+
+TransportCrossSectionCsv::TransportCrossSectionCsv(TcsInterface* solverr) {
+
+    solver = solverr;
+
+    if (solver != nullptr)
+        CollectPrintableTcs(solver->TCScalculator);
+
+}
+
+
+TransportCrossSectionCsv::TransportCrossSectionCsv(
+    TcsInterface* solverr,
+    const std::string& folder
+) {
+
+    solver = solverr;
     customFolder = folder;
+
+    if (solver != nullptr)
+        CollectPrintableTcs(solver->TCScalculator);
+
+}
+
+
+void TransportCrossSectionCsv::Print(
+    const std::string& filename,
+    const std::vector<double>& x,
+    GasMixture* gasmix
+) {
+
+    if (printableTcs.empty()) {
+
+        std::cout << "Skipping: no transport cross section calculator found for "
+                  << filename << "." << std::endl;
+
+        return;
+
+    }
+
+
+    bool firstBlock = true;
+
+    for (const auto& printable : printableTcs) {
+
+        currentCalculator = printable.calculator;
+        currentThreshold = printable.threshold;
+        currentParentCalculator = printable.parentCalculator;
+        currentInelastic = printable.inelastic;
+
+        data.clear();
+        header.clear();
+
+        PrepareHeader();
+        PrepareData(x, gasmix);
+
+        if (!printable.suffix.empty())
+            header += ", (" + printable.suffix.substr(1) + ")";
+
+        if (data.empty() || header.empty()) {
+
+            std::cerr << "Error: data or header not prepared for "
+                    << filename + printable.suffix << "." << std::endl;
+
+            continue;
+
+        }
+
+        if (firstBlock) {
+            WriteData(filename);
+            firstBlock = false;
+        } else {
+            AppendData(filename);
+        }
+
+        currentCalculator = nullptr;
+        currentThreshold = nullptr;
+        currentParentCalculator = nullptr;
+        currentInelastic = false;
+
+    }
+
+    PrintMessage(filename);
+
 }
 
 // ___________________________ CollisionIntegralCsv __________________________ //
@@ -628,12 +916,8 @@ void PartitionFunctionCsv::PrintMessage(const std::string& filename) {
 }
 
 void PartitionFunctionCsv::Print(const std::string& filename, const std::vector<double>& x, GasMixture* gasmix) {
-    std::string tempFolder = customFolder;
-    customFolder += "/PartitionFunctions_" + tempFolder;
-
+    
     DataPrinter::Print(filename, x, gasmix);
-
-    customFolder = tempFolder;
 }
 
 PartitionFunctionCsv::PartitionFunctionCsv(PFinterface* solver)

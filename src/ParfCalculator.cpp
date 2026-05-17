@@ -343,7 +343,7 @@ ElectronicAtomicPF::ElectronicAtomicPF ( const std::string& prefix, Species* sp 
 ElectronicAtomicPF::ElectronicAtomicPF(Species* sp, const std::string& hyperref ) : sp(sp) {
 
     std::string speciesName = sp->getFormula();
-    std::filesystem::path datadir = std::filesystem::current_path() / "data/Electronic_Configurations";
+    std::filesystem::path datadir = std::filesystem::path(PPFM_PROJECT_ROOT) / "data/Electronic_Configurations";
     std::string filename = (datadir / (speciesName + "_ElConfig.csv")).string();
     
     try {

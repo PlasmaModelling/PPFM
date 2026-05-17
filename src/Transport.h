@@ -7,6 +7,23 @@
 #ifndef TRANSPORT_H
 #define TRANSPORT_H 
 
+/**
+ * @file Transport.h
+ * @brief This file contains the base class for transport properties calculations.
+ * The Transport class defines the common interface and data members 
+ * for computing transport properties such as viscosity, thermal conductivity, 
+ * and diffusion coefficients. 
+ * It also includes a pointer to a CiBox object for accessing collision integrals 
+ * needed in the calculations. 
+ * Derived classes will implement specific theories (e.g., Chapman-Enskog, Devoto) 
+ * for computing these properties based on the gas mixture composition and state.
+ * Due to the inner complexity of the formulations involved in the Chapman-Enskog expansion, 
+ * some "hiding behind encapsulation" has been needed, 
+ * and, also, one of the design choices that demanded the need for PPFM implementation.
+ * @cite mathematichal_theory
+ * @cite ferdziger
+*/
+
 #include <vector>
 #include <string>
 #include <numbers>
@@ -51,7 +68,10 @@ class Transport {
      **  default units are [ micron^2 ] */
     std::vector<std::vector<double>> Qt ; 
 
+    /// @brief Constructor for Transport class with assigned CiBox object.
     Transport ( CiBox* cbx ) : Ci(cbx)  {} 
+
+    /// @brief Constructor for Transport class with assigned GasMixture object.
     Transport ( GasMixture* mix ) ;
 
     /** @brief Compute and store Collision Integrals values 
@@ -90,7 +110,10 @@ class Properties : public Transport {
      ** with default values. Users can use the setOrders method to specify them as a whole. */
     std::vector<int> orders ; 
 
+    /// @brief Constructor for Properties class with assigned CiBox object.
     Properties ( CiBox* cbx  ) : Transport ( cbx ) {}
+
+    /// @brief Constructor for Properties class with assigned GasMixture object.
     Properties ( GasMixture* mix ) : Transport ( mix ) {} ;
 
     /** @brief Interface for the calculation of the Thermal Conductivity of electrons
@@ -156,7 +179,10 @@ class Appendix : public Properties {
 
     protected : 
 
+    /// @brief Constructor for Appendix class with assigned CiBox object.
     Appendix ( CiBox* cbx  ) : Properties ( cbx ) {}
+
+    /// @brief Constructor for Appendix class with assigned GasMixture object.
     Appendix ( GasMixture* mix ) : Properties(mix) {} 
     
     /** @brief Some Bracket Expression Coefficients for 
@@ -198,12 +224,34 @@ class Appendix : public Properties {
      ** @param i-th specie
      ** @param j-th specie */
     double DeltaIJ1 (GasMixture* gasmix , int i , int j ) ;
+
+    /** @brief Delta function needed for 2nd order approcimations 
+     ** @param gasmix object of class GasMixture
+     ** @param i-th specie
+     ** @param j-th specie */
     double DeltaIJ2 (GasMixture* gasmix , int i , int j ) ;
 
+    /** @brief Alpha function needed for 1st order approcimations 
+     ** @param mass vector of species masses
+     ** @param i-th specie
+     ** @param j-th specie */
     double alphaIJ(std::vector<double> mass, int i, int j ) ;
 
+    /** @brief Function for 1st order approximation of thermal conductivity.
+     ** @details BEWARE: It doesn't separate electrons and heavy particle contributions. 
+     ** Use only in LTE.
+     ** @param gasmix object of class GasMixture
+     ** @return double 1st order approximation of thermal conductivity */
     double Ktr1(GasMixture* gasmix);
+
+    /** @brief Function for 1st order approximation of viscosity.
+     ** @param gasmix object of class GasMixture
+     ** @return double 1st order approximation of viscosity */
     double Viscosity1(GasMixture* gasmix);
+
+    /** @brief Function for 1st order approximation of electrical conductivity.
+     ** @param gasmix object of class GasMixture
+     ** @return double 1st order approximation of electrical conductivity */
     double Sigma1(GasMixture* gasmix);
 
 } ;

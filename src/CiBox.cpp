@@ -163,9 +163,35 @@ void CiBox::PrintTransportCrossSections ( const std::vector<double>& Ti, GasMixt
 
     for ( TcsInterface* tcs : integrals ) {
 
+        if ( (tcs->GetIntInterface()->GetSp1()->getCharge() != 0) && (tcs->GetIntInterface()->GetSp2()->getCharge() != 0) )
+            continue ; // skip ion-ion interactions.
+
         TransportCrossSectionCsv writer(tcs) ; 
 
         writer.customFolder = folder;
+
+        writer.Print ( tcs->GetIntInterface()->InteractionName(), Ti, gasmix );
+
+    }
+}
+
+void CiBox::PrintDeflectionAngles ( const std::vector<double>& Ti, GasMixture* gasmix, const std::string& folder ) {
+
+    for ( TcsInterface* tcs : integrals ) {
+
+        if ( (tcs->GetIntInterface()->GetSp1()->getCharge() != 0) && (tcs->GetIntInterface()->GetSp2()->getCharge() != 0) )
+            continue ; // skip ion-ion interactions.
+
+        DeflectionAngleCsv writer(tcs) ; 
+
+        writer.customFolder = folder;
+
+        if (writer.ToSkip()) {
+            std::cerr << "Skipping deflection angle print for interaction " 
+                      << tcs->GetIntInterface()->InteractionName() 
+                      << " due to incompatible solver type." << std::endl;
+            continue;
+        }
 
         writer.Print ( tcs->GetIntInterface()->InteractionName(), Ti, gasmix );
 

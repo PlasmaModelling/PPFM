@@ -7,6 +7,19 @@
 #ifndef DEVOTO_H
 #define DEVOTO_H
 
+/**
+ * @file Devoto.h
+ * @brief This file contains the Devoto developments for transport properties. 
+ * And LTE extension for reactional thermal conductivity.
+ * Transport classes holds on Appendix and properties parent classes in order
+ * to incapsulate the complex formulas within the method.
+ * @see class Appendix.
+ * @cite devoto_teoria_base
+ * @cite devoto_teoria_simplificata
+*/
+
+// cite Brokaw and Butler for reactive LTE lambda
+
 #include "Transport.h"
 
 /** @class DevotoTP
@@ -15,38 +28,43 @@
  ** The Physics of fluid, 9,6,June(1966) \n
  ** and \n
  ** @see 2) R.S. Devoto "Simplified Expressions for the Transport Properties 
- ** of Ionized Monoatomic Gases", \n  The Physics of fluid, 10,10,October(1967) */
+ ** of Ionized Monoatomic Gases", \n  The Physics of fluid, 10,10,October(1967) 
+*/
 class DevotoTP : public Appendix {
 
     protected : 
     
-    /**  @brief Function to compute Electrons Thermal Conductivity as in eq.20 of
-     ** this class reference 2.
-     ** @param gasmix GasMixture object 
-     ** @param order Desired order of approximation */
+    /** @brief Function to compute Electrons Thermal Conductivity as in eq.20 of
+     * this class reference 2.
+     * @param gasmix GasMixture object 
+     * @param order Desired order of approximation 
+    */
     double ThermalCondEl ( GasMixture* gasmix, int order ) override ;
 
-    /**  @brief Function to compute Electrons Thermal Conductivity as in eq.14 of
-     ** this class reference 1.
-     ** @param gasmix GasMixture object 
-     ** @param order Desired order of approximation  */
+    /** @brief Function to compute Electrons Thermal Conductivity as in eq.14 of
+     * this class reference 1.
+     * @param gasmix GasMixture object 
+     * @param order Desired order of approximation  
+    */
     double ThermalCondHeavy ( GasMixture* gasmix, int order ) override ;
 
     /** @brief Function to compute Viscosity as in eq.21 of
-     ** this class reference 1.
-     ** @param gasmix GasMixture object 
-     ** @param order Desired order of approximation  */
+     * this class reference 1.
+     * @param gasmix GasMixture object 
+     * @param order Desired order of approximation  
+    */
     double Viscosity ( GasMixture* gasmix, int order ) override ;
 
     /** @brief Function to compute Electrical Conductivity as in eq.16 of
-     ** * this class reference 2.
-     ** @param gasmix GasMixture object 
-     ** @param order Desired order of approximation 
+     * this class reference 2.
+     * @param gasmix GasMixture object 
+     * @param order Desired order of approximation 
     */
     double ElCond ( GasMixture* gasmix, int order ) override ;
     
     /** @brief Function to compute Heat Exchange of electrons-heavy collisions
-     ** @param gasmix GasMixture object  */
+     * @param gasmix GasMixture object  
+    */
     double Qeh ( GasMixture* gasmix ) override ; 
     
     /** @brief Function to compute Diffusion Coefficients as in eq.8 of
@@ -103,6 +121,7 @@ class DevotoLteLambdaR : public DevotoTP {
 
     protected : 
 
+    /// @brief Binary diffusion coefficient. 
     double Dbinij(int i,int j, GasMixture* gasmix) ;  
 
     public :

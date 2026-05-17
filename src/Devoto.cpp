@@ -386,6 +386,7 @@
             return (15. / 4.) * n[ii] * n[ii] * std::sqrt(2. * PI * mass[ii] * kB * T) * (detQ / detq) * 1.e+3;
             
         } else {
+
             // Caso specie pesante – matrice estesa
             const int Ntot = order * N;
 
@@ -527,10 +528,12 @@
                 
         }
         
+        // Solve with Shur complement of AH in A
+
         std::vector<double> y(L, 0.0);
         std::vector<double> rhs = deltaHi;
 
-        // lu_sistema modifica anche b, quindi passo una copia
+        // lu_sistema modifica anche delta Hi, quindi passo una copia
         lu_sistema(y, A, rhs, L);
 
         double quad = 0.0;
@@ -550,30 +553,9 @@
 
         // std::cout<< T << "  " << lambdaR << std::endl ; 
 
-        double dT = 50.;
-        
-        std::vector<double> n0 = gasmix->getCompositionObj()->compositions() ;
-        
-        gasmix->setT(T+dT) ; 
-        thermo->computeThermodynamics(*gasmix) ; 
-        std::vector<double> hf (N,0.) ; 
-        for (size_t i = 0; i < N; i++)
-            hf[i] = thermo->h(i)*1.e+15 ; 
-        
-        gasmix->getCompositionObj()->setn0(n0) ; 
-
-        gasmix->setT(T-dT) ; 
-        thermo->computeThermodynamics(*gasmix) ; 
-        std::vector<double> hb (N,0.) ; 
-        for (size_t i = 0; i < N; i++)
-            hb[i] = thermo->h(i)*1.e+15 ; 
-        
-        gasmix->setT(T) ; 
-        gasmix->getCompositionObj()->setn0(n0) ; 
-
         std::vector<double> cpintj (N,0.) ; 
         for (size_t i = 0; i < N; i++)
-            cpintj[i] = ((hf[i]-hb[i])/(2.*dT))-(5./2.)*kB ; 
+            cpintj[i] = (thermo->dHdT(i)*1.e+15)-(5./2.)*kB ; 
             
         double sum1 = 0.;
         double sum2 = 0.; 

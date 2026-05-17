@@ -7,6 +7,12 @@
 #ifndef ZMTRANSPORT_H
 #define ZMTRANSPORT_H
 
+/** @file ZhangMurphyTP.h
+ * @brief This file contains the ZhangMurphyTP class, 
+ * which implements the transport properties calculation based on the theory of 
+ * Zhang et. al.
+*/
+
 #include"ZMCoefficients.h"
 
 /** @class ZhangMurphyTP
@@ -19,8 +25,11 @@
 class ZhangMurphyTP : public ZMCoefficients {
 
     private:
-    
+ 
+    /// @brief Matrix of non equilibrium diffusion coefficients, see eq.22 of this class reference 1.
     std::vector<std::vector<double>> DiffTheta ;
+
+    /// @brief Vector of non equilibrium thermal diffusion coefficients, see eq.36 of this class reference 1.
     std::vector<double> Dtheta ;
 
     /** @brief Function to compute Electrons Thermal Conductivity as in eq.34 of

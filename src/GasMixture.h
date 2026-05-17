@@ -7,6 +7,13 @@
 #ifndef GASMIXTURE_H
 #define GASMIXTURE_H
 
+/**
+ * @file GasMixture.h
+ * @brief This file contains the GasMixture class, which represents a gas mixture and its composition.
+ * The GasMixture class inherits from both Gas and Mixture, and it contains a pointer to a Composition solver.
+ * It provides methods for setting temperature, pressure, mole fractions, and managing the composition solver.
+*/
+
 #include <stdexcept>
 
 #include "Composition.h"
@@ -52,7 +59,7 @@ public:
 
 };
 
-//_________________________ Implementazione _________________________
+//_________________________ Implementation _________________________
 
 // Template constructors
 template<typename... SpeciesTypes>

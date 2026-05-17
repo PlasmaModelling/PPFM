@@ -7,13 +7,26 @@
 #ifndef THERMODYNAMICS_H
 #define THERMODYNAMICS_H
 
+/**
+ * @file Thermodynamics.h
+ * @brief This file contains the Thermodynamics class hierarchy for computing thermodynamic properties of gas mixtures.
+ * The Thermodynamics class computes properties such as density, specific heats, and speed of sound based on the composition and state of a GasMixture. 
+ * The ThermodynamicsDHcorrected class applies Debye–Hückel corrections to the computed properties for charged species.
+*/
+
 #include <vector>
 #include <stdexcept>
 #include <string>
 
+// Forward declarations
 class GasMixture;
 
-/// @brief Computes thermodynamic properties for a given gas mixture.
+/**
+ * @class Thermodynamics
+ * @brief Class for computing thermodynamic properties of a gas mixture.
+ * @details Iterative dT and dP are implemented for stability of properties 
+ * finite differences and Partition Functions derivates. 
+*/
 class Thermodynamics {
 
     protected:
@@ -32,8 +45,11 @@ class Thermodynamics {
     * [9] a [m/s] */
     std::vector<double> Td;
 
-    /// @brief Vector of hentalphy values for species in the mixture [J/kg].
-    std::vector<double> henthalpies;
+    /// @brief Vector of hentalphy values for species in the mixture [J/kg] (per particle).
+    std::vector<double> henthalpies ;
+
+    /// @brief Vector of dH/dT values for species in the mixture [J/(kg·K)] (per particle).
+    std::vector<double> dhdT ; 
 
     /// @brief saving final dRdP to correct speed of sound in DH corrections 
     double dRdP_final ; 
@@ -62,9 +78,13 @@ class Thermodynamics {
     double a()     const { return Td[9]; }
     
     double h(int i) const{ return henthalpies.at(i); }
-
+    double dHdT(int i) const{ return dhdT.at(i); }
 };
 
+/**
+ * @class ThermodynamicsDHcorrected
+ * @brief Computes thermodynamic properties with Debye–Hückel corrections. 
+*/
 class ThermodynamicsDHcorrected : public Thermodynamics {
 
     /** @brief Computes thermodynamic properties as parent class 

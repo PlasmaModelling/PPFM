@@ -7,6 +7,12 @@
 #ifndef PARTITION_FUNCTION_H
 #define PARTITION_FUNCTION_H
 
+/**
+ * @file ParfCalculator.h
+ * @brief This file contains the concrete and interface class
+ * for partition function in the same fashion as collision integrals.
+*/
+
 #include "ParfCalculator.h"
 #include "GasMixture.h"
 #include <stdexcept>
@@ -50,7 +56,12 @@ class PFinterface {
     /** @brief Returns the computed partition function value
      *  @return Partition function value */
     virtual double getPf() = 0;
+
+    ///** @brief Returns a pointer to the species associated with this partition function.
     virtual Species* getSp() = 0;
+
+    virtual ~PFinterface() = default;
+
 };
 
  /** @class PartitionFunction
@@ -106,14 +117,19 @@ class PartitionFunction : public PFinterface {
      *  @return Partition function value */
     double getPf() override ;
 
+    /// @brief Return a pointer to the species associated with this partition function. 
     Species* getSp() { return this->sp ; }
 
     /** @brief Displays information about the partition function and method used */
     void info() override ;
 
+    public:
+
+    ~PartitionFunction() { delete calculator; delete sp; }
+
 } ;
 
-//________________________ Implementazione _____________________________
+//________________________ Implementation _____________________________
 
 template <typename T>
 void PartitionFunction<T>::initCalculator() {
@@ -175,6 +191,8 @@ void PartitionFunction<T>::computePartitionFunction( double temperature,
 template <typename T>
 void PartitionFunction<T>::setTable() {
 
+    delete calculator;
+
     try 
     {
 
@@ -196,21 +214,29 @@ void PartitionFunction<T>::setTable() {
 template <typename T>
 void PartitionFunction<T>::setAbInitio() {
 
-    try {
+    delete calculator;
 
-        calculator = new ElectronicAtomicPF(this->sp) ;
-    
-    } catch(const std::exception& e) {
+    if(this->sp->getFormula() != "e-") {
 
-        std::cerr <<"No Table found:\n"<< e.what() << '\n' ;
-        std::exit(EXIT_FAILURE); // o std::abort();
+        try {
+            
+            calculator = new ElectronicAtomicPF(this->sp) ;
+            
+        } catch(const std::exception& e) {
+            
+            std::cerr <<"No Table found:\n"<< e.what() << '\n' ;
+            std::exit(EXIT_FAILURE); // o std::abort();
+            
+        }
 
     }
-
+        
 }
 
 template <typename T>
 void PartitionFunction<T>::setAbInitio(std::string hyperref) {
+
+    delete calculator;
 
     try {
 

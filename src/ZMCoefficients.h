@@ -7,6 +7,12 @@
 #ifndef ZMCOEFFICIENTS_H
 #define ZMCOEFFICIENTS_H
 
+/**
+ * @file ZMCoefficients.h
+ * @brief This file contains the ZMCoefficients class, which implements the specific bracket integral expressions needed for the transport properties calculation based on the theory of Zhang et. al.
+ * The ZMCoefficients class derives from the ZMAppendix base class and provides implementations for the coefficients used in the transport properties calculations.
+*/
+
 #include"ZMAppendix.h"
 /**
  * @brief Coefficients of the solved Boltzmann equation as described in 
@@ -18,25 +24,41 @@
  * @see 3) Xiao-Ning Zhang, He-Ping Li, Anthony B. Murphy, Wei-Dong Xia, \n 
  * "A Numerical Model of Non-Equilibrium Thermal Plasmas. \n 
  * I. Transport Properties," Phys. Plasmas, vol. 20, p. 033508, 2013.
+ * @cite zhang_et_al
+ * @cite comparison_zhang_2015 
 */
 class ZMCoefficients : public ZMAppendix {
 
     protected:
 
+    /// Matrix of Qtilde bracket integrals, see eq. 17 of this class reference 1.
     std::vector<std::vector<double>> Qtilde ; 
+
+    /// @brief Matrix of coefficients for the thermal conductivity and diffusion, see eq. 14 of this class reference 2.
     std::vector<std::vector<double>> Q1 ; 
     
+    /// @brief copy of the composition of the mixture, stored for easier access to species mole fractions and masses in the computation of coefficients.
     std::vector<double> n ; 
+    
+    /// @brief copy of the masses of the mixture, stored for easier access to species masses in the computation of coefficients.
     std::vector<double> mass ; 
+
+    /// @brief number of species in the mixture.
     int N ;
+    
+    /// @brief mass of the electron, particle density of electrons, temperature,  non equilibrium parameter, electron temperature, mass density and total particle density of the mixture, stored for easier access in the computation of coefficients.
     double me,ne,T,theta,Te,rho,ntot ;
 
 
     protected : 
 
+    /// @brief Constructor for ZMCoefficients class with assigned CiBox object.
     ZMCoefficients ( CiBox* cbx  ) : ZMAppendix ( cbx ) {}
+
+    /// @brief Constructor for ZMCoefficients class with assigned GasMixture object.
     ZMCoefficients ( GasMixture* mix  ) : ZMAppendix ( mix ) {}
 
+    /// @brief Helper function to initialize the coefficients matrices and store the mixture properties in class members for easier access.
     void init(GasMixture* gasmix ) ;
 
     /// @brief coefficient for viscosity see eq. A.20 of this class reference 2)
@@ -106,7 +128,5 @@ class ZMCoefficients : public ZMAppendix {
     double DiThetaStar ( GasMixture* gasmix, int epsilon, int i ) ;
 
 };
-
-//______________________________ Implementation ______________________________
 
 #endif
