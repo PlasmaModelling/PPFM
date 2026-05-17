@@ -60,6 +60,8 @@ class CsCalculator {
     /// @brief Computes the cross sections. Must be implemented in derived classes.
     virtual void Compute() = 0;
 
+    virtual ~CsCalculator() = default;
+
     protected:
 
     /**
@@ -69,7 +71,6 @@ class CsCalculator {
     CsCalculator(InteractionInterface* i);
 
     CsCalculator() = default;
-    virtual ~CsCalculator() = default;
 };
 
 /// @class CsHolder @brief Combines elastic and inelastic cross section calculators.

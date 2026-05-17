@@ -59,6 +59,9 @@ class PFinterface {
 
     ///** @brief Returns a pointer to the species associated with this partition function.
     virtual Species* getSp() = 0;
+
+    virtual ~PFinterface() = default;
+
 };
 
  /** @class PartitionFunction
@@ -119,6 +122,10 @@ class PartitionFunction : public PFinterface {
 
     /** @brief Displays information about the partition function and method used */
     void info() override ;
+
+    public:
+
+    ~PartitionFunction() { delete calculator; delete sp; }
 
 } ;
 
@@ -184,6 +191,8 @@ void PartitionFunction<T>::computePartitionFunction( double temperature,
 template <typename T>
 void PartitionFunction<T>::setTable() {
 
+    delete calculator;
+
     try 
     {
 
@@ -205,6 +214,8 @@ void PartitionFunction<T>::setTable() {
 template <typename T>
 void PartitionFunction<T>::setAbInitio() {
 
+    delete calculator;
+
     if(this->sp->getFormula() != "e-") {
 
         try {
@@ -224,6 +235,8 @@ void PartitionFunction<T>::setAbInitio() {
 
 template <typename T>
 void PartitionFunction<T>::setAbInitio(std::string hyperref) {
+
+    delete calculator;
 
     try {
 

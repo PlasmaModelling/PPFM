@@ -185,8 +185,9 @@ if(UNIX AND NOT APPLE)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld")
 endif()
 
-include(CTest)
+option(PPFM_BUILD_TESTS "Build PPFM tests" OFF)
 
-if(BUILD_TESTING)
+if(PPFM_BUILD_TESTS)
+    include(CTest)
     add_subdirectory(tests)
 endif()
