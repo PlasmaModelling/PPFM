@@ -160,27 +160,27 @@ class HulburtHirschfelder : public Potential {
 
 /// @brief Unreduced Hulburt–Hirschfelder potential.
 /// @details Parameterization using spectroscopic constants.
-/// @note Input r in Å (or meters—must be consistent with constructor); output in eV.
+/// @note Input r in Å and De in [cm^-1]; conversion to eV will be applied to final Pot(r) value.
 class HulburtHirschfelderUnreduced : public Potential {
 
     protected:
     
-    double eps;    ///< well depth [eV]
-    double re;     ///< equilibrium distance [Å] (or [m], must match usage)
-    double we;     ///< vibrational constant [re]^-1
-    double weXe;   ///< anharmonicity constant [re]^-1
-    double Be;     ///< rotational constant [re]^-1
-    double Alphae; ///< rovibrational coupling [re]^-1
+    double eps;    ///< well depth (De) [cm^-1]
+    double re;     ///< equilibrium distance [Å]
+    double we;     ///< vibrational constant [cm]^-1
+    double weXe;   ///< anharmonicity constant [cm]^-1
+    double Be;     ///< rotational constant [cm]^-1
+    double Alphae; ///< rovibrational coupling [cm]^-1
 
     public:
     
     /// @brief Construct with spectroscopic constants.
-    /// @param eps well depth [eV]
-    /// @param re equilibrium distance [Å] (or [m])
-    /// @param we vibrational constant [re]^-1
-    /// @param weXe anharmonicity constant [re]^-1
-    /// @param Be rotational constant [re]^-1
-    /// @param Alphae rovibrational coupling [re]^-1
+    /// @param eps well depth [cm^-1]
+    /// @param re equilibrium distance [Å]
+    /// @param we vibrational constant [cm]^-1
+    /// @param weXe anharmonicity constant [cm]^-1
+    /// @param Be rotational constant [cm]^-1
+    /// @param Alphae rovibrational coupling [cm]^-1
     HulburtHirschfelderUnreduced(double eps, double re, double we,
                                  double weXe, double Be, double Alphae)
         : eps(eps), re(re), we(we), weXe(weXe), Be(Be), Alphae(Alphae) {}
@@ -360,5 +360,24 @@ class HFD_B : public Potential {
 
 };
 
+/**
+ * @brief Implementation of Ar-Hg n6+Morse potential as in 
+ * @cite J. Koperski,
+ *  Potential energy curve of the X0+(1Σ++) ground state of HgAr determined from A0+(3Π) → X0+ and B1(3Σ+ → X0+ fluorescence spectra,
+ *  Chemical Physics,
+ *  Volume 211, Issues 1–3,
+ *  1996,
+ *  Pages 191-201,
+ *  ISSN 0301-0104,
+ *  https://doi.org/10.1016/0301-0104(96)00177-2.
+ *  (https://www.sciencedirect.com/science/article/pii/0301010496001772) */
+class ArHgX0 : public Morse {
+    
+    public:
+    
+    ArHgX0();
+
+    double Pot(double r) override;
+};
 
 #endif

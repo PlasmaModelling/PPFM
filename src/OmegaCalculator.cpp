@@ -268,12 +268,18 @@ double NonCoulombOmega::MultiCompute(int l, int s, double T, double Lam, MultiCs
     
     if (p->energyWeighted==true)
     {
+        std::vector<double> wi (p->Size(),0.0);
+        for (size_t i = 0; i < p->Size(); i++)
+            wi[i] = p->statesG[i] * exp(-(p->energyWeights[i]*eVtoJ)/(KB*T));
+        
         num = 0.;
         for (int i = 0; i < p->Size(); ++i) 
-            num += OmegaK[i] * p->statesG[i] * exp(-(p->energyWeights[i]*eVtoJ)/(KB*T));
+            num += OmegaK[i] * wi[i];
         
-        den = 1.;
-    
+        den = 0.;
+        for (size_t i = 0; i < p->Size(); i++)
+            den += wi[i];
+        
     } else {
 
         for (int i = 0; i < p->Size(); ++i) {

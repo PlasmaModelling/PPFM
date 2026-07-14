@@ -70,21 +70,28 @@ double HulburtHirschfelder::Pot(double r) {
 }
 
 double HulburtHirschfelderUnreduced::Pot(double r) {
-    
-    double a0,a1,a2 ;
-    a0 = pow(we,2.)/(4.*Be) ; 
-    a1 = -1.-((Alphae*we)/(6.*Be)) ; 
-    a2 = (5./4.)*pow(a1,2.)-2.*weXe/(3.*Be) ;
-   
-    double b,c ; 
-    c = 1+a1*sqrt(eps*a0) ; 
-    b = 2.-((7./12.)-a2*eps/a0)/c ;
-   
-    double x ;  
-    x = we/(2.*sqrt(Be*eps))*((r-re)/re) ; 
 
-    return eps * ( pow(1.-std::exp(-x),2.) + c*pow(x,3.)*(1+b*x)*std::exp(-2*x) -1 ) ;
+    const double CM1_TO_EV = 1.239841984e-4;
 
+    double a0 = pow(we, 2.) / (4. * Be);
+
+    double a1 = -1. - ((Alphae * we) / (6. * Be * Be));
+
+    double a2 = (5. / 4.) * pow(a1, 2.) - 2. * weXe / (3. * Be);
+
+    double c = 1. + a1 * sqrt(eps / a0);
+
+    double b = 2. - (((7. / 12.) - (a2 * eps / a0)) / c);
+
+    double x = we / (2. * sqrt(Be * eps)) * ((r - re) / re);
+
+    double V_cm = eps * (
+        pow(1. - std::exp(-x), 2.)
+        + c * pow(x, 3.) * (1. + b * x) * std::exp(-2. * x)
+        -1.
+    );
+
+    return V_cm * CM1_TO_EV;
 }
 
 double PowerPot::Pot ( double r ) {
@@ -238,5 +245,22 @@ HFD_B::HFD_B(double A_, double alpha_, double beta_,
                 Rm(Rm_), D(D_), epsonK(epson) {
 }
 
+ArHgX0::ArHgX0(){}
+
+double ArHgX0::Pot(double r){
+
+    double nStar = 11.3+10.8*((r/3.99) -1.) ; 
+    const double CM1_TO_EV = 1.239841984e-4;
+
+    double V ;
+    if(r < 3.5001){
+        V = (133.7/(nStar-6.))*(6.*pow(3.99/r,nStar)-nStar*pow(3.99/r,6.)) - 133.7;
+    }else{
+        V = 133.7*pow(1.-exp(-1.5011*(r-3.99)),2.) - 133.7 ; 
+    }
+
+    return V*CM1_TO_EV ;
+
+}
 
 #endif
