@@ -28,6 +28,7 @@ class DevotoTP;
 class ZhangMurphyTP;
 class TcsInterface;
 class CInterface;
+class HybridInterface;
 class PFinterface;
 class MultiCs;
 class CsHolder;
@@ -388,13 +389,13 @@ class CollisionIntegralCsv : public DataPrinter {
     public:
     
     /// @brief Pointer to collision integral solver.
-    CInterface* solver;
+    HybridInterface* solver;
 
     /// @brief Constructor with solver.
-    CollisionIntegralCsv(CInterface* solver);
+    CollisionIntegralCsv(HybridInterface* solver);
 
     /// @brief Constructor with solver and custom output folder.
-    CollisionIntegralCsv(CInterface* solver, const std::string& folder);
+    CollisionIntegralCsv(HybridInterface* solver, const std::string& folder);
 
 };
 

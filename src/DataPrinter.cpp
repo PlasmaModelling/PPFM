@@ -870,10 +870,10 @@ void CollisionIntegralCsv::PrintMessage(const std::string& filename) {
               << " printed (" << filename << ")." << std::endl;
 }
 
-CollisionIntegralCsv::CollisionIntegralCsv(CInterface* solver)
+CollisionIntegralCsv::CollisionIntegralCsv(HybridInterface* solver)
     : solver(solver) {}
 
-CollisionIntegralCsv::CollisionIntegralCsv(CInterface* solver, const std::string& folder)
+CollisionIntegralCsv::CollisionIntegralCsv(HybridInterface* solver, const std::string& folder)
     : solver(solver) {
     customFolder = folder;
 }
