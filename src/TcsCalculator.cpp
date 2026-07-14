@@ -1208,8 +1208,9 @@ void ChargeTransferCs::Compute() {
     #pragma omp parallel for
     for ( int i = 0; i < E.size(); i++ ) {
         
-        double gij = sqrt ( ( 8.*(E[i]/amuKg)*qe ) / ( std::numbers::pi * mu ) ) ; 
-        
+        double gij = sqrt ( ( 8.*(E[i]/amuKg)*qe ) / ( std::numbers::pi * mu ) ) ; // m/s
+        gij *= 1.e+2 ; // cm/s
+
         for ( int j = 0; j < 5; j++ )
             Q[i][j] = pow ( A - B*log(gij) , 2.) ; 
 

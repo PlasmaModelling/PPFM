@@ -121,6 +121,14 @@ Some bash .sh files are provided to give PPFM a quick try. They can be executed 
 
 will build the default main.cpp into PPFM source folder, generate and run the related executable in the executables folder.
 
+You can also specify an argument 
+
+```bash
+./BuildAndRun.sh -a demo/mainPerformances.cpp
+```
+
+Another bash script in the demo folder 
+
 ```bash
 ./demo/DemoBuilding.sh
 ```
