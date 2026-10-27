@@ -458,7 +458,7 @@ void DeflectionAngleCsv::CollectPrintableSolvers(
 
 DeflectionAngleCsv::DeflectionAngleCsv(TcsInterface* tcs) {
 
-    impact_parameter = arange(0.1, 10.0, 0.2);
+    impact_parameter = arange(0.1, 10.0, 0.05);
     energy = logspace(log10(1.15e-3), log10(433), 50);
 
     CollectPrintableSolvers(tcs->TCScalculator);

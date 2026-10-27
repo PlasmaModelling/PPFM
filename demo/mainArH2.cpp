@@ -105,7 +105,7 @@ int main() {
             new HulburtHirschfelderUnreduced ( 
 
                 // eps , re       , we      , weXe, Be   , Alphae
-                0.01136, 3.759e-10, 3.068e-3, 256., 5.973, 0.39 
+                0.01136, 3.759, 3.068e-3, 256., 5.973, 0.39 
             
             ) 
 
@@ -265,9 +265,9 @@ int main() {
     editableQbox->info();
     cibox.info();
 
-    // cibox.PrintDeflectionAngles ( T, mix, folder+ "/Deflection Angles" );
-    // cibox.PrintTransportCrossSections ( T, mix, folder+ "/Transport Cross Sections" );
-    // cibox.PrintCollisionIntegrals ( T, mix, folder+ "/Collision Integrals" );
+     cibox.PrintDeflectionAngles ( T, mix, folder+ "/Deflection Angles" );
+     cibox.PrintTransportCrossSections ( T, mix, folder+ "/Transport Cross Sections" );
+     cibox.PrintCollisionIntegrals ( T, mix, folder+ "/Collision Integrals" );
 
     // Loop on NEparam
     for (size_t i = 0; i < NEparam.size(); i++) {

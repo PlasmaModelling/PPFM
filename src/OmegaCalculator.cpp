@@ -163,6 +163,7 @@ double CoulombOmega::Compute( int l, int s, double T, double Lam, CsCalculator* 
             break;
         case 3:
             ii = 26 + (s-3) * 2 ;
+            break;
         case 4:
             ii = 32 ; 
         default:

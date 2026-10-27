@@ -1228,7 +1228,7 @@ ChargeTransferCsWithEnergy::ChargeTransferCsWithEnergy( InteractionInterface* i,
 
 void ChargeTransferCsWithEnergy::Compute() {
 
-    Q.resize(E.size(), std::vector<double>(4));
+    Q.resize(E.size(), std::vector<double>(5));
 
     #pragma omp parallel for
     for ( int i = 0; i < E.size(); i++ ) {
