@@ -20,6 +20,9 @@ data/Phase_Shifts/*
 !data/Phase_Shifts/PS_Bell1984_Ar_e-.csv
 !data/Phase_Shifts/PS_Gibson1996_Ar_e-.csv
 
+data/Compositions/*
+!data/Compositions/Test.csv
+
 data/Partition_Functions/*
 !data/Partition_Functions/.gitkeep
 

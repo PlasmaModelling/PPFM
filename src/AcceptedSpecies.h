@@ -17,12 +17,9 @@ using AcceptedSpecies = std::variant<
     Argon*,
     ArgonI*,
     ArgonII*,
-    Carbon*,
-    CarbonI*,
-    CarbonII*,
-    Oxygen*,
-    OxygenI*,
-    OxygenII*
+    Hydrogen*,
+    HydrogenI*,
+    MolecularHydrogen*
 >;
 
 #endif // ACCEPTED_SPECIES_H

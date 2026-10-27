@@ -106,7 +106,7 @@ int main() {
     argonCI[0]->Pot( new HFDTCS2_ArAr() ) ;   
 
     // CAPITELLI Ar - Ar
-    argonCI[0]->Pot( new Capitelli(new Argon, new Argon, 8.1193,0.0112843,3.79838) ) ;   
+    // argonCI[0]->Pot( new Capitelli(new Argon, new Argon, 8.1193,0.0112843,3.79838) ) ;   
     
      
     // Ar - Ar+ 
@@ -117,7 +117,7 @@ int main() {
     argonCI[1]->TCScalculator = new CsHolder (
         
         // Elastic integration of the potential TRADITIONAL 
-        /* new MultiCs (
+         new MultiCs (
                 arari, {
                     new AvrgChiIntegrator ( arari, new Morse3Param(1.34,1.69,2.43) ),
                     new AvrgChiIntegrator ( arari, new Morse2Param(369.,    2.031) ),
@@ -138,11 +138,11 @@ int main() {
                 { 
                     1./6.,1./6.,1./6.,1./6.,1./6.,1./6. 
                 }
-            ), */
+            ), 
                     
             // CAPITELLI Ar - Ar+
-            new AdaptChiIntegrator ( arari, new Capitelli(new Argon, new ArgonI, 8.1193, 0.0236949, 4.70232) 
-        ) ,
+            // new AdaptChiIntegrator ( arari, new Capitelli(new Argon, new ArgonI, 8.1193, 0.0236949, 4.70232) 
+            // ) ,
                 
         // Two different Charge Transfer Cross Sections for the two different states
         new MultiCs ( 
@@ -160,9 +160,9 @@ int main() {
     );
                     
     // WEIGHT THE ENERGIES AS IN THE ARTICLE FOR THE AR - AR+ ELASTIC COLLISION
-    /* auto ariar = dynamic_cast<MultiCs*>(dynamic_cast<CsHolder*>(argonCI[1]->TCScalculator)->Qe);
+     auto ariar = dynamic_cast<MultiCs*>(dynamic_cast<CsHolder*>(argonCI[1]->TCScalculator)->Qe);
     ariar->setEnergyWeights( { 0.,0.17752,0.,0.,0.,0.17752 } );
-     */
+     
     
     // Ar - Ar+2 
     argonCI[2]->Pot( new Polarization ( new Argon, new ArgonII, alphaAr) );
@@ -184,14 +184,14 @@ int main() {
     kryptonCI[0]->Pot(new HFD_B(6.9735391e+4,8.38802216,-2.79611543,1.06136003,0.56845577,0.42605480,4.011,1.2080,201.3)) ; 
     
     // CAPITELLI Kr - Kr
-    kryptonCI[0]->Pot( new Capitelli(new Krypton, new Krypton, 7.84589 , 0.0147272 , 4.02566 ) ) ;
+    // kryptonCI[0]->Pot( new Capitelli(new Krypton, new Krypton, 7.84589 , 0.0147272 , 4.02566 ) ) ;
     
     // Kr - Kr+
     kryptonCI[1]->Load(false);
     kryptonCI[1]->TCScalculator = new CsHolder(
         
         // TRADITIONAL
-        /* new MultiCs( kryptonCI[1]->GetIntInterface(),
+         new MultiCs( kryptonCI[1]->GetIntInterface(),
         {
             new AvrgChiIntegrator ( kryptonCI[1]->GetIntInterface(), new Morse3Param( 1.1358192415424 , 1.53051818584054  , 2.68822023138724) ),
             new AvrgChiIntegrator ( kryptonCI[1]->GetIntInterface(), new Morse3Param( 0.193415349504  , 1.48727664654195  , 3.30735756814375) ),
@@ -203,18 +203,18 @@ int main() {
         {
             1./6.,1./6.,1./6.,1./6.,1./6.,1./6. 
         }
-        ),  */
+        ),  
     
         // CAPITELLI Kr - Kr+
-        new AdaptChiIntegrator ( kryptonCI[1]->GetIntInterface(), new Capitelli(new Krypton, new KryptonI, 7.84589 , 0.0273176 , 5.13097 ) ) ,
+        // new AdaptChiIntegrator ( kryptonCI[1]->GetIntInterface(), new Capitelli(new Krypton, new KryptonI, 7.84589 , 0.0273176 , 5.13097 ) ) ,
         
         new ChargeTransferCsWithEnergy(kryptonCI[1]->GetIntInterface(), 8.6483, 0.3995)
     );
         
     // WEIGHT THE ENERGIES AS IN THE ARTICLE FOR THE KR - KR+ ELASTIC COLLISION
-    /* auto krikr = dynamic_cast<MultiCs*>(dynamic_cast<CsHolder*>(kryptonCI[1]->TCScalculator)->Qe);
+     auto krikr = dynamic_cast<MultiCs*>(dynamic_cast<CsHolder*>(kryptonCI[1]->TCScalculator)->Qe);
     krikr->setEnergyWeights( { 0.,0.,0.,0.,0.6659,0.6659 } );
-     */
+     
     
     // Kr - Kr+2
     kryptonCI[2]->Pot(new Polarization(new Krypton, new KryptonII, alphaKr)); 
@@ -236,17 +236,14 @@ int main() {
     xenonCI[0]->Pot(new HFD_B(5.44087277e+4,7.52958289,-3.3390428,1.00555220,0.58359858,0.47378306,4.3656,1.114,282.8));
     
     // CAPITELLI Xe - Xe
-    xenonCI[0]->Pot( new Capitelli(new Xenon, new Xenon, 7.56933 , 0.0201384 , 4.31627 ) ) ;
+    // xenonCI[0]->Pot( new Capitelli(new Xenon, new Xenon, 7.56933 , 0.0201384 , 4.31627 ) ) ;
     
-    // CAPITELLI Xe - Xe
-    xenonCI[0]->Pot( new Capitelli(new Xenon, new Xenon, 7.56933 , 0.0201384 , 4.31627 ) ) ;
-
     // Xe - Xe+
     xenonCI[1]->Load(false);
     xenonCI[1]->TCScalculator = new CsHolder(
         
         // TRADITIONAL Xe - Xe+
-        /* new MultiCs( xenonCI[1]->GetIntInterface(),
+         new MultiCs( xenonCI[1]->GetIntInterface(),
             {
                 new AvrgChiIntegrator ( xenonCI[1]->GetIntInterface(), new Morse3Param ( 0.9722840838528 , 1.36752358722894   , 3.11420788616415 ) ) ,
                 new AvrgChiIntegrator ( xenonCI[1]->GetIntInterface(), new Morse3Param ( 0.2325943561984 , 1.32789439985817   , 3.69471528652475 ) ) ,
@@ -258,19 +255,19 @@ int main() {
             {
                 1./6.,1./6.,1./6.,1./6.,1./6.,1./6. 
             }
-        ), */
+        ), 
     
         // CAPITELLI Xe - Xe+
-        new AdaptChiIntegrator ( xenonCI[1]->GetIntInterface(), new Capitelli(new Xenon, new XenonI, 7.56933 , 0.0334937 , 5.64973 ) ) ,
+        //new AdaptChiIntegrator ( xenonCI[1]->GetIntInterface(), new Capitelli(new Xenon, new XenonI, 7.56933 , 0.0334937 , 5.64973 ) ) ,
         
         new ChargeTransferCsWithEnergy(xenonCI[1]->GetIntInterface(), 9.716, 0.4204)
         
     );
     
     // WEIGHT THE ENERGIES AS IN THE ARTICLE FOR THE XE - XE+ ELASTIC COLLISION
-    /* auto xeixe = dynamic_cast<MultiCs*>(dynamic_cast<CsHolder*>(xenonCI[1]->TCScalculator)->Qe);
+     auto xeixe = dynamic_cast<MultiCs*>(dynamic_cast<CsHolder*>(xenonCI[1]->TCScalculator)->Qe);
     xeixe->setEnergyWeights( { 0.,0.,0.,0.,1.3066,1.3066 } );
-     */
+     
     
     // Xe - Xe+2
     xenonCI[2]->Pot(new Polarization(new Xenon, new XenonII, alphaXe)); 
@@ -304,9 +301,9 @@ int main() {
     xenonCI.info();
 
     // ___________ PRINTING INTEGRALI COLLISIONALI ___________
-     argonCI.PrintCollisionIntegrals(T, argon, folder + "/CollisionIntegrals" );
-     kryptonCI.PrintCollisionIntegrals(T, krypton, folder + "/CollisionIntegrals" );
-     xenonCI.PrintCollisionIntegrals(T, xenon, folder + "/CollisionIntegrals" );
+    // argonCI.PrintCollisionIntegrals(T, argon, folder + "/CollisionIntegrals" );
+    // kryptonCI.PrintCollisionIntegrals(T, krypton, folder + "/CollisionIntegrals" );
+    // xenonCI.PrintCollisionIntegrals(T, xenon, folder + "/CollisionIntegrals" );
 
     // Loop on pressures
     for (size_t i = 0; i < pressures.size(); i++) {
@@ -328,9 +325,9 @@ int main() {
         // compXe->Print("Xe Composition " + p_strings[i], T, xenon); 
 
         // Thermodynamic properties
-        // thermAr->Print("Ar Thermodynamics " + p_strings[i], T, argon);
-        // thermKr->Print("Kr Thermodynamics " + p_strings[i], T, krypton);
-        // thermXe->Print("Xe Thermodynamics " + p_strings[i], T, xenon);
+         thermAr->Print("Ar Thermodynamics " + p_strings[i], T, argon);
+         thermKr->Print("Kr Thermodynamics " + p_strings[i], T, krypton);
+         thermXe->Print("Xe Thermodynamics " + p_strings[i], T, xenon);
 
         // Transport properties
          devAr->Print("Ar Transport " + p_strings[i], T, argon);
