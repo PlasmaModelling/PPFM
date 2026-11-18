@@ -186,8 +186,17 @@ class CollisionIntegral : public TransportCrossSection<T1,T2>, public HybridInte
     void info() override ; 
     
     /// @brief Try LoaderOmega if argument is true, default if false
-    void Load( bool b ) override { b ? InitCalculator() : InitCalculator(b) ;}
-
+    void Load( bool b ) override { 
+        if(b) {
+            try {
+                Omega = new LoaderOmega(this);
+            } catch (const std::exception&) {
+                throw;
+            }
+        }else{
+            InitCalculator();
+        }
+    }
 };
 
 //________________________________ Implementation ________________________________

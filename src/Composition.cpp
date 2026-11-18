@@ -202,7 +202,7 @@ GodinTrepSahaSolver::GodinTrepSahaSolver(Mixture* mix, Gas* gas)
     and can be initialized in the constructor, this is not the case for example for 
     DH corrections */
     Peff = gasptr->getPressure() ; 
-
+    Qbox = new PfBox(mix) ;
 }
 
 GodinTrepSahaSolver::GodinTrepSahaSolver(Mixture* mix, Gas* gas, PfBox* qbox)
@@ -837,6 +837,8 @@ void CompositionLoader::CompositionSolve( std::optional<double> lambda ) {
     lu_inv(Binv,B,M);
     matrix_prod(v,Bs,Binv,L,M);
     
+    totalPartitionFunctions(T, Peff, lambda.has_value() ? *lambda : getDebyeLength(T)) ;
+
 }
 
 void CompositionLoader::restart(){

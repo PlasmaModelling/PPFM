@@ -121,7 +121,7 @@ Ozone::Ozone() {
     abundancy.push_back(3);
 }
 
-int Ozone::numberOfCostituents() { return 3; }
+int Ozone::numberOfCostituents() { return 1; }
 int Ozone::operator()(int i) { return abundancy[0]; }
 Element* Ozone::operator[](int i) { return costituents[0]; }
 
